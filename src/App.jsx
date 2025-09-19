@@ -7,6 +7,7 @@ import TurnosPage from "./pages/TurnosPage.jsx";
 import SolicitudesPage from "./pages/SolicitudesPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage";
+import Footer, { FOOTER_HEIGHT } from "./components/Footer";
 import HistoriasClinicasPage from "./pages/HistoriasClinicasPage.jsx";
 
 export function App() {
@@ -26,6 +27,7 @@ export function App() {
             <Route path='*' element={<NotFoundPage theme={theme} />} />
           </Routes>
         </Box>
+        <Footer />
       </BrowserRouter>
     </Box>
   )
