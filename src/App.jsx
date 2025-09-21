@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage";
 import Footer, { FOOTER_HEIGHT } from "./components/Footer";
 import HistoriasClinicasPage from "./pages/HistoriasClinicasPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 
 export function App() {
   const theme = useTheme();
@@ -19,6 +20,7 @@ export function App() {
         <TopMenu theme={theme} />
         <Box sx={{px: { xs: 1, md: 4 }, py: 4}}>
           <Routes>
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/historias" element={<HistoriasClinicasPage />} />
             <Route path='/actors' element={<ActorsPage theme={theme} />} />
             <Route path='/turnos' element={<TurnosPage theme={theme} />} />
