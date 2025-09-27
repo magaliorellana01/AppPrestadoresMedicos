@@ -1,18 +1,41 @@
-import { useState } from "react"
-import { Box,  Typography, Button , TextField, Alert} from "@mui/material";
+import { useState} from "react"
+import { Box,  Typography, Button , TextField, InputLabel,OutlinedInput, InputAdornment, IconButton} from "@mui/material";
 import Logo from "../icons/logo2.png";
-
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginPage = ({ theme }) => {
       const [cuit, setCuit] = useState("");
+      const [password, setPassword] = useState("");
 
   const handleChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) setCuit(value);
   };
+
+  
+  const handleChangePswd = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+  };  
+
     const handleLogin = () => {
-     alert(`CUIT ingresado: ${cuit}`);
+     alert(`CUIT ingresado: ${cuit} ${password}`);
   };
+
+  const [showPassword, setShowPassword] = useState(false);
+
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const handleMouseUpPassword = (event) => {
+    event.preventDefault();
+  };
+
+
 return (
  <Box
     sx={{
@@ -77,16 +100,42 @@ return (
             flexDirection: "column",
             alignItems: "center",
             width: "100%",
-            gap: 8,
+            gap: 6,
           }}
         >
           <TextField
-            label="Ingrese su CUIT"
+            label="CUIT"
             value={cuit}
             onChange={handleChange}
            
           />
-
+        
+          <TextField
+            label="Contraseña"
+            onChange={handleChangePswd}
+            value={password}
+            type={showPassword ? 'text' : 'password'}
+       InputProps={{
+          endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          aria-label={showPassword ? 'hide the password' : 'display the password'}
+          onClick={handleClickShowPassword}
+          onMouseDown={handleMouseDownPassword}
+          onMouseUp={handleMouseUpPassword}
+          edge="end"
+        >
+          {showPassword ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
+      </InputAdornment>
+    ),
+    
+  }}
+         sx={{
+    width: 'auto',        
+    maxWidth: 225,          
+  }}   
+          />
           <Button
             variant="contained"
             size="large"
