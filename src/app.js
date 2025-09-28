@@ -1,16 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const historiasClinicasRoutes = require("./routes/historiasClinicas");
+const dotenv = require("dotenv");
+const historiasClinicasRoutes = require("./routes/historiaClinica");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+dotenv.config();
 
 // Middleware
 app.use(express.json());
 
 // Database connection
 mongoose
-  .connect("mongodb://localhost:27017/yourdbname", {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
