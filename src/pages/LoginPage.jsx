@@ -19,9 +19,8 @@ const LoginPage = ({ theme }) => {
     setPassword(value);
   };  
 
-    const handleLogin = () => {
-     alert(`CUIT ingresado: ${cuit} ${password}`);
-  };
+ 
+
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -104,10 +103,10 @@ return (
           }}
         >
           <TextField
+
             label="CUIT"
             value={cuit}
             onChange={handleChange}
-           
           />
         
           <TextField
@@ -139,8 +138,10 @@ return (
           <Button
             variant="contained"
             size="large"
-            onClick={handleLogin}
             disabled={cuit.length !== 11} 
+            onClick={() => {
+                  // TODO: validar CUIT y password  en el backend + guardar CUIT en localStorage
+                          }}
           >
             Login
           </Button>
