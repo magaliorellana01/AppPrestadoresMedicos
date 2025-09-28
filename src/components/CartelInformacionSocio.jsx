@@ -1,7 +1,11 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import CredencialIcon from "../icons/icono-credencial.png";
 
+
 export default function CartelInformacionSocio({ socio }) {
+  
+  const theme = useTheme();
+  
   return (
     <Box
       display="flex"
@@ -12,9 +16,10 @@ export default function CartelInformacionSocio({ socio }) {
       sx={{
         width: "100%",                 
         maxWidth: 400,                 
-        border: "1px solid #ccc",
+        border: "1px solid",
+        borderColor:"border.main",
         borderRadius: 2,
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "background.default",
         boxSizing: "border-box",
       }}
     >
@@ -40,12 +45,12 @@ export default function CartelInformacionSocio({ socio }) {
           textAlign: { xs: "center",sm: "center", md: "left" },
         }}
       >
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Afiliado:</strong> {socio?.nombre ?? "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Edad:</strong> {socio?.edad ? `${socio.edad} años` : "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Género:</strong> {socio?.genero ?? "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Nro Afiliado:</strong> {socio?.nroAfiliado ?? "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Miembro:</strong> {socio?.miembro ?? "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "#424245" }}><strong>Patología:</strong> {socio?.patologia ?? "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Afiliado:</strong> {`${socio?.nombres ?? ""} ${socio?.apellidos ?? ""}`.trim() || "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Edad:</strong> {socio?.edad ? `${socio.edad} años` : "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Género:</strong> {socio?.genero ?? "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Nro Afiliado:</strong> {socio?.nro_afiliado ?? "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Miembro:</strong> {socio?.rol ?? "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Patología:</strong> {socio?.historia_clinica?.patologia ?? "—"}</Typography>
       </Box>
     </Box>
   );
