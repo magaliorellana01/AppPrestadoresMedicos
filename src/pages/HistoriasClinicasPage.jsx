@@ -6,22 +6,15 @@ import HistoriasClinicasTable from "../components/TableHistoriasClinicas";
 import demoItems from "../data/historias_demo";
 
 const normalizar = (str) =>
-  String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-const dedup = (arr) => {
-  const seen = new Set(); const out = [];
-  for (const x of arr) {
-    const k = x.id ?? x.nro_afiliado ?? x.nombres;
-    if (!seen.has(k)) { seen.add(k); out.push(x); }
-  }
-  return out;
-};
+  String(str).normalize("NFD") // separa los caracteres compuestos en 2. "á" -> ("a","´") 
+             .replace(/[\u0300-\u036f]/g, "") // limpia los caracteres especiales -> "'" con ese rango 
+             .toLowerCase();
 
 export default function HistoriasClinicasPage({ items, titulo = "Historias Clínicas", descripcion = "Listado de titulares y familiares" }) {
   const nav = useNavigate();
 
   // base de datos
-  const base = useMemo(() => dedup(items?.length ? items : demoItems), [items]);
+  const base = useMemo(() => (items?.length ? items : demoItems), [items]);
 
   // estado búsqueda y paginación
   const [q, setQ] = useState("");

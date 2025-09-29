@@ -90,10 +90,16 @@ export default function HistoriasClinicasTableModern({
                   {item.rol ? (
                     <Chip
                       label={item.rol}
-                      color={item.rol === "Titular" ? "primary" : "secondary"}
                       variant="filled"
                       size="small"
-                      sx={{ fontWeight: 600 }}
+                      sx={{ 
+                        minWidth: 66,          // mismo ancho 
+                        justifyContent: "center",
+                        fontWeight: 600,
+                        bgcolor: item.rol === "Titular" ? "primary.dark" : "primary.light",
+                        color: "primary.contrastText",
+                        "& .MuiChip-label": { px: 0, width: "100%", textAlign: "center" }
+                      }}
                     />
                   ) : "—"}
                 </TableCell>
