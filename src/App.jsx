@@ -18,7 +18,7 @@ export function App() {
     <Box sx={{ backgroundColor: theme.color.secondary, minHeight: '100vh', width: '100%' }}>
       <BrowserRouter>
         <TopMenu theme={theme} />
-        <Box sx={{px: { xs: 1, md: 4 }, py: 4}}>
+        <Box sx={{ px: { xs: 1, md: 4 }, py: 4, pb: { xs: `calc(${FOOTER_HEIGHT.xs}px + 8px)`, md: `calc(${FOOTER_HEIGHT.md}px + 16px)` } }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/historias" element={<HistoriasClinicasPage />} />
