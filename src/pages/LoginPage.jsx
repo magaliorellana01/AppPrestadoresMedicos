@@ -3,6 +3,7 @@ import { Box,  Typography, Button , TextField, InputLabel,OutlinedInput, InputAd
 import Logo from "../icons/logo2.png";
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import BotonLogin from "../components/BotonLogin";
 
 const LoginPage = ({ theme }) => {
       const [cuit, setCuit] = useState("");
@@ -34,6 +35,9 @@ const LoginPage = ({ theme }) => {
     event.preventDefault();
   };
 
+  const handleLogin = () => {
+    console.log("Login clicked", cuit, password);
+  };
 
 return (
  <Box
@@ -135,16 +139,11 @@ return (
     maxWidth: 225,          
   }}   
           />
-          <Button
-            variant="contained"
-            size="large"
-            disabled={cuit.length !== 11} 
-            onClick={() => {
-                  // TODO: validar CUIT y password  en el backend + guardar CUIT en localStorage
-                          }}
-          >
-            Login
-          </Button>
+          <BotonLogin
+            title="Login"
+            onClick={handleLogin}
+            disabled={cuit.length !== 11}
+          />
       </Box>
     </Box>
   </Box>
