@@ -5,7 +5,20 @@ import CredencialIcon from "../icons/icono-credencial.png";
 export default function CartelInformacionSocio({ socio }) {
   
   const theme = useTheme();
-  
+  function calcularEdad(fechaNacimiento) {
+  if (!fechaNacimiento) return "—";
+  const hoy = new Date();
+  const nacimiento = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nacimiento.getFullYear();
+  const mes = hoy.getMonth() - nacimiento.getMonth();
+
+  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+    edad--;
+  }
+
+  return edad;
+  }
+
   return (
     <Box
       display="flex"
@@ -46,7 +59,7 @@ export default function CartelInformacionSocio({ socio }) {
         }}
       >
         <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Afiliado:</strong> {`${socio?.nombres ?? ""} ${socio?.apellidos ?? ""}`.trim() || "—"}</Typography>
-        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Edad:</strong> {socio?.edad ? `${socio.edad} años` : "—"}</Typography>
+        <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Edad:</strong> {calcularEdad(socio?.fecha_nacimiento)} años</Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Género:</strong> {socio?.genero ?? "—"}</Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Nro Afiliado:</strong> {socio?.nro_afiliado ?? "—"}</Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}><strong>Miembro:</strong> {socio?.rol ?? "—"}</Typography>
