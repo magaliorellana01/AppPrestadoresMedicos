@@ -1,14 +1,29 @@
 import React from "react";
 import {
-  Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Chip, Tooltip
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-const keyFor = (x) => x.id ?? x.nro_afiliado ?? x.nombres;
+const keyFor = (x) => x._id ?? x.socio.nro_afiliado ?? x.socio.nombres;
 
-export default function HistoriasClinicasTableModern({
-  rows, count, page, rowsPerPage, onPageChange, onRowsPerPageChange, onSelect
+export default function HistoriasClinicasTable({
+  rows,
+  count,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+  onSelect,
 }) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
@@ -25,17 +40,17 @@ export default function HistoriasClinicasTableModern({
               fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
               fontWeight: 700,
               backgroundColor: "background.paper",
-              boxShadow: "inset 0 -1px 0 0 rgba(0,0,0,0.08)"
+              boxShadow: "inset 0 -1px 0 0 rgba(0,0,0,0.08)",
             },
             "& td": {
               fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
-              py: { xs: 1, sm: 1.25, md: 1.5 }
-            }
+              py: { xs: 1, sm: 1.25, md: 1.5 },
+            },
           }}
         >
           <colgroup>
             <col style={{ width: isXs ? "55%" : "36%" }} />
-            <col style={{ width: isXs ? "0%"  : "34%" }} />
+            <col style={{ width: isXs ? "0%" : "34%" }} />
             <col style={{ width: isXs ? "25%" : "20%" }} />
             <col style={{ width: isXs ? "20%" : "10%" }} />
           </colgroup>
@@ -56,55 +71,71 @@ export default function HistoriasClinicasTableModern({
                   Sin resultados.
                 </TableCell>
               </TableRow>
-            ) : rows.map((item) => (
-              <TableRow
-                key={keyFor(item)}
-                hover
-                onClick={() => onSelect?.(item)}
-                sx={{
-                  cursor: onSelect ? "pointer" : "default",
-                  transition: "background-color .15s ease",
-                  "&:nth-of-type(odd)": { backgroundColor: "grey.50" },
-                  "&:hover": { backgroundColor: "grey.100" }
-                }}
-              >
-                <TableCell sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 500 }}>
-                  <Tooltip title={item.nombres} disableInteractive>
-                    <span>{item.nombres}</span>
-                  </Tooltip>
-                </TableCell>
-
-                <TableCell
-                  sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: { xs: "none", sm: "table-cell" } }}
+            ) : (
+              rows.map((item) => (
+                <TableRow
+                  key={keyFor(item)}
+                  hover
+                  onClick={() => onSelect?.(item)}
+                  sx={{
+                    cursor: onSelect ? "pointer" : "default",
+                    transition: "background-color .15s ease",
+                    "&:nth-of-type(odd)": { backgroundColor: "grey.50" },
+                    "&:hover": { backgroundColor: "grey.100" },
+                  }}
                 >
-                  <Tooltip title={item.apellidos ?? ""} disableInteractive>
-                    <span>{item.apellidos}</span>
-                  </Tooltip>
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Tooltip title={item.socio.nombres} disableInteractive>
+                      <span>{item.socio.nombres}</span>
+                    </Tooltip>
+                  </TableCell>
 
-                <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                  {item.nro_afiliado}
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                  >
+                    <Tooltip title={item.socio.apellidos ?? ""} disableInteractive>
+                      <span>{item.socio.apellidos}</span>
+                    </Tooltip>
+                  </TableCell>
 
-                <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                  {item.rol ? (
-                    <Chip
-                      label={item.rol}
-                      variant="filled"
-                      size="small"
-                      sx={{ 
-                        minWidth: 66,          // mismo ancho 
-                        justifyContent: "center",
-                        fontWeight: 600,
-                        bgcolor: item.rol === "Titular" ? "primary.dark" : "primary.light",
-                        color: "primary.contrastText",
-                        "& .MuiChip-label": { px: 0, width: "100%", textAlign: "center" }
-                      }}
-                    />
-                  ) : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                    {item.socio.nro_afiliado}
+                  </TableCell>
+
+                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                    {item.socio.rol ? (
+                      <Chip
+                        label={item.socio.rol}
+                        variant="filled"
+                        size="small"
+                        sx={{
+                          minWidth: 66, // mismo ancho
+                          justifyContent: "center",
+                          fontWeight: 600,
+                          bgcolor: item.socio.rol === "Titular" ? "primary.dark" : "primary.light",
+                          color: "primary.contrastText",
+                          "& .MuiChip-label": { px: 0, width: "100%", textAlign: "center" },
+                        }}
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
