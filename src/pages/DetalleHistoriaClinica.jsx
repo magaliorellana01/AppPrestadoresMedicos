@@ -7,63 +7,73 @@ import {
   FormControlLabel,
   Radio,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import CartelInformacionSocio from "../components/CartelInformacionSocio";
-import demoItems from "../data/historias_demo";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { getHistoriaClinicaByID } from "../services";
+
+//Reemplazar este valor con el ID real del usuario logueado.
+const getUsuarioActualId = () => "68db391a5f344ed4ec49f3e7";
 
 export default function DetalleDeHistoriaClinica() {
   const { id } = useParams();
-  const socio = demoItems.find((x) => String(x.id) === id);
+
+  const [historiaClinicaData, setHistoriaClinicaData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [filtro, setFiltro] = useState("todas");
 
-  if (!socio) {
+  const fetchHistoriaClinica = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getHistoriaClinicaByID(id);
+      setHistoriaClinicaData(data);
+    } catch (err) {
+      console.error("Error al cargar la Historia Clínica:", err);
+      setError(err.message || "Error desconocido al cargar la historia clínica.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchHistoriaClinica();
+  }, [fetchHistoriaClinica]);
+
+  if (loading) {
+    return (
+      <Box p={4} display="flex" justifyContent="center">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error || !historiaClinicaData) {
     return (
       <Box p={4}>
         <Typography variant="h5" color="error">
           Historia clínica no encontrada
         </Typography>
+        {error && <Typography variant="body1" color="textSecondary">{error}</Typography>}
       </Box>
     );
   }
 
-  // Agregué notas de ejemplo (Magalí)
-  const notas = [
-    {
-      fecha: "20/9/2025",
-      profesional: "Cardiólogo Juan Perez",
-      texto: "Se realizó un electrocardiograma y salió muy bien",
-      autorId: 1,
-    },
-    {
-      fecha: "9/9/2025",
-      profesional: "Traumatóloga Maia Gonzalez",
-      texto: "La resonancia magnética salió perfecta sin señal de esguince, hematoma ni hueso roto",
-      autorId: 2,
-    },
-    {
-      fecha: "1/9/2025",
-      profesional: "Traumatóloga Maia Gonzalez",
-      texto: "Veo bien todas las articulaciones pero mandé a realizar una resonancia...",
-      autorId: 2,
-    },
-    {
-      fecha: "1/9/2025",
-      profesional: "Clínico Médico Fernando Buey",
-      texto: "Presenta dolores en la rodilla, derivo con traumatología.",
-      autorId: 3,
-    },
-  ];
+  const socio = historiaClinicaData.socio;
+  const notasBackend = historiaClinicaData.notas || [];
 
-  const usuarioActualId = 2;
+  const usuarioActualId = getUsuarioActualId();
 
   const notasFiltradas =
-    filtro === "mias" ? notas.filter((n) => n.autorId === usuarioActualId) : notas;
+    filtro === "mias"
+      ? notasBackend.filter((n) => n.prestador?._id === usuarioActualId)
+      : notasBackend;
 
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", px: 2, py: 4 }}>
-      {/* Arrow back hecho por Mati */}
       <Typography
         variant="body2"
         sx={{ mb: 2, cursor: "pointer", color: "primary.main" }}
@@ -72,7 +82,7 @@ export default function DetalleDeHistoriaClinica() {
         ← Volver a Lista de Afiliados
       </Typography>
 
-      {/* Título hecho por Magalí */}
+      {/* Título */}
       <Typography variant="h4" sx={{ mb: 3 }}>
         Historia clínica de {socio.nombres} {socio.apellidos}
       </Typography>
@@ -83,31 +93,40 @@ export default function DetalleDeHistoriaClinica() {
             Notas
           </Typography>
 
-          {/* Hecho por Mati */}
           <RadioGroup row value={filtro} onChange={(e) => setFiltro(e.target.value)} sx={{ mb: 2 }}>
             <FormControlLabel value="todas" control={<Radio />} label="Ver todas las notas" />
-            <FormControlLabel value="mias" control={<Radio />} label="Ver solo mis notas" />
+            <FormControlLabel value="mias" control={<Radio disabled={!usuarioActualId} />} label="Ver solo mis notas" />
           </RadioGroup>
 
-          {/* Listado de notas hecho por Magalí */}
+          {/* Listado de notas */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {notasFiltradas.map((nota, idx) => (
-              <Paper
-                key={idx}
-                elevation={0}
-                sx={{
-                  p: 2,
-                  bgcolor: "grey.100",
-                  borderRadius: 2,
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {nota.fecha} – {nota.profesional}
-                </Typography>
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="body1">{nota.texto}</Typography>
-              </Paper>
-            ))}
+            {notasFiltradas.length > 0 ? (
+              notasFiltradas.map((nota) => (
+                <Paper
+                  key={nota._id}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    bgcolor: "grey.100",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {/* Se usa la fecha de creación y el prestador poblado */}
+                    {new Date(nota.fecha_creacion).toLocaleDateString()} –
+                    {nota.prestador
+                      ? `${nota.prestador.nombres || ''} ${nota.prestador.apellidos || 'Prestador Desconocido'}`
+                      : 'Prestador no especificado'}
+                  </Typography>
+                  <Divider sx={{ my: 1 }} />
+                  <Typography variant="body1">{nota.nota}</Typography>
+                </Paper>
+              ))
+            ) : (
+              <Typography variant="body1" color="textSecondary">
+                No hay notas disponibles bajo el filtro actual.
+              </Typography>
+            )}
           </Box>
         </Box>
 
