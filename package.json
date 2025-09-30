@@ -6,10 +6,10 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "seed": "node seed-database.js",
-    "seed-prestadores": "node seed-prestadores.js",
-    "seed-notas": "node seed-notas.js",
-    "seed-all": "npm run seed && npm run seed-prestadores && npm run seed-notas"
+    "seed": "node src/scripts/seed-database.js",
+    "seed-prestadores": "node src/scripts/seed-prestadores.js",
+    "seed-notas": "node src/scripts/seed-notas.js",
+    "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas"
   },
   "dependencies": {
     "cors": "^2.8.5",

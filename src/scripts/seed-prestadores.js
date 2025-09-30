@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Importar modelo
-const PrestadorModel = require("./src/models/prestador");
+const PrestadorModel = require("../models/prestador");
 
 // Datos para generar prestadores
 const especialidades = [

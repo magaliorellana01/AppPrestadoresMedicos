@@ -5,10 +5,10 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Importar modelos
-const NotaModel = require("./src/models/nota");
-const SocioModel = require("./src/models/socio");
-const HistoriaClinicaModel = require("./src/models/historiaClinica");
-const PrestadorModel = require("./src/models/prestador");
+const NotaModel = require("../models/nota");
+const SocioModel = require("../models/socio");
+const HistoriaClinicaModel = require("../models/historiaClinica");
+const PrestadorModel = require("../models/prestador");
 
 // Plantillas de notas médicas por tipo de consulta
 const tiposDeNotas = {
