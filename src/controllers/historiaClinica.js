@@ -11,19 +11,24 @@ exports.getHistoriaClinicaById = async (req, res) => {
 };
 
 exports.createHistoriaClinica = async (req, res) => {
-  const historiaClinica = await HistoriaClinica.create(req.body).populate("socio");
-  res.json({ message: "Historia Clinica creada correctamente", historiaClinica });
+  const historiaClinica = await HistoriaClinica.create(req.body);
+  const historiaClinicaPopulated = await HistoriaClinica.findById(historiaClinica._id).populate(
+    "socio"
+  );
+  res.json({
+    message: "Historia Clinica creada correctamente",
+    historiaClinica: historiaClinicaPopulated,
+  });
 };
 
 exports.updateHistoriaClinica = async (req, res) => {
   const historiaClinica = await HistoriaClinica.findByIdAndUpdate(req.params.id, req.body, {
-    populate: "socio",
     new: true,
-  });
+  }).populate("socio");
   res.json({ message: "Historia Clinica actualizada correctamente", historiaClinica });
 };
 
 exports.deleteHistoriaClinica = async (req, res) => {
-  await HistoriaClinica.findByIdAndDelete(req.params.id).populate("socio");
+  await HistoriaClinica.findByIdAndDelete(req.params.id);
   res.json({ message: "Historia Clinica eliminada correctamente" });
 };
