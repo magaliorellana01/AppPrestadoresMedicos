@@ -4,7 +4,7 @@ import CartelInformacionSocio from "../components/CartelInformacionSocio";
 import demoItems from "../data/historias_demo";
 import { useState } from "react";
 
-export default function HistoriaClinicaDetallePage() {
+export default function DetalleDeHistoriaClinica() {
   const { id } = useParams();
   const socio = demoItems.find((x) => String(x.id) === id);
 
