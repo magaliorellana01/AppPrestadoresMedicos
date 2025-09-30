@@ -6,8 +6,14 @@ function MenuOption({ path, content }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   return (
-    <Box 
-      sx={{ typography: pathname === path ? 'topMenuSelected' : 'topMenu', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '29px' }} 
+    <Box
+      sx={{
+        typography: pathname === path ? "topMenuSelected" : "topMenu",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        fontSize: "29px",
+      }}
       onClick={() => navigate(path)}
     >
       {content}
@@ -17,12 +23,22 @@ function MenuOption({ path, content }) {
 
 export function TopMenu({ theme }) {
   return (
-    <Stack direction='row' alignItems='center' spacing={8} sx={{ width: '100%', height: '4rem', backgroundColor: theme.color.primary, pl: 4 }}>
-      <MenuOption path='/' content={<img src={Logo} alt='Logo' style={{ width: '60px', height: '60px', marginTop: '10px' }} />} />
-      <MenuOption path='/solicitudes' content='Solicitudes' />
-      <MenuOption path='/historias' content='Historias Clinicas' />
-      <MenuOption path='/actors' content='Situaciones Terapéuticas' />
-      <MenuOption path='/turnos' content='Turnos' />
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={8}
+      sx={{ width: "100%", height: "4rem", backgroundColor: theme.color.primary, pl: 4 }}
+    >
+      <MenuOption
+        path="/"
+        content={
+          <img src={Logo} alt="Logo" style={{ width: "60px", height: "60px", marginTop: "10px" }} />
+        }
+      />
+      <MenuOption path="/solicitudes" content="Solicitudes" />
+      <MenuOption path="/historias" content="Historias Clinicas" />
+      <MenuOption path="/" content="Situaciones Terapéuticas" />
+      <MenuOption path="/turnos" content="Turnos" />
     </Stack>
   );
 }
