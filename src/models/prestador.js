@@ -3,11 +3,11 @@ const mongoose = require("mongoose");
 const prestadorSchema = new mongoose.Schema({
   nombres: {
     type: String,
-    required: false,
+    required: true,
   },
   apellidos: {
     type: String,
-    required: false,
+    required: true,
   },
   telefono: {
     type: String,
@@ -31,19 +31,31 @@ const prestadorSchema = new mongoose.Schema({
   },
   especialidad: {
     type: String,
-    required: false,
+    required: true,
   },
   cuit: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function (v) {
+        return /^\d{11}$/.test(v);
+      },
+      message: "El CUIT debe tener exactamente 11 dígitos",
+    },
+  },
+  password: {
     type: String,
     required: false,
   },
   matricula: {
     type: String,
-    required: false,
+    required: true,
+    unique: true,
   },
   es_centro_medico: {
     type: Boolean,
-    required: false,
+    default: false,
   },
   estado: {
     type: String,

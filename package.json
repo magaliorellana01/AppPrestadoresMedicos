@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "seed": "node seed-database.js"
+    "seed": "node seed-database.js",
+    "seed-prestadores": "node seed-prestadores.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
