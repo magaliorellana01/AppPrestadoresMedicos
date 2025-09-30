@@ -9,6 +9,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import Footer, { FOOTER_HEIGHT } from "./components/Footer";
 import HistoriasClinicasPage from "./pages/HistoriasClinicasPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import DetalleHistoriaClinica from "./pages/DetalleHistoriaClinica.jsx";
 
 export function App() {
   const theme = useTheme();
@@ -32,6 +33,7 @@ export function App() {
             <Route path="/historias" element={<HistoriasClinicasPage />} />
             <Route path="/turnos" element={<TurnosPage theme={theme} />} />
             <Route path="/solicitudes" element={<SolicitudesPage theme={theme} />} />
+            <Route path="/historias/:id" element={<DetalleHistoriaClinica />} />
             <Route path="/" element={<HomePage theme={theme} />} />
             <Route path="*" element={<NotFoundPage theme={theme} />} />
           </Routes>
