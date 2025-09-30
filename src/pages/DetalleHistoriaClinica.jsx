@@ -1,5 +1,13 @@
 import { useParams } from "react-router-dom";
-import { Box, Typography, Paper, RadioGroup, FormControlLabel, Radio, Divider } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Divider,
+} from "@mui/material";
 import CartelInformacionSocio from "../components/CartelInformacionSocio";
 import demoItems from "../data/historias_demo";
 import { useState } from "react";
@@ -51,13 +59,11 @@ export default function DetalleDeHistoriaClinica() {
   const usuarioActualId = 2;
 
   const notasFiltradas =
-    filtro === "mias"
-      ? notas.filter((n) => n.autorId === usuarioActualId)
-      : notas;
+    filtro === "mias" ? notas.filter((n) => n.autorId === usuarioActualId) : notas;
 
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", px: 2, py: 4 }}>
-      {/* Arrow back hecho por Mati */ }
+      {/* Arrow back hecho por Mati */}
       <Typography
         variant="body2"
         sx={{ mb: 2, cursor: "pointer", color: "primary.main" }}
@@ -78,22 +84,9 @@ export default function DetalleDeHistoriaClinica() {
           </Typography>
 
           {/* Hecho por Mati */}
-          <RadioGroup
-            row
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            sx={{ mb: 2 }}
-          >
-            <FormControlLabel
-              value="todas"
-              control={<Radio />}
-              label="Ver todas las notas"
-            />
-            <FormControlLabel
-              value="mias"
-              control={<Radio />}
-              label="Ver solo mis notas"
-            />
+          <RadioGroup row value={filtro} onChange={(e) => setFiltro(e.target.value)} sx={{ mb: 2 }}>
+            <FormControlLabel value="todas" control={<Radio />} label="Ver todas las notas" />
+            <FormControlLabel value="mias" control={<Radio />} label="Ver solo mis notas" />
           </RadioGroup>
 
           {/* Listado de notas hecho por Magalí */}
