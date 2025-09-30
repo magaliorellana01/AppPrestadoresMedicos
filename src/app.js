@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const cors = require("cors");
+
 const historiasClinicasRoutes = require("./routes/historiaClinica");
 
 const app = express();
@@ -9,6 +11,13 @@ dotenv.config();
 
 // Middleware
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 // Database connection
 mongoose
@@ -23,5 +32,5 @@ mongoose
 app.use("/historias-clinicas", historiasClinicasRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

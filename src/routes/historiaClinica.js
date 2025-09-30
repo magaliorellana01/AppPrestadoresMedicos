@@ -9,10 +9,10 @@ const {
 
 const router = express.Router();
 
-router.get("/historias-clinicas", getHistoriasClinicas);
-router.get("/historias-clinicas/:id", getHistoriaClinicaById);
-router.post("/historias-clinicas", createHistoriaClinica);
-router.put("/historias-clinicas/:id", updateHistoriaClinica);
-router.delete("/historias-clinicas/:id", deleteHistoriaClinica);
+router.get("/", getHistoriasClinicas);
+router.get("/:id", getHistoriaClinicaById);
+router.post("/", createHistoriaClinica);
+router.put("/:id", updateHistoriaClinica);
+router.delete("/:id", deleteHistoriaClinica);
 
 module.exports = router;
