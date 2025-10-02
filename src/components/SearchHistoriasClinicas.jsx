@@ -14,13 +14,14 @@ export default function HistoriasClinicasSearch({ q, onChange }) {
           inputProps: { "aria-label": "buscar afiliado" },
         }}
         sx={{
+          backgroundColor: "white",
           "& .MuiInputBase-input": {
             fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
-            py: { xs: 1, sm: 1.25, md: 1.5 }
+            py: { xs: 1, sm: 1.25, md: 1.5 },
           },
           "& .MuiOutlinedInput-root": {
-            borderRadius: 2
-          }
+            borderRadius: 2,
+          },
         }}
       />
     </Box>
