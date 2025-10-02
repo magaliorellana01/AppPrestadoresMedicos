@@ -69,7 +69,8 @@ export default function DetalleDeHistoriaClinica() {
   const socio = historiaClinicaData.socio;
   const notasBackend = historiaClinicaData.notas || [];
 
-  const usuarioActualId = getUsuarioActualId();
+  //TODO: Reemplazar este valor con el ID real del usuario logueado.
+  const usuarioActualId = null;
 
   const notasFiltradas =
     filtro === "mias"
@@ -103,6 +104,7 @@ export default function DetalleDeHistoriaClinica() {
               value="mias"
               control={<Radio disabled={!usuarioActualId} />}
               label="Ver solo mis notas"
+              disabled={!usuarioActualId}
             />
           </RadioGroup>
 
@@ -123,7 +125,7 @@ export default function DetalleDeHistoriaClinica() {
                     {/* Se usa la fecha de creación y el prestador poblado */}
                     {new Date(nota.fecha_creacion).toLocaleDateString()} –
                     {nota.prestador
-                      ? `${nota.prestador.nombres || ""} ${
+                      ? ` ${nota.prestador.nombres || ""} ${
                           nota.prestador.apellidos || "Prestador Desconocido"
                         }`
                       : "Prestador no especificado"}
