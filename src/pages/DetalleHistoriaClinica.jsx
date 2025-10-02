@@ -57,7 +57,11 @@ export default function DetalleDeHistoriaClinica() {
         <Typography variant="h5" color="error">
           Historia clínica no encontrada
         </Typography>
-        {error && <Typography variant="body1" color="textSecondary">{error}</Typography>}
+        {error && (
+          <Typography variant="body1" color="textSecondary">
+            {error}
+          </Typography>
+        )}
       </Box>
     );
   }
@@ -95,7 +99,11 @@ export default function DetalleDeHistoriaClinica() {
 
           <RadioGroup row value={filtro} onChange={(e) => setFiltro(e.target.value)} sx={{ mb: 2 }}>
             <FormControlLabel value="todas" control={<Radio />} label="Ver todas las notas" />
-            <FormControlLabel value="mias" control={<Radio disabled={!usuarioActualId} />} label="Ver solo mis notas" />
+            <FormControlLabel
+              value="mias"
+              control={<Radio disabled={!usuarioActualId} />}
+              label="Ver solo mis notas"
+            />
           </RadioGroup>
 
           {/* Listado de notas */}
@@ -115,16 +123,22 @@ export default function DetalleDeHistoriaClinica() {
                     {/* Se usa la fecha de creación y el prestador poblado */}
                     {new Date(nota.fecha_creacion).toLocaleDateString()} –
                     {nota.prestador
-                      ? `${nota.prestador.nombres || ''} ${nota.prestador.apellidos || 'Prestador Desconocido'}`
-                      : 'Prestador no especificado'}
+                      ? `${nota.prestador.nombres || ""} ${
+                          nota.prestador.apellidos || "Prestador Desconocido"
+                        }`
+                      : "Prestador no especificado"}
                   </Typography>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="body1">{nota.nota}</Typography>
                 </Paper>
               ))
+            ) : !notasBackend.length ? (
+              <Typography variant="body1" color="textSecondary">
+                La historia clínica no tiene notas.
+              </Typography>
             ) : (
               <Typography variant="body1" color="textSecondary">
-                No hay notas disponibles bajo el filtro actual.
+                No hay notas disponibles bajo el filtro seleccionado.
               </Typography>
             )}
           </Box>
