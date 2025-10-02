@@ -30,7 +30,7 @@ export default function HistoriasClinicasTable({
 
   return (
     <Paper elevation={3} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <TableContainer sx={{ maxHeight: 560 }}>
+      <TableContainer>
         <Table
           stickyHeader
           sx={{
