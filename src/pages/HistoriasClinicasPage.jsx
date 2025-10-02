@@ -67,7 +67,7 @@ export default function HistoriasClinicasPage() {
         rowsPerPage={rowsPerPage}
         onPageChange={setPage}
         onRowsPerPageChange={setRowsPerPage}
-        onSelect={(p) => nav(`/historias/${p._id}`)}
+        onSelect={(p) => nav(`/historia-clinica/${p._id}`)}
       />
     </Box>
   );

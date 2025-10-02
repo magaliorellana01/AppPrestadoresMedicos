@@ -10,6 +10,7 @@ import Footer, { FOOTER_HEIGHT } from "./components/Footer";
 import HistoriasClinicasPage from "./pages/HistoriasClinicasPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DetalleHistoriaClinica from "./pages/DetalleHistoriaClinica.jsx";
+import SituacionesTerapeuticasPage from "./pages/SituacionesTerapeuticasPage.jsx";
 
 export function App() {
   const theme = useTheme();
@@ -30,10 +31,14 @@ export function App() {
         >
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/historias" element={<HistoriasClinicasPage />} />
+            <Route path="/historias-clinicas" element={<HistoriasClinicasPage />} />
+            <Route path="/historia-clinica/:id" element={<DetalleHistoriaClinica />} />
             <Route path="/turnos" element={<TurnosPage theme={theme} />} />
             <Route path="/solicitudes" element={<SolicitudesPage theme={theme} />} />
-            <Route path="/historias/:id" element={<DetalleHistoriaClinica />} />
+            <Route
+              path="/situaciones-terapeuticas"
+              element={<SituacionesTerapeuticasPage theme={theme} />}
+            />
             <Route path="/" element={<HomePage theme={theme} />} />
             <Route path="*" element={<NotFoundPage theme={theme} />} />
           </Routes>

@@ -36,8 +36,8 @@ export function TopMenu({ theme }) {
         }
       />
       <MenuOption path="/solicitudes" content="Solicitudes" />
-      <MenuOption path="/historias" content="Historias Clinicas" />
-      <MenuOption path="/" content="Situaciones Terapéuticas" />
+      <MenuOption path="/historias-clinicas" content="Historias Clinicas" />
+      <MenuOption path="/situaciones-terapeuticas" content="Situaciones Terapéuticas" />
       <MenuOption path="/turnos" content="Turnos" />
     </Stack>
   );
