@@ -160,49 +160,72 @@ async function poblarNotas() {
     console.log("🧹 Limpiando notas existentes...");
     await NotaModel.deleteMany({});
 
-    // Generar notas
-    const cantidadNotas = Math.min(100, socios.length * 3); // Máximo 100 notas o 3 por socio
-    console.log(`📝 Generando ${cantidadNotas} notas médicas...`);
+    // Generar múltiples notas por socio
+    console.log(`📝 Generando notas médicas para cada socio...`);
 
     const notasCreadas = [];
+    let contadorNotas = 0;
 
-    for (let i = 0; i < cantidadNotas; i++) {
-      // Seleccionar socio aleatorio
-      const socioAleatorio = socios[Math.floor(Math.random() * socios.length)];
+    for (const socio of socios) {
+      // Determinar cantidad de notas por socio
+      let cantidadNotasPorSocio;
 
-      // Buscar historia clínica del socio o usar una aleatoria
-      let historiaClinica = historiasClinicas.find(
-        (hc) => hc.socio && hc.socio.toString() === socioAleatorio._id.toString()
+      // Socio especial con menos notas (ID 1000035)
+      if (socio.nro_afiliado === "1000035") {
+        cantidadNotasPorSocio = Math.floor(Math.random() * 2) + 1; // 1-2 notas
+        console.log(
+          `📝 Generando ${cantidadNotasPorSocio} notas para ${socio.nombres} ${socio.apellidos} (menos notas)`
+        );
+      } else {
+        cantidadNotasPorSocio = Math.floor(Math.random() * 6) + 4; // 4-9 notas por socio
+        console.log(
+          `📝 Generando ${cantidadNotasPorSocio} notas para ${socio.nombres} ${socio.apellidos}`
+        );
+      }
+
+      for (let j = 0; j < cantidadNotasPorSocio; j++) {
+        contadorNotas++;
+
+        // Buscar historia clínica del socio actual
+        let historiaClinica = historiasClinicas.find(
+          (hc) => hc.socio && hc.socio.toString() === socio._id.toString()
+        );
+
+        if (!historiaClinica && historiasClinicas.length > 0) {
+          historiaClinica = historiasClinicas[Math.floor(Math.random() * historiasClinicas.length)];
+        }
+
+        // Seleccionar prestador aleatorio
+        const prestadorAleatorio = prestadores[Math.floor(Math.random() * prestadores.length)];
+
+        // Generar fechas distribuidas en el tiempo para que parezcan consultas reales
+        const fechaBase = generarFechaReciente();
+        const diasOffset = j * Math.floor(Math.random() * 30) + Math.random() * 7; // Espaciar las notas
+        const fechaNota = new Date(fechaBase.getTime() - diasOffset * 24 * 60 * 60 * 1000);
+
+        // Generar nota
+        const nuevaNota = {
+          nota: generarNotaCompleta(),
+          socio: socio._id,
+          historia_clinica: historiaClinica ? historiaClinica._id : null,
+          prestador: prestadorAleatorio._id,
+          fecha_creacion: fechaNota,
+          fecha_actualizacion: fechaNota,
+        };
+
+        const notaCreada = await NotaModel.create(nuevaNota);
+        notasCreadas.push(notaCreada);
+      }
+
+      // Log progreso por socio
+      console.log(
+        `   ✅ ${cantidadNotasPorSocio} notas creadas para ${socio.nombres} ${socio.apellidos}`
       );
-
-      if (!historiaClinica && historiasClinicas.length > 0) {
-        historiaClinica = historiasClinicas[Math.floor(Math.random() * historiasClinicas.length)];
-      }
-
-      // Seleccionar prestador aleatorio
-      const prestadorAleatorio = prestadores[Math.floor(Math.random() * prestadores.length)];
-
-      // Generar nota
-      const nuevaNota = {
-        nota: generarNotaCompleta(),
-        socio: socioAleatorio._id,
-        historia_clinica: historiaClinica ? historiaClinica._id : null,
-        prestador: prestadorAleatorio._id,
-        fecha_creacion: generarFechaReciente(),
-        fecha_actualizacion: generarFechaReciente(),
-      };
-
-      const notaCreada = await NotaModel.create(nuevaNota);
-      notasCreadas.push(notaCreada);
-
-      // Log cada 10 notas para mostrar progreso
-      if ((i + 1) % 10 === 0 || i === cantidadNotas - 1) {
-        console.log(`📝 Creadas ${i + 1}/${cantidadNotas} notas...`);
-      }
     }
 
     console.log(`\n🎉 ¡Proceso completado exitosamente!`);
-    console.log(`📊 Se crearon ${cantidadNotas} notas médicas.`);
+    console.log(`📊 Se crearon ${contadorNotas} notas médicas para ${socios.length} socios.`);
+    console.log(`📈 Promedio de ${Math.round(contadorNotas / socios.length)} notas por socio.`);
 
     // Estadísticas adicionales
     const notasConMedicacion = notasCreadas.filter((nota) =>
@@ -214,6 +237,24 @@ async function poblarNotas() {
 
     console.log(`💊 Notas con medicación: ${notasConMedicacion}`);
     console.log(`📅 Notas con seguimiento: ${notasConControl}`);
+
+    // Estadísticas por socio
+    const notasPorSocio = {};
+    for (const nota of notasCreadas) {
+      const socioId = nota.socio.toString();
+      notasPorSocio[socioId] = (notasPorSocio[socioId] || 0) + 1;
+    }
+
+    console.log(`\n📊 Distribución de notas por socio:`);
+    for (const socio of socios) {
+      const cantidad = notasPorSocio[socio._id.toString()] || 0;
+      const esSocioEspecial = socio.nro_afiliado === "1000035";
+      console.log(
+        `   ${socio.nombres} ${socio.apellidos}: ${cantidad} notas${
+          esSocioEspecial ? " (menos notas)" : ""
+        }`
+      );
+    }
 
     // Mostrar ejemplo de notas creadas
     console.log(`\n📋 Ejemplos de notas creadas:`);
