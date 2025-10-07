@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
-
-const NovedadSchema = new mongoose.Schema({
+const NovedadSchema = new Schema({
   fecha: {
     type: Date,
     required: true,
@@ -14,10 +13,11 @@ const NovedadSchema = new mongoose.Schema({
   },
 });
 
-const situacionTerapeuticaSchema = new mongoose.Schema(
+
+const situacionTerapeuticaSchema = new Schema(
   {
     socio: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Socio",
       required: true,
     },
@@ -50,9 +50,4 @@ const situacionTerapeuticaSchema = new mongoose.Schema(
   }
 );
 
-const situacionTerapeutica = mongoose.model(
-  "situacionTerapeutica",
-  situacionTerapeuticaSchema
-);
-
-module.exports = situacionTerapeutica;
+export default model("situacionTerapeutica", situacionTerapeuticaSchema);
