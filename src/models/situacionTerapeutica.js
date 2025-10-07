@@ -26,16 +26,8 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
   fechaFin: Date,
   estado: {
     type: String,
-    enum: ['pendiente', 'autorizada', 'rechazada', 'en curso', 'finalizada'],
+    enum: ['activa', 'finalizada', 'rechazada'],
     default: 'pendiente'
-  },
-  sesionesAutorizadas: { 
-    type: Number, 
-    default: 0 
-  },
-  sesionesRealizadas: { 
-    type: Number, 
-    default: 0 
   },
   observaciones: String,
   novedadesMedicas: [
@@ -50,4 +42,4 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('SituacionTerapeutica', SituacionTerapeuticaSchema);
+export default mongoose.model('SituacionTerapeutica', SituacionTerapeuticaSchema)

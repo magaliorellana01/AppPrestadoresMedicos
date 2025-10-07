@@ -1,58 +1,72 @@
 const mongoose = require("mongoose");
 
-
-const NovedadSchema = new mongoose.Schema({
-  fecha: {
-    type: Date,
-    required: true,
-    default: Date.now,
-  },
-  descripcion: {
+const socioSchema = new mongoose.Schema({
+  nombres: {
     type: String,
     required: true,
-    trim: true,
+  },
+  apellidos: {
+    type: String,
+    required: true,
+  },
+  nro_afiliado: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  rol: {
+    type: String,
+    enum: ["Titular", "Familiar"],
+    default: "Titular",
+  },
+  genero: {
+    type: String,
+    enum: ["Masculino", "Femenino"],
+  },
+  fecha_nacimiento: {
+    type: Date,
+    required: true,
+  },
+  telefono: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  direccion: {
+    type: String,
+    required: true,
+  },
+  ciudad: {
+    type: String,
+    required: true,
+  },
+  provincia: {
+    type: String,
+    required: true,
+  },
+  fecha_creacion: {
+    type: Date,
+    default: Date.now,
+  },
+  fecha_actualizacion: {
+    type: Date,
+    default: Date.now,
+  },
+  estado: {
+    type: String,
+    enum: ["Activo", "Inactivo"],
+    default: "Activo",
+  },
+  historia_clinica: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "HistoriaClinica",
   },
 });
 
-const situacionTerapeuticaSchema = new mongoose.Schema(
-  {
-    socio: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Socio",
-      required: true,
-    },
-    diagnostico: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 400,
-    },
-    fechaAlta: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    fechaFinalizacion: {
-      type: Date,
-    },
-    novedades: {
-      type: [NovedadSchema],
-      default: [],
-    },
-    estado: {
-      type: String,
-      enum: ["activa", "inactiva"],
-      default: "activa",
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+const SocioModel = mongoose.model("Socio", socioSchema);
 
-const situacionTerapeutica = mongoose.model(
-  "situacionTerapeutica",
-  situacionTerapeuticaSchema
-);
-
-module.exports = situacionTerapeutica;
+module.exports = SocioModel;
