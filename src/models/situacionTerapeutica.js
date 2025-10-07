@@ -1,53 +1,53 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
-const NovedadSchema = new Schema({
-  fecha: {
-    type: Date,
-    required: true,
-    default: Date.now,
+const SituacionTerapeuticaSchema = new mongoose.Schema({
+  socio: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Socio', 
+    required: true 
   },
-  descripcion: {
+  prestador: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Prestador', 
+    required: true 
+  },
+  diagnostico: { 
+    type: String, 
+    required: true 
+  },
+  tratamiento: { 
+    type: String, 
+    required: true 
+  },
+  fechaInicio: { 
+    type: Date, 
+    default: Date.now 
+  },
+  fechaFin: Date,
+  estado: {
     type: String,
-    required: true,
-    trim: true,
+    enum: ['pendiente', 'autorizada', 'rechazada', 'en curso', 'finalizada'],
+    default: 'pendiente'
   },
+  sesionesAutorizadas: { 
+    type: Number, 
+    default: 0 
+  },
+  sesionesRealizadas: { 
+    type: Number, 
+    default: 0 
+  },
+  observaciones: String,
+  novedadesMedicas: [
+    {
+      nota: { type: String, required: true },
+      fechaCreacion: { type: Date, default: Date.now }
+    }
+  ],
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  }
 });
 
-
-const situacionTerapeuticaSchema = new Schema(
-  {
-    socio: {
-      type: Schema.Types.ObjectId,
-      ref: "Socio",
-      required: true,
-    },
-    diagnostico: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 400,
-    },
-    fechaAlta: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    fechaFinalizacion: {
-      type: Date,
-    },
-    novedades: {
-      type: [NovedadSchema],
-      default: [],
-    },
-    estado: {
-      type: String,
-      enum: ["activa", "inactiva"],
-      default: "activa",
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export default model("situacionTerapeutica", situacionTerapeuticaSchema);
+export default mongoose.model('SituacionTerapeutica', SituacionTerapeuticaSchema);
