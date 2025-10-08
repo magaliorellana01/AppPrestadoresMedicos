@@ -1,0 +1,52 @@
+const getSituacionTerapeuticaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const situacion = await SituacionTerapeutica.findById(id)
+      .populate('socio')
+      .populate('prestador');
+
+    if (!situacion) {
+      return res.status(404).json({ message: 'Situación terapéutica no encontrada' });
+    }
+
+    res.status(200).json(situacion);
+  } catch (error) {
+    console.error('Error al obtener la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: "Error interno del servidor", 
+            error: error.message 
+        })}
+    };
+
+const updateSituacionTerapeutica = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No se recibieron datos para actualizar.' });
+    }
+
+    
+    const situacionActualizada = await SituacionTerapeutica.findByIdAndUpdate(
+      id,
+      { ...updates },
+      { new: true, runValidators: true }
+    )
+      .populate('socio')
+      .populate('prestador');
+
+    if (!situacionActualizada) {
+      return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
+    }
+
+    res.status(200).json(situacionActualizada);
+  } catch (error) {
+    console.error('Error al actualizar la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: "Error interno del servidor", 
+            error: error.message 
+        });
+  }
+};
