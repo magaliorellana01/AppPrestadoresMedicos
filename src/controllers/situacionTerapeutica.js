@@ -1,4 +1,43 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
+const Socio = require('../models/socio')
+
+exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
+  try {
+    const { input } = req.query;
+
+    if (!input || String(input).trim() === '') {
+      return res.status(400).json({ message: "El query param 'input' es obligatorio." });
+    }
+
+    const socioFilter = {
+      $or: [
+        { dni: input },
+        { telefono: input },
+        { nombres: { $regex: input, $options: 'i' } },
+        { apellidos: { $regex: input, $options: 'i' } }
+        // expresion regular en Mongoose que indica búsqueda insensible a mayúsculas/minúsculas.
+      ]
+    };
+
+    const socios = await Socio.find(socioFilter).select('_id');
+
+    if (!socios.length) {
+      return res.status(200).json([]);
+    }
+
+    const socioIds = socios.map(s => s._id);
+
+    const situaciones = await SituacionTerapeutica.find({ socio: { $in: socioIds } })
+      .populate('socio');
+
+    return res.status(200).json(situaciones);
+  } catch (error) {
+    console.error('Error al obtener la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: error.message || "Error interno del servidor"
+    })
+  }
+};
 
  exports.getSituacionTerapeuticaById = async (req, res) => {
   try {
@@ -17,8 +56,9 @@ const SituacionTerapeutica = require('../models/situacionTerapeutica')
     console.error('Error al obtener la situación terapéutica:', error);
     res.status(500).json({ 
             message: error.message || "Error interno del servidor"
-        })}
-    };
+    })
+  }
+};
 
 exports.updateSituacionTerapeutica = async (req, res) => {
   try {
