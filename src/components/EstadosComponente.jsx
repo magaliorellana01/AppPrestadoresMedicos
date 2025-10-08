@@ -6,25 +6,25 @@ const estilosDeBoton = {
     py: 0.5,
     px: 1,
     height: "auto",
-    borderRadius: "20px",
+    borderRadius: "10px",
     whiteSpace: "nowrap",
     margin: "2px 0",
 
     '& .MuiChip-label': {
         padding: "5px",
         fontSize: "0.875rem",
-        fontWeight: 600,
+        fontWeight: 400,
     }
 }
 
 
 const getEstadoProps = (estado) => {
     const colores = {
-        Recibido: { bg: 'rgba(158, 158, 158, 0.5)', text: '#616161' },
-        EnAnalisis: { bg: 'rgba(0, 140, 180, 0.5)', text: '#007090' },
-        Observado: { bg: 'rgba(255, 193, 7, 0.5)', text: '#e0a800' },
-        Aprobado: { bg: 'rgba(76, 175, 80, 0.5)', text: '#388e3c' },
-        Rechazado: { bg: 'rgba(244, 67, 54, 0.5)', text: '#d32f2f' },
+        Recibido: { bg: '#F0F0F0', text: '#777777' },
+        EnAnalisis: { bg: '#B5D6FF', text: '#2563EB' },
+        Observado: { bg: '#FFEDB6', text: '#EAB308' },
+        Aprobado: { bg: '#D1FFCE', text: '#4BAE72' },
+        Rechazado: { bg: '#FFCECE', text: '#DC2626' },
     }
     switch (estado) {
         case 'Recibido':
@@ -48,7 +48,7 @@ const ComponenteDeEstados = ({ estado }) => {
 
     return (
         <Chip
-            size="medium"
+            size="small"
             {...props}
         />
     );
