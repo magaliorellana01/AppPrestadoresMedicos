@@ -1,164 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { Box, Button, Divider, IconButton, Modal, TextField, Typography } from "@mui/material";
-import { Add, Close } from "@mui/icons-material";
+import React, { useState } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import { Add, Search } from "@mui/icons-material";
+import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
 
-const formatTodayYYYYMMDD = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
 
-  const [form, setForm] = useState({
-    dniAfiliado: "",
-    fechaAlta: formatTodayYYYYMMDD(),
-    fechaFinalizacion: "",
-    diagnostico: "",
-    tratamiento: "",
-  });
-
-  const handleChangeField = (field) => (event) => {
-    if(field === "dniAfiliado") {
-      setForm((prev) => ({ ...prev, [field]: event.target.value.replace(/\D/g, "") }));
-    } else {
-      setForm((prev) => ({ ...prev, [field]: event.target.value }));
-    }
-  };
-
-  const handleCrear = async () => {
-    // TODO: integrar con servicio createSituacionTerapeutica(form)
-    // Por ahora, solo log para ver los valores
-    console.log("Crear Situación Terapéutica:", form);
-  };
-
-  useEffect(() => {
-    if (!openModal) {
-      setForm({
-        dniAfiliado: "",
-        fechaAlta: formatTodayYYYYMMDD(),
-        fechaFinalizacion: "",
-        diagnostico: "",
-        tratamiento: "",
-      });
-    }
-  }, [openModal, setForm]);
-
   return (
     <Box>
-
       <Typography variant="h4" color={theme.color.primary} mb={4}>
         Situaciones Terapéuticas
       </Typography>
 
       <Box mb={2} display="flex" justifyContent="space-between">
-        <TextField
-          fullWidth
-          size="small"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por Nro Afiliado, Apellido o Teléfono"
-          InputProps={{
-            inputProps: { "aria-label": "buscar afiliado" },
-          }}
-          sx={{
-            maxWidth: 660,
-            backgroundColor: "white",
-            "& .MuiInputBase-input": {
-              py: 1,
-            },
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 2,
-              fontSize: '22px',
-            },
-          }}
-        />
+        <Box width="100%" display="flex" flexDirection="column" gap={3}>
+          <TextField
+            fullWidth
+            size="small"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por Nro Afiliado, Apellido o Teléfono"
+            InputProps={{
+              inputProps: { "aria-label": "buscar afiliado" },
+            }}
+            sx={{
+              maxWidth: 660,
+              backgroundColor: "white",
+              "& .MuiInputBase-input": {
+                py: 1,
+              },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                fontSize: '22px',
+              },
+            }}
+          />
+          <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "fit-content" }} onClick={() => setOpenModal(true)} >
+            Buscar
+            <Search sx={{ ml: 1 }} />
+          </Button>
+        </Box>
 
-        <Button variant="contained" color="primary" sx={{ fontSize: "22px" }} onClick={() => setOpenModal(true)}>
+        <Button variant="contained" color="primary" sx={{ fontSize: "22px", height: 'fit-content', width: '500px' }} onClick={() => setOpenModal(true)}>
           Agregar Situación Terapéutica
           <Add sx={{ ml: 1 }} />
         </Button>
       </Box>
 
-      <Modal open={openModal} onClose={() => setOpenModal(false)} sx={{ display: "flex", justifyContent: "center", alignItems: "center"}}>
-        
-        <Box sx={{ width: "500px", backgroundColor: "white", p: 4,  borderRadius: '22px', border: '1px solid #E5E7EB', width: { xs: "90%", md: "1008px" } }}>
+      <ModalNuevaSTerapeutica openModal={openModal} setOpenModal={setOpenModal} />
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography color={theme.color.primary} fontSize="28px">Nueva Situación Terapéutica</Typography>
-            <IconButton onClick={() => setOpenModal(false)}>
-              <Close />
-            </IconButton>
-          </Box>
-
-          <Divider sx={{ mt: 2, mb: 4 }} />
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              aria-label="dni afiliado"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              label="DNI Afiliado *"
-              onChange={handleChangeField("dniAfiliado")}
-              size="small"
-              value={form.dniAfiliado}
-            />
-            <TextField
-              aria-label="fecha de alta"
-              disabled
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              label="Fecha de Alta *"
-              onChange={handleChangeField("fechaAlta")}
-              size="small"
-              type="date"
-              value={form.fechaAlta}
-            />
-            <TextField
-              aria-label="fecha de finalización"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              label="Fecha de Finalización"
-              onChange={handleChangeField("fechaFinalizacion")}
-              size="small"
-              type="date"
-              value={form.fechaFinalizacion}
-            />
-            <TextField
-              aria-label="diagnóstico"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              label="Diagnóstico *"
-              onChange={handleChangeField("diagnostico")}
-              size="small"
-              value={form.diagnostico}
-            />
-            <TextField
-              aria-label="tratamiento"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              label="Tratamiento *"
-              onChange={handleChangeField("tratamiento")}
-              size="small"
-              value={form.tratamiento}
-            />
-          </Box>
-
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", borderRadius: "10px", color: 'white', backgroundColor: theme.color.secondary }} onClick={() => setOpenModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", ml: 2, borderRadius: "10px" }} onClick={handleCrear} disabled={!form.dniAfiliado || !form.fechaAlta || !form.diagnostico || !form.tratamiento}>
-              Crear
-            </Button>
-          </Box>
-        </Box>
-
-      </Modal>
     </Box>
   );
 };
