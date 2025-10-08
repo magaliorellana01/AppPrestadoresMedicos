@@ -26,3 +26,20 @@ export const getHistoriaClinicaByID = async (id) => {
         throw error;
     }
 };
+
+export const getSituacionTerapeuticaByMultipleParams = async (input) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/search?input=${input}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la Situación Terapéutica.`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching situacion terapeutica:", error);
+        return null;
+    }
+};
+
