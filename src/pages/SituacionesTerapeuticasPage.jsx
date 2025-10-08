@@ -1,10 +1,52 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Divider, IconButton, Modal, TextField, Typography } from "@mui/material";
 import { Add, Close } from "@mui/icons-material";
+
+const formatTodayYYYYMMDD = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
+
+  const [form, setForm] = useState({
+    dniAfiliado: "",
+    fechaAlta: formatTodayYYYYMMDD(),
+    fechaFinalizacion: "",
+    diagnostico: "",
+    tratamiento: "",
+  });
+
+  const handleChangeField = (field) => (event) => {
+    if(field === "dniAfiliado") {
+      setForm((prev) => ({ ...prev, [field]: event.target.value.replace(/\D/g, "") }));
+    } else {
+      setForm((prev) => ({ ...prev, [field]: event.target.value }));
+    }
+  };
+
+  const handleCrear = async () => {
+    // TODO: integrar con servicio createSituacionTerapeutica(form)
+    // Por ahora, solo log para ver los valores
+    console.log("Crear Situación Terapéutica:", form);
+  };
+
+  useEffect(() => {
+    if (!openModal) {
+      setForm({
+        dniAfiliado: "",
+        fechaAlta: formatTodayYYYYMMDD(),
+        fechaFinalizacion: "",
+        diagnostico: "",
+        tratamiento: "",
+      });
+    }
+  }, [openModal, setForm]);
 
   return (
     <Box>
@@ -53,21 +95,64 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
             </IconButton>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ mt: 2, mb: 4 }} />
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField fullWidth size="small" label="DNI Afiliado" type="number" InputLabelProps={{ shrink: true }} aria-label="dni afiliado"/>
-            <TextField fullWidth size="small" label="Fecha de Alta" type="date" InputLabelProps={{ shrink: true }} aria-label="fecha de alta"/>
-            <TextField fullWidth size="small" label="Fecha de Finalización" type="date" InputLabelProps={{ shrink: true }} aria-label="fecha de finalización"/>
-            <TextField fullWidth size="small" label="Diagnóstico" InputLabelProps={{ shrink: true }} aria-label="diagnóstico"/>
-            <TextField fullWidth size="small" label="Tratamiento" InputLabelProps={{ shrink: true }} aria-label="tratamiento"/>
+            <TextField
+              aria-label="dni afiliado"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              label="DNI Afiliado *"
+              onChange={handleChangeField("dniAfiliado")}
+              size="small"
+              value={form.dniAfiliado}
+            />
+            <TextField
+              aria-label="fecha de alta"
+              disabled
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              label="Fecha de Alta *"
+              onChange={handleChangeField("fechaAlta")}
+              size="small"
+              type="date"
+              value={form.fechaAlta}
+            />
+            <TextField
+              aria-label="fecha de finalización"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              label="Fecha de Finalización"
+              onChange={handleChangeField("fechaFinalizacion")}
+              size="small"
+              type="date"
+              value={form.fechaFinalizacion}
+            />
+            <TextField
+              aria-label="diagnóstico"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              label="Diagnóstico *"
+              onChange={handleChangeField("diagnostico")}
+              size="small"
+              value={form.diagnostico}
+            />
+            <TextField
+              aria-label="tratamiento"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              label="Tratamiento *"
+              onChange={handleChangeField("tratamiento")}
+              size="small"
+              value={form.tratamiento}
+            />
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", borderRadius: "10px", color: 'white', backgroundColor: theme.color.secondary }}>
+            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", borderRadius: "10px", color: 'white', backgroundColor: theme.color.secondary }} onClick={() => setOpenModal(false)}>
               Cancelar
             </Button>
-            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", ml: 2, borderRadius: "10px" }}>
+            <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "175px", ml: 2, borderRadius: "10px" }} onClick={handleCrear} disabled={!form.dniAfiliado || !form.fechaAlta || !form.diagnostico || !form.tratamiento}>
               Crear
             </Button>
           </Box>
