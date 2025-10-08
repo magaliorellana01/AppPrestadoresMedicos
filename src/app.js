@@ -10,6 +10,7 @@ require("./models/socio");
 require("./models/historiaClinica");
 require("./models/nota");
 require("./models/prestador");
+require("./models/situacionTerapeutica");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
