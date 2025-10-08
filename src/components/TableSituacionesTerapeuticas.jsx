@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typog
 
 export default function TableSituacionesTerapeuticas({ situacionesTerapeuticas }) {
 
-    console.log(situacionesTerapeuticas);
     if (!situacionesTerapeuticas) {
         return null;
     }
