@@ -20,6 +20,7 @@ export default function TableSituacionesTerapeuticas({ situacionesTerapeuticas }
             <TableCell>Apellidos</TableCell>
             <TableCell>Diagnóstico</TableCell>
             <TableCell>Teléfono</TableCell>
+            <TableCell>Prestador</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -29,6 +30,7 @@ export default function TableSituacionesTerapeuticas({ situacionesTerapeuticas }
                 <TableCell>{situacionTerapeutica.socio.apellidos}</TableCell>
                 <TableCell>{situacionTerapeutica.tratamiento}</TableCell>
                 <TableCell>{situacionTerapeutica.socio.telefono}</TableCell>
+                <TableCell>{situacionTerapeutica.prestador.apellidos}</TableCell>
             </TableRow>
         ))}
     </TableBody>
