@@ -28,7 +28,8 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
     const socioIds = socios.map(s => s._id);
 
     const situaciones = await SituacionTerapeutica.find({ socio: { $in: socioIds } })
-      .populate('socio');
+      .populate('socio')
+      .populate('prestador');
 
     return res.status(200).json(situaciones);
   } catch (error) {
