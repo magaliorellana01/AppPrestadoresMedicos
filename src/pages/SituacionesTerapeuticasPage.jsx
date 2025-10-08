@@ -27,7 +27,13 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
         Situaciones Terapéuticas
       </Typography>
 
-      <Box mb={2} display="flex" justifyContent="space-between">
+      <Box
+        mb={2}
+        display="flex"
+        justifyContent={{ xs: "flex-start", md: "space-between" }}
+        flexDirection={{ xs: "column-reverse", md: "row" }}
+        gap={2}
+      >
         <Box width="100%" display="flex" flexDirection="column" gap={3}>
           <TextField
             fullWidth
@@ -81,7 +87,12 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
           </Box>
         </Box>
 
-        <Button variant="contained" color="primary" sx={{ fontSize: "22px", height: 'fit-content', width: '500px' }} onClick={() => setOpenModal(true)}>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ fontSize: "22px", height: 'fit-content', width: { xs: '100%', md: 500 } }}
+          onClick={() => setOpenModal(true)}
+        >
           Agregar Situación Terapéutica
           <Add sx={{ ml: 1 }} />
         </Button>
