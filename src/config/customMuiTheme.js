@@ -93,6 +93,7 @@ export const customMuiTheme = createTheme({
   },
   color: {
     primary: '#2D6A8C',
-    secondary: '#F5F5F5',
+    secondary: '#AFACAC',
+    background: 'F5F5F5',
   }
 });

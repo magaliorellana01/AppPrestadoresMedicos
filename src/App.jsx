@@ -16,7 +16,7 @@ export function App() {
   const theme = useTheme();
 
   return (
-    <Box sx={{ backgroundColor: theme.color.secondary, minHeight: "100vh", width: "100%" }}>
+    <Box sx={{ backgroundColor: theme.color.background, minHeight: "100vh", width: "100%" }}>
       <BrowserRouter>
         <TopMenu theme={theme} />
         <Box
