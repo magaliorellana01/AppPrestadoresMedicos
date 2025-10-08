@@ -297,7 +297,7 @@ const historiaClinicaSchema = new mongoose.Schema(
     // ===== INFORMACIÓN ADMINISTRATIVA =====
     obra_social: {
       nombre: String,
-      numero_afiliado: String,
+      dni: String,
       plan: String,
       vigencia: Date,
     },

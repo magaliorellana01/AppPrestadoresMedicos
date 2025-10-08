@@ -9,7 +9,7 @@ const socioSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  nro_afiliado: {
+  dni: {
     type: String,
     required: true,
     unique: true,

@@ -171,7 +171,7 @@ async function poblarNotas() {
       let cantidadNotasPorSocio;
 
       // Socio especial con menos notas (ID 1000035)
-      if (socio.nro_afiliado === "1000035") {
+      if (socio.dni === "1000035") {
         cantidadNotasPorSocio = Math.floor(Math.random() * 2) + 1; // 1-2 notas
         console.log(
           `📝 Generando ${cantidadNotasPorSocio} notas para ${socio.nombres} ${socio.apellidos} (menos notas)`
@@ -248,7 +248,7 @@ async function poblarNotas() {
     console.log(`\n📊 Distribución de notas por socio:`);
     for (const socio of socios) {
       const cantidad = notasPorSocio[socio._id.toString()] || 0;
-      const esSocioEspecial = socio.nro_afiliado === "1000035";
+      const esSocioEspecial = socio.dni === "1000035";
       console.log(
         `   ${socio.nombres} ${socio.apellidos}: ${cantidad} notas${
           esSocioEspecial ? " (menos notas)" : ""
