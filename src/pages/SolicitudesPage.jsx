@@ -60,9 +60,8 @@ const SolicitudesPage = ({ theme }) => {
         </Button>
       </Box>
 
-      <Divider sx={{ mb: 4 }} />
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+      <Typography variant="subtitle1" color= "#6B7280" fontWeight="bold" sx={{ mb: 1 }}>
         Filtros:
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>

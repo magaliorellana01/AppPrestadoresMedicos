@@ -96,19 +96,21 @@ export default function TablaGenerica({
                         tableLayout: "fixed",
                         width: "100%",
                         "& th": {
-                            fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                            fontSize: { xs: "1.1rem", sm: "1.1rem" },
                             fontWeight: 600,
                             backgroundColor: '#f5f7f9',
-                            color: '#4a4a4a',
+                            color: '#6B7280',
                             boxShadow: "none",
                             borderBottom: '1px solid #e0e0e0',
                             py: { xs: 1.5, sm: 2 },
+                            textAlign: "center",
                         },
                         "& td": {
-                            fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                            fontSize: { xs: "16px", sm: "16px" },
                             py: { xs: 1.5, sm: 2 },
-                            color: '#333',
+                            color: '#6B7280',
                             borderBottom: '1px solid #f0f0f0',
+                            textAlign:"center",
                         },
                     }}
                 >
