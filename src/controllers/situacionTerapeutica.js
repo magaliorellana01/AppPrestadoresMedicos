@@ -1,5 +1,6 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
 const Socio = require('../models/socio')
+const Prestador = require('../models/prestador')
 
 exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
   try {
@@ -118,4 +119,27 @@ exports.agregarNovedad = async (req, res) => {
     res.status(500).json({ 
             message: error.message || "Error interno del servidor"
         })};
+};
+
+exports.createSituacionTerapeutica = async (req, res) => {
+  try {
+    const socio = await Socio.findOne({ dni: req.body.dniAfiliado });
+    if (!socio) {
+      return res.status(404).json({ message: 'Socio no encontrado' });
+    }
+    req.body.socio = socio._id;
+    const prestador = await Prestador.findById(req.body.prestador);
+    if (!prestador) {
+      return res.status(404).json({ message: 'Prestador no encontrado' });
+    }
+    req.body.prestador = prestador._id;
+
+    const situacion = await SituacionTerapeutica.create(req.body);
+    res.status(201).json(situacion);
+  } catch (error) {
+    console.error('Error al crear la situación terapéutica:', error);
+    res.status(500).json({ 
+      message: error.message || "Error interno del servidor"
+    });
+  }
 };
