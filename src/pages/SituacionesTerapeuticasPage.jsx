@@ -34,6 +34,14 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
             size="small"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (q.trim()) {
+                  handleBuscar();
+                }
+              }
+            }}
             placeholder="Buscar por Nro Afiliado, Apellido o Teléfono"
             InputProps={{
               inputProps: { "aria-label": "buscar afiliado" },
