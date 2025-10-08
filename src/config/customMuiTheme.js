@@ -2,52 +2,60 @@ import { createTheme } from "@mui/material";
 import { blue, blueGrey, lightBlue } from "@mui/material/colors";
 
 export const customMuiTheme = createTheme({
-   palette: {
+  palette: {
 
     primary: {
-      main: "#2D6A8C", 
+      main: "#2D6A8C",
     },
     secondary: {
-      main: "#4BAE72", 
+      main: "#4BAE72",
     },
 
     background: {
-      default: "#F9FAFB", 
+      default: "#F9FAFB",
     },
     border: {
-      main: "#E5E7EB", 
+      main: "#E5E7EB",
     },
     text: {
-      primary: "#111827", 
-      secondary: "#6B7280", 
+      primary: "#111827",
+      secondary: "#6B7280",
     },
 
     // Estados 
     aprobado: {
-      main: "#4BAE72", 
+      main: "#4BAE72",
     },
     rechazado: {
-      main: "#DC2626", 
+      main: "#DC2626",
     },
     observado: {
-      main: "#EAB308", 
+      main: "#EAB308",
     },
     analisis: {
-      main: "#2563EB", 
+      main: "#2563EB",
     },
     recibido: {
-      main: "#9CA3AF", 
+      main: "#9CA3AF",
     },
 
     // Accentos opcionales
     accentViolet: {
-      main: "#9333EA", 
+      main: "#9333EA",
     },
     accentOrange: {
-      main: "#F97316", 
+      main: "#F97316",
     },
   },
   typography: {
+
+    fontFamily: [
+      'Merriweather Sans', 
+      'Roboto',            
+      'Arial', 
+      'sans-serif',
+    ].join(','),
+
     h3: {
       fontWeight: 'bold'
     },
