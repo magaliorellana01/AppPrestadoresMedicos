@@ -12,8 +12,8 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
 
   const handleBuscar = async () => {
-    const situacionTerapeutica = await getSituacionTerapeuticaByMultipleParams(q);
-    setSituacionesTerapeuticas(situacionTerapeutica);
+    const resultados = await getSituacionTerapeuticaByMultipleParams(q);
+    setSituacionesTerapeuticas(resultados);
   };
 
   const handleLimpiar = () => {
