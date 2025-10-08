@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 
 const historiasClinicasRoutes = require("./routes/historiaClinica");
+const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
 
 // Importar modelos para registrarlos
 require("./models/socio");
@@ -37,6 +38,7 @@ mongoose
 
 // Routes
 app.use("/historias-clinicas", historiasClinicasRoutes);
+app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

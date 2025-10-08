@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const SituacionTerapeuticaSchema = new mongoose.Schema({
   socio: { 
@@ -38,4 +38,6 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('SituacionTerapeutica', SituacionTerapeuticaSchema)
+const SituacionTerapeutica = mongoose.model("SituacionTerapeutica", SituacionTerapeuticaSchema);
+
+module.exports = SituacionTerapeutica;
