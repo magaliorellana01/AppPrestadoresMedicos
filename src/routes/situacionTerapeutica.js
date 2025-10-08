@@ -8,9 +8,9 @@ const {
 
 const router = express.Router();
 
-router.get("/:id", getSituacionTerapeuticaById); 
-
 router.get("/search", getSituacionesTerapeuticasByMultipleEntries);
+
+router.get("/:id", getSituacionTerapeuticaById); 
 
 router.put("/:id", updateSituacionTerapeutica);
 
