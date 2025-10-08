@@ -1,13 +1,14 @@
 const express = require("express");
 const {
-  getSituacionTerapeuticaById,
-updateSituacionTerapeutica,
-agregarNovedad
-  
+    getSituacionTerapeuticaById,
+    getSituacionesTerapeuticasByMultipleEntries,
+    updateSituacionTerapeutica,
+    agregarNovedad
 } = require("../controllers/situacionTerapeutica");
 
 const router = express.Router();
 
+router.get("/search", getSituacionesTerapeuticasByMultipleEntries);
 
 router.get("/:id", getSituacionTerapeuticaById); 
 
