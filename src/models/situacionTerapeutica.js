@@ -24,11 +24,7 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
     default: Date.now 
   },
   fechaFin: Date,
-  estado: {
-    type: String,
-    enum: ['activa', 'finalizada', 'rechazada'],
-    default: 'pendiente'
-  },
+  
   observaciones: String,
   novedadesMedicas: [
     {
