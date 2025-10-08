@@ -86,13 +86,9 @@ export default function TablaGenerica({
     sxContainer = {},
 }) {
 
-    const headerBgColor = '#f5f7f9';
-    const tableContainerBgColor = '#E5E7EB'; 
-    const oddRowBgColor = tableContainerBgColor;
-    const hoverColor = "#FFFFFF";
 
     return (
-        <Paper elevation={3} sx={{ borderRadius: 3, overflow: "hidden", backgroundColor: tableContainerBgColor, ...sxContainer }}>
+        <Paper elevation={3} sx={{ borderRadius: 3, overflow: "hidden", backgroundColor: "#E5E7EB", ...sxContainer }}>
             <TableContainer>
                 <Table
                     stickyHeader
@@ -102,7 +98,7 @@ export default function TablaGenerica({
                         "& th": {
                             fontSize: { xs: "0.875rem", sm: "0.95rem" },
                             fontWeight: 600,
-                            backgroundColor: headerBgColor,
+                            backgroundColor: '#f5f7f9',
                             color: '#4a4a4a',
                             boxShadow: "none",
                             borderBottom: '1px solid #e0e0e0',
@@ -147,8 +143,8 @@ export default function TablaGenerica({
                                     sx={{
                                         cursor: onSelect ? "pointer" : "default",
                                         transition: "background-color .15s ease",
-                                        "&:nth-of-type(odd)": { backgroundColor: oddRowBgColor },
-                                        "&:hover": { backgroundColor: hoverColor },
+                                        "&:nth-of-type(odd)": { backgroundColor: '#E5E7EB' },
+                                        "&:hover": { backgroundColor: "#FFFFFF" },
                                         "&:last-child td, &:last-child th": { border: 0 },
                                     }}
                                 >
