@@ -2,11 +2,24 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { Add, Search } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
+import { getSituacionTerapeuticaByMultipleParams } from "../services";
+import TableSituacionesTerapeuticas from "../components/TableSituacionesTerapeuticas";
 
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
+
+  const handleBuscar = async () => {
+    const situacionTerapeutica = await getSituacionTerapeuticaByMultipleParams(q);
+    setSituacionesTerapeuticas(situacionTerapeutica);
+  };
+
+  const handleLimpiar = () => {
+    setQ("");
+    setSituacionesTerapeuticas(null);
+  };
 
   return (
     <Box>
@@ -37,10 +50,27 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               },
             }}
           />
-          <Button variant="contained" color="primary" sx={{ fontSize: "22px", width: "fit-content" }} onClick={() => setOpenModal(true)} >
-            Buscar
-            <Search sx={{ ml: 1 }} />
-          </Button>
+          <Box display="flex" gap={2}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              sx={{ fontSize: "22px", width: "fit-content" }} 
+              onClick={handleLimpiar}
+              disabled={!q.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
+            >
+              Limpiar
+            </Button>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              sx={{ fontSize: "22px", width: "fit-content" }} 
+              onClick={handleBuscar} 
+              disabled={!q.trim()}
+            >
+              Buscar
+              <Search sx={{ ml: 1 }} />
+            </Button>
+          </Box>
         </Box>
 
         <Button variant="contained" color="primary" sx={{ fontSize: "22px", height: 'fit-content', width: '500px' }} onClick={() => setOpenModal(true)}>
@@ -48,6 +78,8 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
           <Add sx={{ ml: 1 }} />
         </Button>
       </Box>
+
+      <TableSituacionesTerapeuticas situacionesTerapeuticas={situacionesTerapeuticas} />
 
       <ModalNuevaSTerapeutica openModal={openModal} setOpenModal={setOpenModal} />
 
