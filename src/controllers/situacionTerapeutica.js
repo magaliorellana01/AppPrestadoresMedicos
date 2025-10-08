@@ -13,7 +13,6 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
       $or: [
         { dni: input },
         { telefono: input },
-        { nombres: { $regex: input, $options: 'i' } },
         { apellidos: { $regex: input, $options: 'i' } }
         // expresion regular en Mongoose que indica búsqueda insensible a mayúsculas/minúsculas.
       ]
