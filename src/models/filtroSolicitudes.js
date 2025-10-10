@@ -1,9 +1,16 @@
 const mongoose = require('mongoose');
-const SolicitudEsquema = new mongoose.Schema({
-    estado: {
-        type: String,
-        required: true,
-        enum: ['Aprobado', 'Rechazado', 'Observado', 'EnAnálisis', 'Recibido'],
+
+const SolicitudSchema = new mongoose.Schema({
+    nro: {
+        type: String
+    },
+
+    afiliadoNombre: {
+        type: String
+    },
+
+    afiliadoId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'Socio'
     },
 
     tipo: {
@@ -12,11 +19,12 @@ const SolicitudEsquema = new mongoose.Schema({
         enum: ['Reintegro', 'Autorizacion', 'Receta'],
     },
 
-    socio: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Socio',
+    estado: {
+        type: String,
         required: true,
+        enum: ['Aprobado', 'Rechazado', 'Observado', 'EnAnalisis', 'Recibido'],
     },
+
 
     fechaCreacion: {
         type: Date,
@@ -26,5 +34,5 @@ const SolicitudEsquema = new mongoose.Schema({
     timestamps: true
 });
 
-const Solicitud = mongoose.model('Solicitud', SolicitudEsquema);
+const Solicitud = mongoose.model('Solicitud', SolicitudSchema);
 module.exports = Solicitud;

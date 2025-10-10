@@ -35,7 +35,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((error) => console.error("MongoDB connection error:", error));
 
 // Routes
 app.use("/historias-clinicas", historiasClinicasRoutes);
