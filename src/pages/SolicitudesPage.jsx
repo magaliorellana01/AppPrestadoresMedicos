@@ -1,27 +1,32 @@
-import React, { useState } from "react";
-import { Box, Typography, Button, Container, Grid, MenuItem, Select, FormControl, InputLabel, Divider } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Button, Container, Grid, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TablaGenerica from "../components/TablaGenerica";
 import ComponenteDeEstados from "../components/EstadosComponente";
+export const API_BASE = "http://localhost:3000";
 
 
-// Simulacion de datos hasta que tenga el back 
+// Estados y tipos:
 
-const dataSolicitudes = [
-  { id: 1, nro: '123454', afiliado: 'Mateo Fernández', tipo: 'Reintegro', estado: 'Recibido', fecha: '12/08/2025' },
-  { id: 2, nro: '123453', afiliado: 'Camila Duarte', tipo: 'Autorización', estado: 'En Análisis', fecha: '15/06/2025' },
-  { id: 3, nro: '123452', afiliado: 'Sofía Benitez', tipo: 'Receta', estado: 'Observado', fecha: '10/07/2025' },
-  { id: 4, nro: '123451', afiliado: 'Julián Herrera', tipo: 'Receta', estado: 'Aprobado', fecha: '14/07/2025' },
-  { id: 5, nro: '123450', afiliado: 'Valentina López', tipo: 'Reintegro', estado: 'Aprobado', fecha: '10/05/2025' },
-  { id: 6, nro: '123449', afiliado: 'Tomás Ríos', tipo: 'Autorización', estado: 'Rechazado', fecha: '06/04/2025' },
-  { id: 7, nro: '123445', afiliado: 'Magalí Orellana', tipo: 'Autorización', estado: 'Aprobado', fecha: '03/04/2025' },
+const estadosOpciones = [
+  { label: 'Recibido', value: 'Recibido' },
+  { label: 'En Analisis', value: 'EnAnalisis' },
+  { label: ' Observado', value: 'Observado' },
+  { label: 'Aprobado', value: 'Aprobado' },
+  { label: 'Rechazado', value: 'Rechazado' },
+];
+
+const tiposOpciones = [
+  { label: 'Reintegro', value: 'Reintegro' },
+  { label: 'Autorizacion', value: 'Autorizacion' },
+  { label: 'Receta', value: 'Receta' },
 ];
 
 // TABLA:
 
 const columnasSolicitudes = [
   { id: 'nro', label: 'Nro Solicitud', align: 'left', width: '15%' },
-  { id: 'afiliado', label: 'Afiliado', align: 'left', width: '30%' },
+  { id: 'afiliadoNombre', label: 'Afiliado', align: 'left', width: '30%' },
   { id: 'tipo', label: 'Tipo', align: 'left', width: '20%' },
   {
     id: 'estado',
@@ -31,98 +36,91 @@ const columnasSolicitudes = [
     renderCell: (row) => <ComponenteDeEstados estado={row.estado} />,
     sxCell: { padding: '8px' }
   },
-  { id: 'fecha', label: 'Fecha', align: 'right', width: '15%' },
+  { id: 'fechaCreacion', label: 'Fecha', align: 'right', width: '15%', renderCell: (row) => row.fechaCreacion ? new Date(row.fechaCreacion).toLocaleDateString('es-AR') : '-', },
 ];
 
-const keyForSolicitudes = (item) => item.id;
+const keyForSolicitudes = (item) => item._id || item.id;
 
 
 const SolicitudesPage = ({ theme }) => {
+  const [data, setData] = useState([]);
+  const [count, setCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
 
-  return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, minHeight: '80vh' }}>
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({ page, size: rowsPerPage });
+      if (estadoFiltro) params.append('estado', estadoFiltro);
+      if (tipoFiltro) params.append('tipo', tipoFiltro);
+
+      const res = await fetch(`${API_BASE}/filtro-solicitudes?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setData(json.content || []);
+      setCount(json.total || 0);
+    } catch (err) {
+      console.error('Error al conectar con el backend:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [page, rowsPerPage, estadoFiltro, tipoFiltro]);
+
+
+
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Typography variant='h4' color={theme?.color?.primary || 'primary.main'} gutterBottom>
-          Solicitudes
-        </Typography>
-        <Button
-          endIcon={<ArrowForwardIcon />}
-          variant="text"
-          color="primary"
-          onClick={() => console.log('Navegar al Dashboard')}
-        >
-          Ir al Dashboard
-        </Button>
+        <Typography variant='h4'>Solicitudes</Typography>
+        <Button endIcon={<ArrowForwardIcon />} variant="text">Ir al Dashboard</Button>
       </Box>
 
-
-      <Typography variant="subtitle1" color= "#6B7280" fontWeight="bold" sx={{ mb: 1 }}>
-        Filtros:
-      </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item>
-          <FormControl sx={{ minWidth: 200 }} size="small">
+          <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Tipo</InputLabel>
-            <Select
-              label="Tipo"
-              value={tipoFiltro}
-              onChange={(e) => setTipoFiltro(e.target.value)}
-            >
+            <Select value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }}>
               <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="Reintegro">Reintegro</MenuItem>
-              <MenuItem value="Autorizacion">Autorización</MenuItem>
-              <MenuItem value="Receta">Receta</MenuItem>
+              {tiposOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
             </Select>
           </FormControl>
         </Grid>
         <Grid item>
-          <FormControl sx={{ minWidth: 200 }} size="small">
+          <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Estado</InputLabel>
-            <Select
-              label="Estado"
-              value={estadoFiltro}
-              onChange={(e) => setEstadoFiltro(e.target.value)}
-            >
+            <Select value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }}>
               <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="Recibido">Recibido</MenuItem>
-              <MenuItem value="En Análisis">En Análisis</MenuItem>
-              <MenuItem value="Observado">Observado</MenuItem>
-              <MenuItem value="Aprobado">Aprobado</MenuItem>
-              <MenuItem value="Rechazado">Rechazado</MenuItem>
+              {estadosOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
             </Select>
           </FormControl>
         </Grid>
       </Grid>
 
-      <Box
-        sx={{
-          borderRadius: '4px',
-          overflowX: 'auto',
-          mb: 4,
-          mt: 2
-        }}
-      >
-        <TablaGenerica
-          columns={columnasSolicitudes}
-          rows={dataSolicitudes}
-          count={dataSolicitudes.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={setPage}
-          onRowsPerPageChange={(rpp) => { setRowsPerPage(rpp); setPage(0); }}
-          keyFor={keyForSolicitudes}
-          sxContainer={{ elevation: 0 }}
-        />
+      <Box sx={{ overflowX: 'auto', mb: 4 }}>
+        {isLoading ? <Typography align="center" sx={{ py: 4 }}>Cargando solicitudes...</Typography> :
+          <TablaGenerica
+            columns={columnasSolicitudes}
+            rows={data}
+            count={count}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(e, p) => setPage(p)}
+            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            keyFor={keyForSolicitudes}
+          />}
       </Box>
-
     </Container>
   );
 };
-
 
 export default SolicitudesPage;

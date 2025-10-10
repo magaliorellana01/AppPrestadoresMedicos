@@ -9,14 +9,14 @@ import {
     TablePagination,
     TableRow,
     IconButton,
-    Button,
+    Box
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-import Box from '@mui/material/Box'
+
 
 
 function TablePaginationActions(props) {
@@ -74,13 +74,13 @@ function TablePaginationActions(props) {
 }
 
 export default function TablaGenerica({
-    columns,
-    rows,
-    count,
-    page,
-    rowsPerPage,
-    onPageChange,
-    onRowsPerPageChange,
+    columns = [],
+    rows = [],
+    count = 0,
+    page = 0,
+    rowsPerPage = 10,
+    onPageChange = () => {},
+    onRowsPerPageChange = () => {},
     onSelect,
     keyFor,
     sxContainer = {},

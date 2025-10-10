@@ -17,8 +17,6 @@ const estilosDeBoton = {
         fontWeight: 400,
     }
 }
-   
-
 
 const getEstadoProps = (estado) => {
     const colores = {
@@ -31,7 +29,7 @@ const getEstadoProps = (estado) => {
     switch (estado) {
         case 'Recibido':
             return { label: estado, variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
-        case 'En Análisis':
+        case 'EnAnalisis':
             return { label: estado, color: 'info', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.EnAnalisis.bg, color: colores.EnAnalisis.text } };
         case 'Observado':
             return { label: estado, sx: { ...estilosDeBoton, backgroundColor: colores.Observado.bg, color: colores.Observado.text }, variant: 'filled' };
@@ -45,7 +43,7 @@ const getEstadoProps = (estado) => {
 };
 
 const ComponenteDeEstados = ({ estado }) => {
-
+    
     const props = getEstadoProps(estado);
 
     return (
