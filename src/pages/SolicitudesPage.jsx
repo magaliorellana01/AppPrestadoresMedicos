@@ -87,9 +87,9 @@ const SolicitudesPage = ({ theme }) => {
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Tipo</InputLabel>
-            <Select value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }}>
+          <FormControl size="small" sx={{ minWidth: 200 }} variant="outlined">
+            <InputLabel id= "tipo-label">Tipo</InputLabel>
+            <Select labelId="tipo-label" value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }} label= "Tipo">
               <MenuItem value="">Todos</MenuItem>
               {tiposOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
             </Select>
@@ -97,8 +97,8 @@ const SolicitudesPage = ({ theme }) => {
         </Grid>
         <Grid item>
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Estado</InputLabel>
-            <Select value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }}>
+            <InputLabel id= "estado-label">Estado</InputLabel>
+            <Select labelId="estado-label" value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }} label="Estado">
               <MenuItem value="">Todos</MenuItem>
               {estadosOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
             </Select>
