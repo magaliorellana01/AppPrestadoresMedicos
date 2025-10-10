@@ -35,7 +35,7 @@ for (const s of socios) {
     const cantidad = Math.floor(Math.random() * 3) + 1; 
     for (let i = 0; i < cantidad; i++) {
       docs.push({
-        nro: `SOL-${s.dni}-${i + 1}`,
+        nro: `${s.dni}-${i + 1}`,
         afiliadoNombre: `${s.nombres} ${s.apellidos}`,
         afiliadoId: s._id,
         tipo: randomFrom(tipos),
