@@ -5,13 +5,14 @@ const cors = require("cors");
 
 const historiasClinicasRoutes = require("./routes/historiaClinica");
 const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
-
+const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");  
 // Importar modelos para registrarlos
 require("./models/socio");
 require("./models/historiaClinica");
 require("./models/nota");
 require("./models/prestador");
 require("./models/situacionTerapeutica");
+require("./models/filtroSolicitudes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,12 +35,12 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((error) => console.error("MongoDB connection error:", error));
 
 // Routes
 app.use("/historias-clinicas", historiasClinicasRoutes);
 app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
-
+app.use("/filtro-solicitudes", filtroSolicitudesRoutes); 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
