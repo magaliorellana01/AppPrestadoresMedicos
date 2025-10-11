@@ -2,10 +2,14 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const path = require("path");
+
+dotenv.config();
 
 const historiasClinicasRoutes = require("./routes/historiaClinica");
 const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
-const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");  
+const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");
+
 // Importar modelos para registrarlos
 require("./models/socio");
 require("./models/historiaClinica");
@@ -16,7 +20,6 @@ require("./models/filtroSolicitudes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-dotenv.config();
 
 // Middleware
 app.use(express.json());
@@ -28,6 +31,9 @@ app.use(
   })
 );
 
+// Servir archivos estáticos de uploads para poder descargar
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Database connection
 mongoose
   .connect(process.env.MONGODB_URI, {
@@ -37,10 +43,11 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((error) => console.error("MongoDB connection error:", error));
 
-// Routes
+// Rutas
 app.use("/historias-clinicas", historiasClinicasRoutes);
 app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
-app.use("/filtro-solicitudes", filtroSolicitudesRoutes); 
+app.use("/filtro-solicitudes", filtroSolicitudesRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
