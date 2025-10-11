@@ -41,6 +41,11 @@ export default function DetalleSolicitudPage() {
     severity: "success",
   });
 
+  // Archivos a subir
+  const [archivoFactura, setArchivoFactura] = useState(null);
+  const [archivoReceta, setArchivoReceta] = useState(null);
+
+  // Cargar detalle
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
@@ -63,6 +68,7 @@ export default function DetalleSolicitudPage() {
     loadSolicitud();
   }, [loadSolicitud]);
 
+  // Guardar cambios de estado/motivo
   const handleGuardarCambios = async () => {
     try {
       const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}`, {
@@ -76,6 +82,31 @@ export default function DetalleSolicitudPage() {
     } catch (err) {
       console.error("Error actualizando:", err);
       setSnackbar({ open: true, message: "No se pudo actualizar la solicitud", severity: "error" });
+    }
+  };
+
+  // Subir archivos
+  const handleSubirArchivos = async () => {
+    if (!archivoFactura && !archivoReceta) return;
+
+    const formData = new FormData();
+    if (archivoFactura) formData.append("factura", archivoFactura);
+    if (archivoReceta) formData.append("receta", archivoReceta);
+
+    try {
+      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}/archivos`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Error subiendo archivos");
+
+      setSnackbar({ open: true, message: "Archivos subidos correctamente", severity: "success" });
+      setArchivoFactura(null);
+      setArchivoReceta(null);
+      loadSolicitud();
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: "No se pudieron subir los archivos", severity: "error" });
     }
   };
 
@@ -124,16 +155,52 @@ export default function DetalleSolicitudPage() {
       titulo: "Descripción",
       contenido: (
         <>
-          <Typography sx={{ mb: 2, lineHeight: 1.4 }}>{solicitud.descripcion?.texto ?? "Sin descripción disponible"}</Typography>
-          {archivosFromDescripcion().map((a, idx) => {
-            const nombre = typeof a === "string" ? a : a.nombreArchivo ?? a.nombre ?? a.filename ?? "adjunto.pdf";
-            return (
-              <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Typography sx={{ mr: 1, fontSize: "0.85rem", color: "#495057" }}>{nombre}</Typography>
-                <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d" }} />
-              </Box>
-            );
-          })}
+          <Typography sx={{ mb: 2, lineHeight: 1.4 }}>
+            {solicitud.descripcion?.texto ?? "Sin descripción disponible"}
+          </Typography>
+
+          {archivosFromDescripcion().map((a, idx) => (
+            <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <a
+                href={`http://localhost:3000/${a.path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}
+              >
+                {a.nombreArchivo}
+              </a>
+              <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d", ml: 1 }} />
+            </Box>
+          ))}
+
+          {/* Inputs para subir archivos */}
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" component="label" sx={{ mr: 2 }}>
+              Subir Factura
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setArchivoFactura(e.target.files[0])}
+              />
+            </Button>
+            {archivoFactura && <Typography sx={{ display: "inline", ml: 1 }}>{archivoFactura.name}</Typography>}
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" component="label" sx={{ mr: 2 }}>
+              Subir Receta / Adicional
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setArchivoReceta(e.target.files[0])}
+              />
+            </Button>
+            {archivoReceta && <Typography sx={{ display: "inline", ml: 1 }}>{archivoReceta.name}</Typography>}
+          </Box>
+
+          <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={handleSubirArchivos}>
+            Subir Archivos
+          </Button>
         </>
       ),
     },
@@ -176,13 +243,13 @@ export default function DetalleSolicitudPage() {
         {solicitud.titulo || solicitud.tipo} - {getEstadoLabel()}
       </Typography>
 
-      {/* GRID 2x2 con separación extra entre filas */}
+      {/* GRID 2x2 */}
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
           gap: 3,
-          rowGap: 6, // aumenta separación entre filas
+          rowGap: 6,
           columnGap: 4,
           maxWidth: 1000,
           mb: 5,
@@ -237,7 +304,7 @@ export default function DetalleSolicitudPage() {
           fontSize: "1rem",
           borderRadius: 2,
           boxShadow: "none",
-          mt: 5, // <-- Esto separa el botón de las tarjetas
+          mt: 5,
         }}
       >
         Confirmar Cambios
