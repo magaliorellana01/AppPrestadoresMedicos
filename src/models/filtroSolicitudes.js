@@ -24,11 +24,31 @@ const SolicitudSchema = new mongoose.Schema({
         required: true,
         enum: ['Aprobado', 'Rechazado', 'Observado', 'EnAnalisis', 'Recibido'],
     },
+    motivo: {
+        type: String,
+        required: false
+    },
+    // Campos para el workflow
+    motivoCambioEstado: {
+        type: String
+    },
 
+    usuarioCambioEstado: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Prestador'
+    },
+
+    fechaCambioEstado: {
+        type: Date
+    },
 
     fechaCreacion: {
         type: Date,
         default: Date.now,
+    },
+    fechaActualizacion: {
+        type: Date,
+        default: Date.now
     },
 }, {
     timestamps: true

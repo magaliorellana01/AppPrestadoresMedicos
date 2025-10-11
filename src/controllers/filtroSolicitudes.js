@@ -1,4 +1,6 @@
 const Solicitud = require('../models/filtroSolicitudes');
+const Socio = require('../models/socio');
+const Prestador = require('../models/prestador');
 
 exports.getSolicitudes = async (req, res) => {
     try {
@@ -28,5 +30,171 @@ exports.getSolicitudes = async (req, res) => {
     catch (error) {
         console.error('Error en getSolicitudes:', error);
         return res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+// ===== OBTENER DETALLE DE SOLICITUD POR ID =====
+exports.getSolicitudById = async (req, res) => {
+    try {
+        const solicitud = await Solicitud.findById(req.params.id)
+            .populate('afiliadoId', 'nombres apellidos dni telefono email direccion ciudad provincia fecha_nacimiento genero rol')
+            .lean();
+
+        if (!solicitud) {
+            return res.status(404).json({ message: 'Solicitud no encontrada' });
+        }
+
+        // Calcular edad del afiliado si tiene fecha de nacimiento
+        let edad = null;
+        if (solicitud.afiliadoId && solicitud.afiliadoId.fecha_nacimiento) {
+            const fechaNacimiento = new Date(solicitud.afiliadoId.fecha_nacimiento);
+            const hoy = new Date();
+            edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+        }
+
+        // Agregar información adicional para el detalle
+        const detalleSolicitud = {
+            ...solicitud,
+            afiliado: solicitud.afiliadoId ? {
+                ...solicitud.afiliadoId,
+                edad: edad,
+                nroAfiliado: solicitud.afiliadoId.dni,
+                tipoMiembro: solicitud.afiliadoId.rol
+            } : null,
+            // Información específica según el tipo de solicitud
+            detalles: {
+                tipo: solicitud.tipo,
+                estado: solicitud.estado,
+                fecha: solicitud.fechaCreacion,
+                // Para reintegros oncológicos (ejemplo)
+                ...(solicitud.tipo === 'Reintegro' && {
+                    monto: 50000, // Esto vendría de datos adicionales
+                    proveedor: 'Farmacia Central',
+                    descripcion: 'Adjunto facturas de la medicación oncológica que mi médico me indicó.',
+                    adjuntos: [
+                        { nombreArchivo: 'Factura.pdf', tipoArchivo: 'Factura' },
+                        { nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }
+                    ]
+                })
+            }
+        };
+
+        res.json({ 
+            message: 'Detalle de solicitud obtenido correctamente', 
+            solicitud: detalleSolicitud 
+        });
+    } catch (error) {
+        console.error('Error al obtener detalle de solicitud:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
+
+// ===== CAMBIAR ESTADO DE SOLICITUD =====
+exports.cambiarEstadoSolicitud = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nuevoEstado, motivo, usuarioId } = req.body;
+
+        // Validar que el nuevo estado sea válido
+        const estadosValidos = ['Recibido', 'EnAnalisis', 'Observado', 'Aprobado', 'Rechazado'];
+        if (!estadosValidos.includes(nuevoEstado)) {
+            return res.status(400).json({ message: 'Estado no válido' });
+        }
+
+        // Validar que se proporcione motivo para estados que lo requieren
+        if ((nuevoEstado === 'Observado' || nuevoEstado === 'Rechazado') && !motivo) {
+            return res.status(400).json({ message: 'El motivo es obligatorio para este estado' });
+        }
+
+        // Verificar que el usuario existe (si se proporciona)
+        if (usuarioId) {
+            const usuario = await Prestador.findById(usuarioId);
+            if (!usuario) {
+                return res.status(404).json({ message: 'Usuario no encontrado' });
+            }
+        }
+
+        const solicitud = await Solicitud.findById(id);
+        if (!solicitud) {
+            return res.status(404).json({ message: 'Solicitud no encontrada' });
+        }
+
+        // Validar transiciones de estado según el workflow
+        const transicionesValidas = {
+            'Recibido': ['EnAnalisis'],
+            'EnAnalisis': ['Observado', 'Aprobado', 'Rechazado'],
+            'Observado': ['EnAnalisis', 'Aprobado', 'Rechazado'],
+            'Aprobado': [], // Estado final
+            'Rechazado': [] // Estado final
+        };
+
+        if (!transicionesValidas[solicitud.estado].includes(nuevoEstado)) {
+            return res.status(400).json({ 
+                message: `No se puede cambiar de ${solicitud.estado} a ${nuevoEstado}` 
+            });
+        }
+
+        // Actualizar el estado
+        const solicitudActualizada = await Solicitud.findByIdAndUpdate(
+            id,
+            { 
+                estado: nuevoEstado,
+                motivoCambioEstado: motivo,
+                usuarioCambioEstado: usuarioId,
+                fechaCambioEstado: new Date()
+            },
+            { new: true }
+        ).populate('afiliadoId', 'nombres apellidos dni telefono email');
+
+        res.json({
+            message: 'Estado de la solicitud actualizado correctamente',
+            solicitud: solicitudActualizada
+        });
+    } catch (error) {
+        console.error('Error al cambiar estado de la solicitud:', error);
+        res.status(500).json({ 
+            message: 'Error interno del servidor', 
+            error: error.message 
+        });
+    }
+};
+// Actualizar una solicitud
+exports.updateSolicitud = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado, motivo } = req.body;
+
+        console.log('Actualizando solicitud:', id, 'Estado:', estado, 'Motivo:', motivo);
+
+        // Validar que el estado sea válido
+        const estadosValidos = ['Recibido', 'EnAnalisis', 'Observado', 'Aprobado', 'Rechazado'];
+        if (!estadosValidos.includes(estado)) {
+            return res.status(400).json({ message: 'Estado inválido' });
+        }
+
+        // Si es Observado o Rechazado, el motivo es obligatorio
+        if ((estado === 'Observado' || estado === 'Rechazado') && !motivo) {
+            return res.status(400).json({ message: 'El motivo es obligatorio para este estado' });
+        }
+
+        const solicitudActualizada = await Solicitud.findByIdAndUpdate(
+            id,
+            { 
+                estado,
+                motivo,
+                fechaActualizacion: new Date()
+            },
+            { new: true }
+        );
+
+        if (!solicitudActualizada) {
+            return res.status(404).json({ message: 'Solicitud no encontrada' });
+        }
+
+        console.log('Solicitud actualizada:', solicitudActualizada);
+        res.json(solicitudActualizada);
+    } catch (error) {
+        console.error('Error en updateSolicitud:', error);
+        res.status(500).json({ message: 'Error del servidor' });
     }
 };
