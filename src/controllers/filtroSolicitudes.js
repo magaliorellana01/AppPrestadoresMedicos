@@ -52,31 +52,89 @@ exports.getSolicitudById = async (req, res) => {
             edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
         }
 
-        // Agregar información adicional para el detalle
+        // Generar datos específicos según el tipo de solicitud
+        let datosEspecificos = {};
+        
+        if (solicitud.tipo === 'Reintegro') {
+            // Datos para reintegro oncológico
+            datosEspecificos = {
+                monto: 50000,
+                proveedor: 'Farmacia Central',
+                descripcion: 'Adjunto facturas de la medicación oncológica que mi médico me indicó.',
+                adjuntos: [
+                    { nombreArchivo: 'Factura.pdf', tipoArchivo: 'Factura' },
+                    { nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }
+                ]
+            };
+        } else if (solicitud.tipo === 'Autorizacion') {
+            // Datos para autorización
+            datosEspecificos = {
+                monto: 0,
+                proveedor: 'Hospital Central',
+                descripcion: 'Solicitud de autorización para procedimiento médico especializado.',
+                adjuntos: [
+                    { nombreArchivo: 'Solicitud.pdf', tipoArchivo: 'Solicitud' },
+                    { nombreArchivo: 'Presupuesto.pdf', tipoArchivo: 'Presupuesto' }
+                ]
+            };
+        } else if (solicitud.tipo === 'Receta') {
+            // Datos para receta
+            datosEspecificos = {
+                monto: 15000,
+                proveedor: 'Farmacia del Pueblo',
+                descripcion: 'Receta médica para medicamentos de tratamiento crónico.',
+                adjuntos: [
+                    { nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }
+                ]
+            };
+        }
+
+        // Estructura optimizada para el frontend
         const detalleSolicitud = {
-            ...solicitud,
-            afiliado: solicitud.afiliadoId ? {
-                ...solicitud.afiliadoId,
-                edad: edad,
-                nroAfiliado: solicitud.afiliadoId.dni,
-                tipoMiembro: solicitud.afiliadoId.rol
-            } : null,
-            // Información específica según el tipo de solicitud
+            // Título y estado
+            titulo: `${solicitud.tipo} por Medicación Oncológica`,
+            estado: solicitud.estado,
+            estadoDisplay: solicitud.estado === 'EnAnalisis' ? 'En Análisis' : 
+                          solicitud.estado === 'Recibido' ? 'Recibido' :
+                          solicitud.estado === 'Observado' ? 'Observado' :
+                          solicitud.estado === 'Aprobado' ? 'Aprobado' :
+                          solicitud.estado === 'Rechazado' ? 'Rechazado' : solicitud.estado,
+            
+            // Tarjeta Datos (afiliado)
+            datos: {
+                afiliado: solicitud.afiliadoId ? `${solicitud.afiliadoId.nombres} ${solicitud.afiliadoId.apellidos}` : solicitud.afiliadoNombre,
+                edad: edad ? `${edad} años` : 'No disponible',
+                genero: solicitud.afiliadoId?.genero || 'No disponible',
+                nroAfiliado: solicitud.afiliadoId?.dni || solicitud.nro,
+                tipoMiembro: solicitud.afiliadoId?.rol === 'Titular' ? 'Titular' : 'Familiar'
+            },
+            
+            // Tarjeta Detalles
             detalles: {
-                tipo: solicitud.tipo,
-                estado: solicitud.estado,
-                fecha: solicitud.fechaCreacion,
-                // Para reintegros oncológicos (ejemplo)
-                ...(solicitud.tipo === 'Reintegro' && {
-                    monto: 50000, // Esto vendría de datos adicionales
-                    proveedor: 'Farmacia Central',
-                    descripcion: 'Adjunto facturas de la medicación oncológica que mi médico me indicó.',
-                    adjuntos: [
-                        { nombreArchivo: 'Factura.pdf', tipoArchivo: 'Factura' },
-                        { nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }
-                    ]
-                })
-            }
+                fecha: solicitud.fechaCreacion ? new Date(solicitud.fechaCreacion).toLocaleDateString('es-ES') : 'No disponible',
+                monto: `$${datosEspecificos.monto?.toLocaleString() || '0'}`,
+                proveedor: datosEspecificos.proveedor || 'No especificado'
+            },
+            
+            // Tarjeta Descripción
+            descripcion: {
+                texto: datosEspecificos.descripcion || 'Sin descripción disponible',
+                adjuntos: datosEspecificos.adjuntos || []
+            },
+            
+            // Tarjeta Acción
+            accion: {
+                estadoActual: solicitud.estado,
+                motivoActual: solicitud.motivoCambioEstado || '',
+                usuarioCambio: solicitud.usuarioCambioEstado || null,
+                fechaCambio: solicitud.fechaCambioEstado || null
+            },
+            
+            // Datos originales para referencia
+            _id: solicitud._id,
+            tipo: solicitud.tipo,
+            fechaCreacion: solicitud.fechaCreacion,
+            afiliadoCompleto: solicitud.afiliadoId
         };
 
         res.json({ 
