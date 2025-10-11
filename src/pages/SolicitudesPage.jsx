@@ -4,7 +4,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TablaGenerica from "../components/TablaGenerica";
 import ComponenteDeEstados from "../components/EstadosComponente";
 export const API_BASE = "http://localhost:3000";
-
+import { useNavigate } from "react-router-dom";
 
 // Estados y tipos:
 
@@ -46,6 +46,7 @@ const SolicitudesPage = ({ theme }) => {
   const [data, setData] = useState([]);
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -117,6 +118,7 @@ const SolicitudesPage = ({ theme }) => {
             onPageChange={(e, p) => setPage(p)}
             onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
             keyFor={keyForSolicitudes}
+            onRowClick={(row) => navigate(`/solicitudes/${row._id}`)} // <-- esto es clave
           />}
       </Box>
     </Container>

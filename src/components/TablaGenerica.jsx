@@ -17,8 +17,6 @@ import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 
-
-
 function TablePaginationActions(props) {
     const theme = useTheme();
     const { count, page, rowsPerPage, onPageChange } = props;
@@ -81,11 +79,10 @@ export default function TablaGenerica({
     rowsPerPage = 10,
     onPageChange = () => {},
     onRowsPerPageChange = () => {},
-    onSelect,
+    onRowClick, // <-- aquí
     keyFor,
     sxContainer = {},
 }) {
-
 
     return (
         <Paper elevation={3} sx={{ borderRadius: 3, overflow: "hidden", backgroundColor: "#E5E7EB", ...sxContainer }}>
@@ -141,9 +138,9 @@ export default function TablaGenerica({
                                 <TableRow
                                     key={keyFor ? keyFor(item) : index}
                                     hover
-                                    onClick={() => onSelect?.(item)}
+                                    onClick={() => onRowClick?.(item)} // <-- CAMBIO AQUÍ
                                     sx={{
-                                        cursor: onSelect ? "pointer" : "default",
+                                        cursor: onRowClick ? "pointer" : "default", // <-- CAMBIO AQUÍ
                                         transition: "background-color .15s ease",
                                         "&:nth-of-type(odd)": { backgroundColor: '#E5E7EB' },
                                         "&:hover": { backgroundColor: "#FFFFFF" },
