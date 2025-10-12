@@ -2,7 +2,6 @@ import * as React from 'react';
 import Chip from '@mui/material/Chip';
 import { useTheme } from '@mui/material/styles';
 
-
 const estilosDeBoton = {
     py: 0.5,
     px: 1,
@@ -18,6 +17,24 @@ const estilosDeBoton = {
     }
 }
 
+//Función para mostrar el texto legible sin afectar color
+const getEstadoDisplay = (estado) => {
+    switch (estado) {
+        case 'EnAnalisis':
+            return 'En Análisis';
+        case 'Recibido':
+            return 'Recibido';
+        case 'Observado':
+            return 'Observado';
+        case 'Aprobado':
+            return 'Aprobado';
+        case 'Rechazado':
+            return 'Rechazado';
+        default:
+            return estado || '—';
+    }
+};
+
 const getEstadoProps = (estado) => {
     const colores = {
         Recibido: { bg: '#F0F0F0', text: '#777777' },
@@ -26,24 +43,24 @@ const getEstadoProps = (estado) => {
         Aprobado: { bg: '#D1FFCE', text: '#4BAE72' },
         Rechazado: { bg: '#FFCECE', text: '#DC2626' },
     }
+
     switch (estado) {
         case 'Recibido':
-            return { label: estado, variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
+            return { label: getEstadoDisplay(estado), variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
         case 'EnAnalisis':
-            return { label: estado, color: 'info', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.EnAnalisis.bg, color: colores.EnAnalisis.text } };
+            return { label: getEstadoDisplay(estado), color: 'info', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.EnAnalisis.bg, color: colores.EnAnalisis.text } };
         case 'Observado':
-            return { label: estado, sx: { ...estilosDeBoton, backgroundColor: colores.Observado.bg, color: colores.Observado.text }, variant: 'filled' };
+            return { label: getEstadoDisplay(estado), sx: { ...estilosDeBoton, backgroundColor: colores.Observado.bg, color: colores.Observado.text }, variant: 'filled' };
         case 'Aprobado':
-            return { label: estado, color: 'success', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.Aprobado.bg, color: colores.Aprobado.text } };
+            return { label: getEstadoDisplay(estado), color: 'success', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.Aprobado.bg, color: colores.Aprobado.text } };
         case 'Rechazado':
-            return { label: estado, color: 'error', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.Rechazado.bg, color: colores.Rechazado.text } };
+            return { label: getEstadoDisplay(estado), color: 'error', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.Rechazado.bg, color: colores.Rechazado.text } };
         default:
-            return { label: estado, color: 'default', variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
+            return { label: getEstadoDisplay(estado), color: 'default', variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
     }
 };
 
 const ComponenteDeEstados = ({ estado }) => {
-    
     const props = getEstadoProps(estado);
 
     return (

@@ -2,24 +2,16 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Snackbar,
-  Alert,
-  Grow,
+  Box, Typography, Paper, Button, TextField, MenuItem,
+  Select, FormControl, InputLabel, Snackbar, Alert, Grow
 } from "@mui/material";
-import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import PersonIcon from "@mui/icons-material/Person";
-import DescriptionIcon from "@mui/icons-material/Description";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import {
+  CloudDownload as CloudDownloadIcon,
+  Person as PersonIcon,
+  Description as DescriptionIcon,
+  EditNote as EditNoteIcon,
+  CheckBox as CheckBoxIcon
+} from "@mui/icons-material";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
@@ -35,40 +27,42 @@ export default function DetalleSolicitudPage() {
   const [loading, setLoading] = useState(true);
   const [nuevoEstado, setNuevoEstado] = useState("");
   const [motivo, setMotivo] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-
-  // Archivos a subir
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [archivoFactura, setArchivoFactura] = useState(null);
   const [archivoReceta, setArchivoReceta] = useState(null);
 
-  // Cargar detalle
+  // 🔹 Cargar solicitud
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const detalle = data?.solicitud ? data.solicitud : data;
-      setSolicitud(detalle);
+      const detalle = data?.solicitud || data;
+
+      const socio = {
+        nombres: detalle.datos?.afiliado?.split(" ")[0] || "",
+        apellidos: detalle.datos?.afiliado?.split(" ").slice(1).join(" ") || "",
+        genero: detalle.datos?.genero || "No disponible",
+        edad: detalle.datos?.edad || "No disponible",
+        nroAfiliado: detalle.datos?.nroAfiliado || "No disponible",
+        tipoMiembro: detalle.datos?.tipoMiembro || "No especificado",
+      };
+
+      setSolicitud({ ...detalle, socio });
       setNuevoEstado(detalle?.estado || detalle?.accion?.estadoActual || "EnAnalisis");
       setMotivo(detalle?.accion?.motivoActual || "");
     } catch (err) {
-      console.error("Error cargando solicitud:", err);
+      console.error(err);
       setSnackbar({ open: true, message: "No se pudo cargar la solicitud", severity: "error" });
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  useEffect(() => {
-    loadSolicitud();
-  }, [loadSolicitud]);
+  useEffect(() => { loadSolicitud(); }, [loadSolicitud]);
 
-  // Guardar cambios de estado/motivo
+  // 🔹 Guardar cambios
   const handleGuardarCambios = async () => {
     try {
       const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}`, {
@@ -76,30 +70,25 @@ export default function DetalleSolicitudPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado, motivo }),
       });
-      if (!res.ok) throw new Error("Error al actualizar la solicitud");
+      if (!res.ok) throw new Error("Error al actualizar");
       await loadSolicitud();
       setSnackbar({ open: true, message: "Solicitud actualizada correctamente", severity: "success" });
     } catch (err) {
-      console.error("Error actualizando:", err);
+      console.error(err);
       setSnackbar({ open: true, message: "No se pudo actualizar la solicitud", severity: "error" });
     }
   };
 
-  // Subir archivos
+  // 🔹 Subir archivos
   const handleSubirArchivos = async () => {
     if (!archivoFactura && !archivoReceta) return;
-
     const formData = new FormData();
     if (archivoFactura) formData.append("factura", archivoFactura);
     if (archivoReceta) formData.append("receta", archivoReceta);
 
     try {
-      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}/archivos`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}/archivos`, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Error subiendo archivos");
-
       setSnackbar({ open: true, message: "Archivos subidos correctamente", severity: "success" });
       setArchivoFactura(null);
       setArchivoReceta(null);
@@ -114,9 +103,8 @@ export default function DetalleSolicitudPage() {
   if (!solicitud) return <Typography>No se encontró la solicitud</Typography>;
 
   const getEstadoLabel = () => {
-    if (solicitud.estadoDisplay) return solicitud.estadoDisplay;
-    const e = ESTADOS.find((x) => x.value === (solicitud.estado || nuevoEstado));
-    return e ? e.label : solicitud.estado || nuevoEstado;
+    const e = ESTADOS.find(x => x.value === (solicitud.estado || nuevoEstado));
+    return solicitud.estadoDisplay || e?.label || solicitud.estado || nuevoEstado;
   };
 
   const archivosFromDescripcion = () => {
@@ -124,103 +112,77 @@ export default function DetalleSolicitudPage() {
     return Array.isArray(adj) ? adj : [];
   };
 
-  // Tarjetas
+  // 🔹 Tarjetas
   const tarjetas = [
     {
       icon: <PersonIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Datos",
+      titulo: "Datos del Afiliado",
       contenido: (
         <>
-          <Typography sx={{ mb: 1 }}><strong>Afiliado:</strong> {solicitud.datos?.afiliado ?? "—"}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Edad:</strong> {solicitud.datos?.edad ?? "—"}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Género:</strong> {solicitud.datos?.genero ?? "—"}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Nro Afiliado:</strong> {solicitud.datos?.nroAfiliado ?? "—"}</Typography>
-          <Typography><strong>Miembro:</strong> {solicitud.datos?.tipoMiembro ?? "—"}</Typography>
+          <Typography sx={{ mb: 1 }}><strong>Afiliado:</strong> {solicitud.socio?.nombres} {solicitud.socio?.apellidos}</Typography>
+          <Typography sx={{ mb: 1 }}><strong>Edad:</strong> {solicitud.socio?.edad}</Typography>
+          <Typography sx={{ mb: 1 }}><strong>Género:</strong> {solicitud.socio?.genero}</Typography>
+          <Typography sx={{ mb: 1 }}><strong>Nro Afiliado:</strong> {solicitud.socio?.nroAfiliado}</Typography>
+          <Typography><strong>Miembro:</strong> {solicitud.socio?.tipoMiembro}</Typography>
         </>
-      ),
+      )
     },
     {
       icon: <DescriptionIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Detalles",
+      titulo: "Detalles de la Solicitud",
       contenido: (
         <>
           <Typography sx={{ mb: 1 }}><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
           <Typography sx={{ mb: 1 }}><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
           <Typography><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
         </>
-      ),
+      )
     },
     {
       icon: <EditNoteIcon sx={{ color: "white", fontSize: 22 }} />,
       titulo: "Descripción",
       contenido: (
         <>
-          <Typography sx={{ mb: 2, lineHeight: 1.4 }}>
-            {solicitud.descripcion?.texto ?? "Sin descripción disponible"}
-          </Typography>
-
+          <Typography sx={{ mb: 2, lineHeight: 1.4 }}>{solicitud.descripcion?.texto ?? "Sin descripción disponible"}</Typography>
           {archivosFromDescripcion().map((a, idx) => (
             <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <a
-                href={`http://localhost:3000/${a.path}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}
-              >
-                {a.nombreArchivo}
-              </a>
+              <a href={`http://localhost:3000/${a.path}`} target="_blank" rel="noopener noreferrer"
+                 style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}>{a.nombreArchivo}</a>
               <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d", ml: 1 }} />
             </Box>
           ))}
-
-          {/* Inputs para subir archivos */}
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" component="label" sx={{ mr: 2 }}>
-              Subir Factura
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setArchivoFactura(e.target.files[0])}
-              />
+            <Button variant="outlined" component="label" sx={{ mr: 2 }}>Subir Factura
+              <input type="file" hidden onChange={e => setArchivoFactura(e.target.files[0])} />
             </Button>
             {archivoFactura && <Typography sx={{ display: "inline", ml: 1 }}>{archivoFactura.name}</Typography>}
           </Box>
-
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" component="label" sx={{ mr: 2 }}>
-              Subir Receta / Adicional
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setArchivoReceta(e.target.files[0])}
-              />
+            <Button variant="outlined" component="label" sx={{ mr: 2 }}>Subir Receta / Adicional
+              <input type="file" hidden onChange={e => setArchivoReceta(e.target.files[0])} />
             </Button>
             {archivoReceta && <Typography sx={{ display: "inline", ml: 1 }}>{archivoReceta.name}</Typography>}
           </Box>
-
-          <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={handleSubirArchivos}>
-            Subir Archivos
-          </Button>
+          <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={handleSubirArchivos}>Subir Archivos</Button>
         </>
-      ),
+      )
     },
     {
       icon: <CheckBoxIcon sx={{ color: "white", fontSize: 22 }} />,
       titulo: "Acción",
       contenido: (
         <>
+          {/* InputLabel separado para que no se superponga */}
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel id="estado-label">Cambiar Estado</InputLabel>
             <Select
               labelId="estado-label"
               value={nuevoEstado}
               label="Cambiar Estado"
-              onChange={(e) => setNuevoEstado(e.target.value)}
+              onChange={e => setNuevoEstado(e.target.value)}
               sx={{ fontSize: "0.9rem" }}
             >
-              {ESTADOS.map((e) => (
-                <MenuItem key={e.value} value={e.value}>{e.label}</MenuItem>
-              ))}
+              {ESTADOS.map(e => <MenuItem key={e.value} value={e.value}>{e.label}</MenuItem>)}
             </Select>
           </FormControl>
           <TextField
@@ -229,12 +191,12 @@ export default function DetalleSolicitudPage() {
             minRows={2}
             fullWidth
             value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
+            onChange={e => setMotivo(e.target.value)}
             sx={{ fontSize: "0.9rem" }}
           />
         </>
-      ),
-    },
+      )
+    }
   ];
 
   return (
@@ -243,47 +205,19 @@ export default function DetalleSolicitudPage() {
         {solicitud.titulo || solicitud.tipo} - {getEstadoLabel()}
       </Typography>
 
-      {/* GRID 2x2 */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          gap: 3,
-          rowGap: 6,
-          columnGap: 4,
-          maxWidth: 1000,
-          mb: 5,
-          width: "100%",
-          alignItems: "stretch",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: 1000, mb: 5, width: "100%" }}>
         {tarjetas.map((tarjeta, idx) => (
-          <Grow in={true} style={{ transformOrigin: '0 0 0' }} timeout={300 + idx * 150} key={idx}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.5,
-                border: "1px solid #dee2e6",
-                backgroundColor: "#fff",
-                borderRadius: 2,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                transition: "all 0.25s ease",
-                "&:hover": {
-                  transform: "translateY(-3px)",
-                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-                },
-              }}
-            >
+          <Grow in key={idx} style={{ transformOrigin: "0 0 0" }} timeout={300 + idx * 150}>
+            <Paper elevation={0} sx={{
+              p: 2.5, border: "1px solid #dee2e6", backgroundColor: "#fff", borderRadius: 2,
+              display: "flex", flexDirection: "column", transition: "all 0.25s ease",
+              "&:hover": { transform: "translateY(-3px)", boxShadow: "0px 4px 20px rgba(0,0,0,0.1)" }
+            }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Box sx={{ width: 40, height: 40, backgroundColor: "#6c757d", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", mr: 2 }}>
                   {tarjeta.icon}
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#495057" }}>
-                  {tarjeta.titulo}
-                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#495057" }}>{tarjeta.titulo}</Typography>
               </Box>
               <Box sx={{ pl: 6, flexGrow: 1 }}>{tarjeta.contenido}</Box>
             </Paper>
@@ -291,26 +225,13 @@ export default function DetalleSolicitudPage() {
         ))}
       </Box>
 
-      <Button
-        variant="contained"
-        size="large"
-        onClick={handleGuardarCambios}
-        sx={{
-          backgroundColor: "#1976d2",
-          "&:hover": { backgroundColor: "#115293" },
-          px: 4,
-          py: 1,
-          textTransform: "none",
-          fontSize: "1rem",
-          borderRadius: 2,
-          boxShadow: "none",
-          mt: 5,
-        }}
-      >
+      <Button variant="contained" size="large" onClick={handleGuardarCambios}
+        sx={{ backgroundColor: "#1976d2", "&:hover": { backgroundColor: "#115293" }, px: 4, py: 1, textTransform: "none", fontSize: "1rem", borderRadius: 2, boxShadow: "none", mt: 5 }}>
         Confirmar Cambios
       </Button>
 
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
       </Snackbar>
     </Box>
