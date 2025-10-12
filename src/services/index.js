@@ -48,3 +48,13 @@ export const createSituacionTerapeutica = async (form) => {
     const data = await response.json();
     return data;
 };
+export const getSituacionTerapeuticaByID = async (id) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/${id}`);
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la Situación Terapéutica.`);
+    }
+     const data = await response.json();
+    return data; 
+};

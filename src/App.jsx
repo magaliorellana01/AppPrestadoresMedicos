@@ -11,6 +11,7 @@ import HistoriasClinicasPage from "./pages/HistoriasClinicasPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DetalleHistoriaClinica from "./pages/DetalleHistoriaClinica.jsx";
 import SituacionesTerapeuticasPage from "./pages/SituacionesTerapeuticasPage.jsx";
+import DetalleSituacionTerapeutica from "./pages/DetalleSituacionTerapeutica.jsx"
 
 export function App() {
   const theme = useTheme();
@@ -38,6 +39,10 @@ export function App() {
             <Route
               path="/situaciones-terapeuticas"
               element={<SituacionesTerapeuticasPage theme={theme} />}
+            />
+             <Route
+              path="/situaciones-terapeuticas/:id"
+              element={<DetalleSituacionTerapeutica theme={theme} />}
             />
             <Route path="/" element={<HomePage theme={theme} />} />
             <Route path="*" element={<NotFoundPage theme={theme} />} />
