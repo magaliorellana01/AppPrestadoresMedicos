@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const estadosOpciones = [
   { label: 'Recibido', value: 'Recibido' },
-  { label: 'En Analisis', value: 'EnAnalisis' },
+  { label: 'En Análisis', value: 'EnAnalisis' },
   { label: ' Observado', value: 'Observado' },
   { label: 'Aprobado', value: 'Aprobado' },
   { label: 'Rechazado', value: 'Rechazado' },
