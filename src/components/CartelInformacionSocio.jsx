@@ -2,8 +2,7 @@ import { Box, Typography } from "@mui/material";
 import CredencialIcon from "../icons/icono-credencial.png";
 import React from "react";
 
-// Se envuelve el componente en React.forwardRef para que pueda ser utilizado
-// dentro de componentes de transición de Material-UI como <Grow>.
+// Se envuelve el componente en React.forwardRef para poder reuitlizarlo
 const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
   function calcularEdad(fechaNacimiento) {
     if (!fechaNacimiento) return "—";

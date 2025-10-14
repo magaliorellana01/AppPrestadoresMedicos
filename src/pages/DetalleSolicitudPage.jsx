@@ -2,17 +2,17 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
-  Box, Typography, Paper, Button, TextField, MenuItem,
-  Select, FormControl, InputLabel, Snackbar, Alert, Grow
+  Box, Typography, Button, TextField, MenuItem,
+  Select, FormControl, InputLabel, Snackbar, Alert
 } from "@mui/material";
 import {
   CloudDownload as CloudDownloadIcon,
-  Person as PersonIcon,
   Description as DescriptionIcon,
   EditNote as EditNoteIcon,
   CheckBox as CheckBoxIcon
 } from "@mui/icons-material";
 import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud } from "../services/index.js";
+import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
@@ -21,6 +21,45 @@ const ESTADOS = [
   { value: "Aprobado", label: "Aprobado" },
   { value: "Rechazado", label: "Rechazado" },
 ];
+
+// Componente local para las tarjetas de información, con estilo unificado
+const InfoCard = ({ icon, title, children }) => (
+  <Box
+    display="flex"
+    flexDirection={{ xs: "column", sm: "column", md: "row" }}
+    alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
+    gap={2}
+    p={{ xs: 2, sm: 2, md: 3 }}
+    sx={{
+      width: "100%",
+      maxWidth: 400,
+      border: "1px solid",
+      borderColor: "border.main",
+      borderRadius: 2,
+      backgroundColor: "background.default",
+      boxSizing: "border-box",
+      height: "100%",
+    }}
+  >
+    <Box
+      sx={{
+        width: { xs: '100%', md: 100 },
+        alignSelf: { xs: "center", sm: "center", md: "flex-start" },
+        textAlign: 'center',
+        flexShrink: 0,
+        pt: { md: 3 },
+      }}
+    >
+      {icon}
+    </Box>
+    <Box display="grid" gap={0.5} sx={{ width: "100%", textAlign: { xs: 'center', md: 'left'} }}>
+      <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
+        {title}
+      </Typography>
+      {children}
+    </Box>
+  </Box>
+);
 
 export default function DetalleSolicitudPage() {
   const { id } = useParams();
@@ -32,7 +71,6 @@ export default function DetalleSolicitudPage() {
   const [archivoFactura, setArchivoFactura] = useState(null);
   const [archivoReceta, setArchivoReceta] = useState(null);
 
-  // 🔹 Cargar solicitud
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
@@ -61,7 +99,6 @@ export default function DetalleSolicitudPage() {
 
   useEffect(() => { loadSolicitud(); }, [loadSolicitud]);
 
-  // 🔹 Guardar cambios
   const handleGuardarCambios = async () => {
     try {
       await updateSolicitud(id, { estado: nuevoEstado, motivo });
@@ -73,7 +110,6 @@ export default function DetalleSolicitudPage() {
     }
   };
 
-  // 🔹 Subir archivos
   const handleSubirArchivos = async () => {
     if (!archivoFactura && !archivoReceta) return;
     const formData = new FormData();
@@ -95,20 +131,6 @@ export default function DetalleSolicitudPage() {
   if (loading) return <Typography>Cargando...</Typography>;
   if (!solicitud) return <Typography>No se encontró la solicitud</Typography>;
 
-  function calcularEdad(fechaNacimiento) {
-    if (!fechaNacimiento) return "—";
-    const hoy = new Date();
-    const nacimiento = new Date(fechaNacimiento);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-
-    return edad;
-  }
-
   const getEstadoLabel = () => {
     const e = ESTADOS.find(x => x.value === (solicitud.estado || nuevoEstado));
     return solicitud.estadoDisplay || e?.label || solicitud.estado || nuevoEstado;
@@ -119,49 +141,24 @@ export default function DetalleSolicitudPage() {
     return Array.isArray(adj) ? adj : [];
   };
 
-  // 🔹 Tarjetas
-  const tarjetas = [
-    {
-      icon: <PersonIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Datos del Afiliado",
-      contenido: (
-        <>
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            <strong>Afiliado:</strong>{" "}
-            {`${solicitud.socio?.nombres ?? ""} ${solicitud.socio?.apellidos ?? ""}`.trim() || "—"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            <strong>Edad:</strong> {calcularEdad(solicitud.socio?.fecha_nacimiento)} años
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            <strong>Género:</strong> {solicitud.socio?.genero ?? "—"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            <strong>Nro Afiliado:</strong> {solicitud.socio?.nro_afiliado ?? "—"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Miembro:</strong> {solicitud.socio?.rol ?? "—"}
-          </Typography>
-        </>
-      ),
-    },
-    {
-      icon: <DescriptionIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Detalles de la Solicitud",
-      contenido: (
-        <>
-          <Typography sx={{ mb: 1 }}><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
-          <Typography><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
-        </>
-      )
-    },
-    {
-      icon: <EditNoteIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Descripción",
-      contenido: (
-        <>
-          <Typography sx={{ mb: 2, lineHeight: 1.4 }}>{solicitud.descripcion?.texto ?? "Sin descripción disponible"}</Typography>
+  return (
+    <Box sx={{ p: 4, backgroundColor: "#f5f7fa", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Typography variant="h4" sx={{ textAlign: "center", mb: 4, color: "#1976d2", fontWeight: "bold" }}>
+        {solicitud.titulo || solicitud.tipo} - {getEstadoLabel()}
+      </Typography>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: 1100, mb: 5, width: "100%", justifyItems: 'center' }}>
+        
+        <CartelInformacionSocio socio={solicitud.socio} />
+
+        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la Solicitud">
+          <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
+          <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
+          <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
+        </InfoCard>
+
+        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Descripción">
+          <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.4 }}>{solicitud.descripcion?.texto ?? "Sin descripción disponible"}</Typography>
           {archivosFromDescripcion().map((a, idx) => (
             <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
               <a href={`http://localhost:3000/${a.path}`} target="_blank" rel="noopener noreferrer"
@@ -170,27 +167,21 @@ export default function DetalleSolicitudPage() {
             </Box>
           ))}
           <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" component="label" sx={{ mr: 2 }}>Subir Factura
+            <Button variant="outlined" component="label" size="small" sx={{ mr: 2 }}>Subir Factura
               <input type="file" hidden onChange={e => setArchivoFactura(e.target.files[0])} />
             </Button>
-            {archivoFactura && <Typography sx={{ display: "inline", ml: 1 }}>{archivoFactura.name}</Typography>}
+            {archivoFactura && <Typography variant="caption" sx={{ display: "inline" }}>{archivoFactura.name}</Typography>}
           </Box>
-          <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" component="label" sx={{ mr: 2 }}>Subir Receta / Adicional
+          <Box sx={{ mt: 1 }}>
+            <Button variant="outlined" component="label" size="small" sx={{ mr: 2 }}>Subir Receta
               <input type="file" hidden onChange={e => setArchivoReceta(e.target.files[0])} />
             </Button>
-            {archivoReceta && <Typography sx={{ display: "inline", ml: 1 }}>{archivoReceta.name}</Typography>}
+            {archivoReceta && <Typography variant="caption" sx={{ display: "inline" }}>{archivoReceta.name}</Typography>}
           </Box>
-          <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={handleSubirArchivos}>Subir Archivos</Button>
-        </>
-      )
-    },
-    {
-      icon: <CheckBoxIcon sx={{ color: "white", fontSize: 22 }} />,
-      titulo: "Acción",
-      contenido: (
-        <>
-          {/* InputLabel separado para que no se superponga */}
+          <Button variant="contained" size="small" sx={{ mt: 2, alignSelf: { xs: 'center', md: 'flex-start'} }} onClick={handleSubirArchivos}>Subir Archivos</Button>
+        </InfoCard>
+
+        <InfoCard icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} title="Acción">
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel id="estado-label">Cambiar Estado</InputLabel>
             <Select
@@ -198,7 +189,6 @@ export default function DetalleSolicitudPage() {
               value={nuevoEstado}
               label="Cambiar Estado"
               onChange={e => setNuevoEstado(e.target.value)}
-              sx={{ fontSize: "0.9rem" }}
             >
               {ESTADOS.map(e => <MenuItem key={e.value} value={e.value}>{e.label}</MenuItem>)}
             </Select>
@@ -210,41 +200,13 @@ export default function DetalleSolicitudPage() {
             fullWidth
             value={motivo}
             onChange={e => setMotivo(e.target.value)}
-            sx={{ fontSize: "0.9rem" }}
           />
-        </>
-      )
-    }
-  ];
+        </InfoCard>
 
-  return (
-    <Box sx={{ p: 4, backgroundColor: "#f5f7fa", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <Typography variant="h4" sx={{ textAlign: "center", mb: 4, color: "#1976d2", fontWeight: "bold" }}>
-        {solicitud.titulo || solicitud.tipo} - {getEstadoLabel()}
-      </Typography>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: 1000, mb: 5, width: "100%" }}>
-        {tarjetas.map((tarjeta, idx) => (
-          <Grow in key={idx} style={{ transformOrigin: "0 0 0" }} timeout={300 + idx * 150}>
-            <Paper elevation={0} sx={{
-              p: 2.5, border: "1px solid #dee2e6", backgroundColor: "#fff", borderRadius: 2,
-              display: "flex", flexDirection: "column", transition: "all 0.25s ease",
-              "&:hover": { transform: "translateY(-3px)", boxShadow: "0px 4px 20px rgba(0,0,0,0.1)" }
-            }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Box sx={{ width: 40, height: 40, backgroundColor: "#6c757d", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", mr: 2 }}>
-                  {tarjeta.icon}
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#495057" }}>{tarjeta.titulo}</Typography>
-              </Box>
-              <Box sx={{ pl: 6, flexGrow: 1 }}>{tarjeta.contenido}</Box>
-            </Paper>
-          </Grow>
-        ))}
       </Box>
 
       <Button variant="contained" size="large" onClick={handleGuardarCambios}
-        sx={{ backgroundColor: "#1976d2", "&:hover": { backgroundColor: "#115293" }, px: 4, py: 1, textTransform: "none", fontSize: "1rem", borderRadius: 2, boxShadow: "none", mt: 5 }}>
+        sx={{ backgroundColor: "#1976d2", "&:hover": { backgroundColor: "#115293" }, px: 4, py: 1, textTransform: "none", fontSize: "1rem", borderRadius: 2, boxShadow: "none" }}>
         Confirmar Cambios
       </Button>
 
