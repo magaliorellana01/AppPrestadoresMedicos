@@ -48,3 +48,40 @@ export const createSituacionTerapeutica = async (form) => {
     const data = await response.json();
     return data;
 };
+
+export const getSolicitudById = async (id) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/filtro-solicitudes/${id}`);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la solicitud.`);
+    }
+    const data = await response.json();
+    return data;
+};
+
+export const updateSolicitud = async (id, updateData) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/filtro-solicitudes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: No se pudo actualizar la solicitud.`);
+    }
+    const data = await response.json();
+    return data;
+};
+
+export const uploadArchivosSolicitud = async (id, formData) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/filtro-solicitudes/${id}/archivos`, {
+        method: 'POST',
+        body: formData,
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: No se pudieron subir los archivos.`);
+    }
+    const data = await response.json();
+    return data;
+};

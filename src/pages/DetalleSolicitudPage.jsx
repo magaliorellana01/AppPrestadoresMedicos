@@ -12,6 +12,7 @@ import {
   EditNote as EditNoteIcon,
   CheckBox as CheckBoxIcon
 } from "@mui/icons-material";
+import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud } from "../services/index.js";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
@@ -35,18 +36,16 @@ export default function DetalleSolicitudPage() {
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await getSolicitudById(id);
       const detalle = data?.solicitud || data;
 
       const socio = {
-        nombres: detalle.datos?.afiliado?.split(" ")[0] || "",
-        apellidos: detalle.datos?.afiliado?.split(" ").slice(1).join(" ") || "",
-        genero: detalle.datos?.genero || "No disponible",
-        edad: detalle.datos?.edad || "No disponible",
-        nroAfiliado: detalle.datos?.nroAfiliado || "No disponible",
-        tipoMiembro: detalle.datos?.tipoMiembro || "No especificado",
+        nombres: detalle.afiliadoCompleto?.nombres || "",
+        apellidos: detalle.afiliadoCompleto?.apellidos || "",
+        genero: detalle.afiliadoCompleto?.genero || "No disponible",
+        nro_afiliado: detalle.afiliadoCompleto?.dni || "No disponible",
+        rol: detalle.afiliadoCompleto?.rol || "No especificado",
+        fecha_nacimiento: detalle.afiliadoCompleto?.fecha_nacimiento,
       };
 
       setSolicitud({ ...detalle, socio });
@@ -54,7 +53,7 @@ export default function DetalleSolicitudPage() {
       setMotivo(detalle?.accion?.motivoActual || "");
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: "No se pudo cargar la solicitud", severity: "error" });
+      setSnackbar({ open: true, message: err.message || "No se pudo cargar la solicitud", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -65,17 +64,12 @@ export default function DetalleSolicitudPage() {
   // 🔹 Guardar cambios
   const handleGuardarCambios = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado, motivo }),
-      });
-      if (!res.ok) throw new Error("Error al actualizar");
+      await updateSolicitud(id, { estado: nuevoEstado, motivo });
       await loadSolicitud();
       setSnackbar({ open: true, message: "Solicitud actualizada correctamente", severity: "success" });
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: "No se pudo actualizar la solicitud", severity: "error" });
+      setSnackbar({ open: true, message: err.message || "No se pudo actualizar la solicitud", severity: "error" });
     }
   };
 
@@ -87,20 +81,33 @@ export default function DetalleSolicitudPage() {
     if (archivoReceta) formData.append("receta", archivoReceta);
 
     try {
-      const res = await fetch(`http://localhost:3000/filtro-solicitudes/${id}/archivos`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Error subiendo archivos");
+      await uploadArchivosSolicitud(id, formData);
       setSnackbar({ open: true, message: "Archivos subidos correctamente", severity: "success" });
       setArchivoFactura(null);
       setArchivoReceta(null);
       loadSolicitud();
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: "No se pudieron subir los archivos", severity: "error" });
+      setSnackbar({ open: true, message: err.message || "No se pudieron subir los archivos", severity: "error" });
     }
   };
 
   if (loading) return <Typography>Cargando...</Typography>;
   if (!solicitud) return <Typography>No se encontró la solicitud</Typography>;
+
+  function calcularEdad(fechaNacimiento) {
+    if (!fechaNacimiento) return "—";
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+
+    return edad;
+  }
 
   const getEstadoLabel = () => {
     const e = ESTADOS.find(x => x.value === (solicitud.estado || nuevoEstado));
@@ -119,13 +126,24 @@ export default function DetalleSolicitudPage() {
       titulo: "Datos del Afiliado",
       contenido: (
         <>
-          <Typography sx={{ mb: 1 }}><strong>Afiliado:</strong> {solicitud.socio?.nombres} {solicitud.socio?.apellidos}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Edad:</strong> {solicitud.socio?.edad}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Género:</strong> {solicitud.socio?.genero}</Typography>
-          <Typography sx={{ mb: 1 }}><strong>Nro Afiliado:</strong> {solicitud.socio?.nroAfiliado}</Typography>
-          <Typography><strong>Miembro:</strong> {solicitud.socio?.tipoMiembro}</Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            <strong>Afiliado:</strong>{" "}
+            {`${solicitud.socio?.nombres ?? ""} ${solicitud.socio?.apellidos ?? ""}`.trim() || "—"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            <strong>Edad:</strong> {calcularEdad(solicitud.socio?.fecha_nacimiento)} años
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            <strong>Género:</strong> {solicitud.socio?.genero ?? "—"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            <strong>Nro Afiliado:</strong> {solicitud.socio?.nro_afiliado ?? "—"}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Miembro:</strong> {solicitud.socio?.rol ?? "—"}
+          </Typography>
         </>
-      )
+      ),
     },
     {
       icon: <DescriptionIcon sx={{ color: "white", fontSize: 22 }} />,

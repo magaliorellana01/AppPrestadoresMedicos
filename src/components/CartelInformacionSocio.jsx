@@ -1,7 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import CredencialIcon from "../icons/icono-credencial.png";
+import React from "react";
 
-export default function CartelInformacionSocio({ socio }) {
+// Se envuelve el componente en React.forwardRef para que pueda ser utilizado
+// dentro de componentes de transición de Material-UI como <Grow>.
+const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
   function calcularEdad(fechaNacimiento) {
     if (!fechaNacimiento) return "—";
     const hoy = new Date();
@@ -18,6 +21,7 @@ export default function CartelInformacionSocio({ socio }) {
 
   return (
     <Box
+      ref={ref}
       display="flex"
       flexDirection={{ xs: "column", sm: "column", md: "row" }}
       alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
@@ -73,4 +77,6 @@ export default function CartelInformacionSocio({ socio }) {
       </Box>
     </Box>
   );
-}
+});
+
+export default CartelInformacionSocio;
