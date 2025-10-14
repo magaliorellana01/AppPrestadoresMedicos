@@ -1,4 +1,4 @@
-const Solicitud = require('../models/filtroSolicitudes');
+const Solicitud = require('../models/detalleSolicitud');
 const Socio = require('../models/socio');
 const Prestador = require('../models/prestador');
 
@@ -12,30 +12,6 @@ const calcularEdadNumerica = (fechaNacimiento) => {
   const m = hoy.getMonth() - nacimiento.getMonth();
   if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) años--;
   return años >= 0 ? años : null;
-};
-
-// ===== Listado de solicitudes =====
-exports.getSolicitudes = async (req, res) => {
-  try {
-    const page = Math.max(0, parseInt(req.query.page, 10) || 0);
-    const size = Math.max(1, parseInt(req.query.size, 10) || 10);
-    const { estado, tipo, q } = req.query;
-
-    const filter = {};
-    if (estado) filter.estado = estado;
-    if (tipo) filter.tipo = tipo;
-    if (q) filter.$or = [
-      { nro: { $regex: q, $options: 'i' } },
-      { afiliadoNombre: { $regex: q, $options: 'i' } },
-    ];
-
-    const total = await Solicitud.countDocuments(filter);
-    const content = await Solicitud.find(filter).skip(page * size).limit(size).sort({ fechaCreacion: -1 }).lean();
-    res.json({ content, total, page, size });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error del servidor' });
-  }
 };
 
 // ===== Detalle de solicitud =====
@@ -125,11 +101,11 @@ exports.getSolicitudById = async (req, res) => {
   }
 };
 
-// ===== Cambiar estado de solicitud =====
-exports.cambiarEstadoSolicitud = async (req, res) => {
+// ===== Actualizar solicitud =====
+exports.updateSolicitud = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nuevoEstado, motivo, usuarioId } = req.body;
+    const { estado: nuevoEstado, motivo, usuarioId } = req.body;
 
     const estadosValidos = ['Recibido', 'EnAnalisis', 'Observado', 'Aprobado', 'Rechazado'];
     if (!estadosValidos.includes(nuevoEstado)) return res.status(400).json({ message: 'Estado no válido' });
@@ -157,22 +133,37 @@ exports.cambiarEstadoSolicitud = async (req, res) => {
   }
 };
 
-// ===== Actualizar solicitud =====
-exports.updateSolicitud = async (req, res) => {
+// ===== Subir archivos a solicitud =====
+exports.subirArchivos = async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado, motivo } = req.body;
+    const solicitud = await Solicitud.findById(id);
+    if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
 
-    const estadosValidos = ['Recibido','EnAnalisis','Observado','Aprobado','Rechazado'];
-    if (!estadosValidos.includes(estado)) return res.status(400).json({ message: 'Estado inválido' });
-    if ((estado === 'Observado' || estado === 'Rechazado') && !motivo) return res.status(400).json({ message: 'Motivo obligatorio' });
+    // Inicializar adjuntos si no existen
+    if (!solicitud.descripcion) solicitud.descripcion = {};
+    if (!Array.isArray(solicitud.descripcion.adjuntos)) solicitud.descripcion.adjuntos = [];
 
-    const solicitudActualizada = await Solicitud.findByIdAndUpdate(id, { estado, motivo, fechaActualizacion: new Date() }, { new: true });
-    if (!solicitudActualizada) return res.status(404).json({ message: 'Solicitud no encontrada' });
+    // Agregar archivos subidos
+    if (req.files['factura']) {
+      solicitud.descripcion.adjuntos.push({
+        tipo: 'Factura',
+        nombreArchivo: req.files['factura'][0].originalname,
+        path: req.files['factura'][0].path
+      });
+    }
+    if (req.files['receta']) {
+      solicitud.descripcion.adjuntos.push({
+        tipo: 'Receta',
+        nombreArchivo: req.files['receta'][0].originalname,
+        path: req.files['receta'][0].path
+      });
+    }
 
-    res.json(solicitudActualizada);
+    await solicitud.save();
+    res.status(200).json({ message: 'Archivos subidos correctamente', adjuntos: solicitud.descripcion.adjuntos });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error del servidor' });
+    console.error('Error al subir archivos:', err);
+    res.status(500).json({ message: 'Error al subir archivos', error: err.message });
   }
 };
