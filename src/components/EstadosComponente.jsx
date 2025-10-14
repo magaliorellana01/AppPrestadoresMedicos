@@ -43,13 +43,21 @@ const getEstadoProps = (estado) => {
 };
 
 const ComponenteDeEstados = ({ estado }) => {
-    
+    const estadoConEspacios = {
+        EnAnalisis: "En Análisis",
+        Recibido: "Recibido",
+        Observado: "Observado",
+        Aprobado: "Aprobado",
+        Rechazado: "Rechazado",
+    }[estado] || estado;
+
     const props = getEstadoProps(estado);
 
     return (
         <Chip
             size="small"
             {...props}
+            label={estadoConEspacios}
         />
     );
 };

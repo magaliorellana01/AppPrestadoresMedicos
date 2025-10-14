@@ -10,7 +10,7 @@ export const API_BASE = "http://localhost:3000";
 
 const estadosOpciones = [
   { label: 'Recibido', value: 'Recibido' },
-  { label: 'En Analisis', value: 'EnAnalisis' },
+  { label: 'En Análisis', value: 'EnAnalisis' },
   { label: ' Observado', value: 'Observado' },
   { label: 'Aprobado', value: 'Aprobado' },
   { label: 'Rechazado', value: 'Rechazado' },
