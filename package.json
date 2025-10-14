@@ -12,8 +12,7 @@
     "seed-notas": "node src/scripts/seed-notas.js",
     "seed-sit-terapeuticas": "node src/scripts/seed-sit-terapeuticas.js",
     "seed-solicitudes": "node src/scripts/seed-solicitudes.js",
-
-    "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas && npm run seed-sit-terapeuticas && npm run seed-solicitudes"
+    "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas && npm run seed-sit-terapeuticas"
   },
   "dependencies": {
     "cors": "^2.8.5",
