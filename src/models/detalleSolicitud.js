@@ -54,5 +54,5 @@ const DetalleSolicitudSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const DetalleSolicitud = mongoose.model('DetalleSolicitud', DetalleSolicitudSchema);
+const DetalleSolicitud = mongoose.model('DetalleSolicitud', DetalleSolicitudSchema, 'solicituds');
 module.exports = DetalleSolicitud;
