@@ -16,7 +16,7 @@ import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
-  { value: "EnAnalisis", label: "En Análisis" },
+  { value: "En Análisis", label: "En Análisis" },
   { value: "Observado", label: "Observado" },
   { value: "Aprobado", label: "Aprobado" },
   { value: "Rechazado", label: "Rechazado" },
@@ -39,6 +39,11 @@ const InfoCard = ({ icon, title, children }) => (
       backgroundColor: "background.default",
       boxSizing: "border-box",
       height: "100%",
+      transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: 6,
+      },
     }}
   >
     <Box
@@ -81,7 +86,7 @@ export default function DetalleSolicitudPage() {
         nombres: detalle.afiliadoCompleto?.nombres || "",
         apellidos: detalle.afiliadoCompleto?.apellidos || "",
         genero: detalle.afiliadoCompleto?.genero || "No disponible",
-        nro_afiliado: detalle.afiliadoCompleto?.dni || "No disponible",
+        dni: detalle.afiliadoCompleto?.dni || "No disponible",
         rol: detalle.afiliadoCompleto?.rol || "No especificado",
         fecha_nacimiento: detalle.afiliadoCompleto?.fecha_nacimiento,
       };

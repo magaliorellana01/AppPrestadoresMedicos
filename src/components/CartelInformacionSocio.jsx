@@ -34,6 +34,11 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
         borderRadius: 2,
         backgroundColor: "background.default",
         boxSizing: "border-box",
+        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: 6,
+        },
       }}
     >
       <Box
@@ -68,7 +73,7 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
           <strong>Género:</strong> {socio?.genero ?? "—"}
         </Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}>
-          <strong>Nro Afiliado:</strong> {socio?.nro_afiliado ?? "—"}
+          <strong>DNI:</strong> {socio?.dni ?? "—"}
         </Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}>
           <strong>Miembro:</strong> {socio?.rol ?? "—"}
