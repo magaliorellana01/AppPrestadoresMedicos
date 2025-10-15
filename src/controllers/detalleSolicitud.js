@@ -23,7 +23,7 @@ exports.getSolicitudById = async (req, res) => {
         select: 'nombres apellidos dni genero rol fecha_nacimiento historia_clinica',
         populate: { path: 'historia_clinica', select: 'fecha_nacimiento genero' }
       })
-      .populate('usuarioCambioEstado', 'nombre apellido email')
+      .populate({ path: 'historialEstados.usuario', select: 'nombre apellido email' })
       .lean();
 
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
@@ -56,37 +56,31 @@ exports.getSolicitudById = async (req, res) => {
       afiliado: afiliado ? `${afiliado.nombres || ''} ${afiliado.apellidos || ''}`.trim() : (solicitud.afiliadoNombre || solicitud.datos?.afiliado) || 'No disponible',
       edad: solicitud.datos?.edad && solicitud.datos?.edad !== 'No disponible' ? solicitud.datos.edad : edadStr,
       genero: solicitud.datos?.genero && solicitud.datos?.genero !== 'No disponible' ? solicitud.datos.genero : genero,
-      nroAfiliado: afiliado?.dni || solicitud.datos?.nroAfiliado || solicitud.nro || 'No disponible',
+      dni: afiliado?.dni || solicitud.datos?.nroAfiliado || solicitud.nro || 'No disponible',
       tipoMiembro
     };
 
-    // Datos según tipo de solicitud
-    const datosPorTipo = {
-      Reintegro: { monto: 50000, proveedor: 'Farmacia Central', descripcion: 'Adjunto facturas de la medicación oncológica.', adjuntos: [{ nombreArchivo: 'Factura.pdf', tipoArchivo: 'Factura' }, { nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }] },
-      Autorizacion: { monto: 0, proveedor: 'Hospital Central', descripcion: 'Solicitud de autorización para procedimiento médico especializado.', adjuntos: [{ nombreArchivo: 'Solicitud.pdf', tipoArchivo: 'Solicitud' }, { nombreArchivo: 'Presupuesto.pdf', tipoArchivo: 'Presupuesto' }] },
-      Receta: { monto: 15000, proveedor: 'Farmacia del Pueblo', descripcion: 'Receta médica para medicamentos de tratamiento crónico.', adjuntos: [{ nombreArchivo: 'Receta.pdf', tipoArchivo: 'Receta' }] }
-    };
-    const datosEspecificos = datosPorTipo[solicitud.tipo] || {};
+    const ultimoCambio = solicitud.historialEstados?.[solicitud.historialEstados.length - 1];
 
     const detalleSolicitud = {
       titulo: `${solicitud.tipo} por Medicación Oncológica`,
       estado: solicitud.estado,
-      estadoDisplay: { EnAnalisis: 'En Análisis', Recibido: 'Recibido', Observado: 'Observado', Aprobado: 'Aprobado', Rechazado: 'Rechazado' }[solicitud.estado] || solicitud.estado,
+      estadoDisplay: solicitud.estado,
       datos: afiliadoData,
       detalles: {
         fecha: solicitud.fechaCreacion ? new Date(solicitud.fechaCreacion).toLocaleDateString('es-ES') : 'No disponible',
-        monto: `$${datosEspecificos.monto?.toLocaleString() || '0'}`,
-        proveedor: datosEspecificos.proveedor || solicitud.detalles?.proveedor || 'No especificado'
+        monto: `${solicitud.monto?.toLocaleString() || '0'}`,
+        proveedor: solicitud.proveedor || 'No especificado'
       },
       descripcion: {
-        texto: solicitud.descripcion?.texto || datosEspecificos.descripcion || 'Sin descripción disponible',
-        adjuntos: solicitud.descripcion?.adjuntos || datosEspecificos.adjuntos || []
+        texto: solicitud.descripcion?.texto || 'Sin descripción disponible',
+        adjuntos: solicitud.descripcion?.adjuntos || []
       },
       accion: {
         estadoActual: solicitud.estado,
-        motivoActual: solicitud.motivoCambioEstado || solicitud.accion?.motivoActual || '',
-        usuarioCambio: solicitud.usuarioCambioEstado ? `${solicitud.usuarioCambioEstado.nombre} ${solicitud.usuarioCambioEstado.apellido}` : null,
-        fechaCambio: solicitud.fechaCambioEstado || solicitud.accion?.fechaCambio || null
+        motivoActual: ultimoCambio?.motivo || '',
+        usuarioCambio: ultimoCambio?.usuario ? `${ultimoCambio.usuario.nombre} ${ultimoCambio.usuario.apellido}` : null,
+        fechaCambio: ultimoCambio?.fecha || null
       },
       _id: solicitud._id,
       tipo: solicitud.tipo,
@@ -107,7 +101,7 @@ exports.updateSolicitud = async (req, res) => {
     const { id } = req.params;
     const { estado: nuevoEstado, motivo, usuarioId } = req.body;
 
-    const estadosValidos = ['Recibido', 'EnAnalisis', 'Observado', 'Aprobado', 'Rechazado'];
+    const estadosValidos = ['Recibido', 'En Análisis', 'Observado', 'Aprobado', 'Rechazado'];
     if (!estadosValidos.includes(nuevoEstado)) return res.status(400).json({ message: 'Estado no válido' });
     if ((nuevoEstado === 'Observado' || nuevoEstado === 'Rechazado') && !motivo) return res.status(400).json({ message: 'Motivo obligatorio' });
 
@@ -116,13 +110,35 @@ exports.updateSolicitud = async (req, res) => {
     const solicitud = await Solicitud.findById(id);
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
 
-    const transiciones = { Recibido: ['EnAnalisis'], EnAnalisis: ['Observado','Aprobado','Rechazado'], Observado: ['EnAnalisis','Aprobado','Rechazado'], Aprobado: [], Rechazado: [] };
-    if (!transiciones[solicitud.estado].includes(nuevoEstado)) return res.status(400).json({ message: `No se puede cambiar de ${solicitud.estado} a ${nuevoEstado}` });
+    // Se flexibilizan las transiciones para permitir todos los cambios de estado.
+    const transiciones = {
+        'Recibido': ['En Análisis', 'Observado', 'Aprobado', 'Rechazado'],
+        'En Análisis': ['Recibido', 'Observado', 'Aprobado', 'Rechazado'],
+        'Observado': ['Recibido', 'En Análisis', 'Aprobado', 'Rechazado'],
+        'Aprobado': ['Recibido', 'En Análisis', 'Observado', 'Rechazado'],
+        'Rechazado': ['Recibido', 'En Análisis', 'Observado', 'Aprobado']
+    };
+
+    // Filtrar para que un estado no pueda transicionar a sí mismo
+    const posiblesTransiciones = transiciones[solicitud.estado]?.filter(e => e !== solicitud.estado) || [];
+
+    if (nuevoEstado !== solicitud.estado && !posiblesTransiciones.includes(nuevoEstado)) {
+        return res.status(400).json({ message: `No se puede cambiar de ${solicitud.estado} a ${nuevoEstado}` });
+    }
+
+    const nuevoHistorial = {
+        estado: nuevoEstado,
+        motivo: motivo,
+        usuario: usuarioId || null,
+        fecha: new Date()
+    };
 
     solicitud.estado = nuevoEstado;
-    solicitud.motivoCambioEstado = motivo;
-    solicitud.usuarioCambioEstado = usuarioId || null;
-    solicitud.fechaCambioEstado = new Date();
+    // Inicializar el historial si no existe
+    if (!Array.isArray(solicitud.historialEstados)) {
+        solicitud.historialEstados = [];
+    }
+    solicitud.historialEstados.push(nuevoHistorial);
     await solicitud.save();
 
     const solicitudActualizada = await Solicitud.findById(id).populate('afiliadoId', 'nombres apellidos dni telefono email');

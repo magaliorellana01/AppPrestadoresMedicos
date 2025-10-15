@@ -22,25 +22,32 @@ const DetalleSolicitudSchema = new mongoose.Schema({
     estado: {
         type: String,
         required: true,
-        enum: ['Aprobado', 'Rechazado', 'Observado', 'EnAnalisis', 'Recibido'],
+        enum: ['Aprobado', 'Rechazado', 'Observado', 'En Análisis', 'Recibido'],
     },
     motivo: {
         type: String,
         required: false
     },
-    // Campos para el workflow
-    motivoCambioEstado: {
+    monto: {
+        type: Number
+    },
+    proveedor: {
         type: String
     },
-
-    usuarioCambioEstado: {
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Prestador'
+    descripcion: {
+        texto: { type: String },
+        adjuntos: [{
+            nombreArchivo: { type: String },
+            tipoArchivo: { type: String },
+            path: { type: String }
+        }]
     },
-
-    fechaCambioEstado: {
-        type: Date
-    },
+    historialEstados: [{
+        estado: { type: String },
+        motivo: { type: String },
+        usuario: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestador' },
+        fecha: { type: Date, default: Date.now }
+    }],
 
     fechaCreacion: {
         type: Date,
