@@ -7,19 +7,19 @@ export const getAllHistoriasClinicas = async () => {
     }
 
     const data = await response.json();
-    return data; 
+    return data;
 };
 
 export const getHistoriaClinicaByID = async (id) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/historias-clinicas/${id}`);
-    
+
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la Historia Clínica.`);
     }
 
     const data = await response.json();
-    return data.historiaClinica; 
+    return data.historiaClinica;
 };
 
 export const getSituacionTerapeuticaByMultipleParams = async (input) => {
@@ -36,7 +36,9 @@ export const getSituacionTerapeuticaByMultipleParams = async (input) => {
 export const createSituacionTerapeutica = async (form) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify(form),
     });
 
@@ -49,8 +51,11 @@ export const createSituacionTerapeutica = async (form) => {
     return data;
 };
 
+// --- SECCIÓN CORREGIDA ---
+
 export const getSolicitudById = async (id) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/detalle-solicitudes/${id}`);
+    // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`);
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error ${response.status}: No se pudo obtener la solicitud.`);
@@ -60,9 +65,12 @@ export const getSolicitudById = async (id) => {
 };
 
 export const updateSolicitud = async (id, updateData) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/detalle-solicitudes/${id}`, {
+    // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify(updateData),
     });
     if (!response.ok) {
@@ -74,7 +82,8 @@ export const updateSolicitud = async (id, updateData) => {
 };
 
 export const uploadArchivosSolicitud = async (id, formData) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/detalle-solicitudes/${id}/archivos`, {
+    // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}/archivos`, {
         method: 'POST',
         body: formData,
     });

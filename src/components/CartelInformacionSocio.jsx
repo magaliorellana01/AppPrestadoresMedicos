@@ -1,9 +1,8 @@
+// src/components/CartelInformacionSocio.jsx
 import { Box, Typography } from "@mui/material";
 import CredencialIcon from "../icons/icono-credencial.png";
-import React from "react";
 
-// Se envuelve el componente en React.forwardRef para poder reuitlizarlo
-const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
+export default function CartelInformacionSocio({ socio }) {
   function calcularEdad(fechaNacimiento) {
     if (!fechaNacimiento) return "—";
     const hoy = new Date();
@@ -14,13 +13,12 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
       edad--;
     }
-
-    return edad;
+    return edad >= 0 ? edad : "—";
   }
 
+  // Se revierte el componente a su estado original, sin efectos de hover ni transiciones.
   return (
     <Box
-      ref={ref}
       display="flex"
       flexDirection={{ xs: "column", sm: "column", md: "row" }}
       alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
@@ -34,11 +32,6 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
         borderRadius: 2,
         backgroundColor: "background.default",
         boxSizing: "border-box",
-        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: 6,
-        },
       }}
     >
       <Box
@@ -53,7 +46,6 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
           pt: { md: 6 },
         }}
       />
-
       <Box
         display="grid"
         gap={0.5}
@@ -81,6 +73,4 @@ const CartelInformacionSocio = React.forwardRef(({ socio }, ref) => {
       </Box>
     </Box>
   );
-});
-
-export default CartelInformacionSocio;
+}

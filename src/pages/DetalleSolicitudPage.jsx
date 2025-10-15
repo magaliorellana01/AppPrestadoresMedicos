@@ -22,51 +22,51 @@ const ESTADOS = [
   { value: "Rechazado", label: "Rechazado" },
 ];
 
-// Componente local para las tarjetas de información, con estilo unificado
-const InfoCard = ({ icon, title, children }) => (
-  <Box
-    display="flex"
-    flexDirection={{ xs: "column", sm: "column", md: "row" }}
-    alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
-    gap={2}
-    p={{ xs: 2, sm: 2, md: 3 }}
-    sx={{
-      width: "100%",
-      maxWidth: 400,
-      border: "1px solid",
-      borderColor: "border.main",
-      borderRadius: 2,
-      backgroundColor: "background.default",
-      boxSizing: "border-box",
-      height: "100%",
-      transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-      "&:hover": {
-        transform: "translateY(-4px)",
-        boxShadow: 6,
-      },
-    }}
-  >
+export default function DetalleSolicitudPage() {
+  // Componente local para las tarjetas de información, movido aquí para resolver el error de referencia.
+  const InfoCard = ({ icon, title, children }) => (
     <Box
+      display="flex"
+      flexDirection={{ xs: "column", sm: "column", md: "row" }}
+      alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
+      gap={2}
+      p={{ xs: 2, sm: 2, md: 3 }}
       sx={{
-        width: { xs: '100%', md: 100 },
-        alignSelf: { xs: "center", sm: "center", md: "flex-start" },
-        textAlign: 'center',
-        flexShrink: 0,
-        pt: { md: 3 },
+        width: "100%",
+        maxWidth: 400,
+        border: "1px solid",
+        borderColor: "border.main",
+        borderRadius: 2,
+        backgroundColor: "background.default",
+        boxSizing: "border-box",
+        height: "100%",
+        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: 6,
+        },
       }}
     >
-      {icon}
+      <Box
+        sx={{
+          width: { xs: '100%', md: 100 },
+          alignSelf: { xs: "center", sm: "center", md: "flex-start" },
+          textAlign: 'center',
+          flexShrink: 0,
+          pt: { md: 3 },
+        }}
+      >
+        {icon}
+      </Box>
+      <Box display="grid" gap={0.5} sx={{ width: "100%", textAlign: { xs: 'center', md: 'left'} }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
+          {title}
+        </Typography>
+        {children}
+      </Box>
     </Box>
-    <Box display="grid" gap={0.5} sx={{ width: "100%", textAlign: { xs: 'center', md: 'left'} }}>
-      <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
-        {title}
-      </Typography>
-      {children}
-    </Box>
-  </Box>
-);
+  );
 
-export default function DetalleSolicitudPage() {
   const { id } = useParams();
   const [solicitud, setSolicitud] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -154,7 +154,20 @@ export default function DetalleSolicitudPage() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: 1100, mb: 5, width: "100%", justifyItems: 'center' }}>
         
-        <CartelInformacionSocio socio={solicitud.socio} />
+        {/* MODIFICACIÓN AQUÍ */}
+        <Box sx={{
+            width: "100%",
+            maxWidth: 400,
+            height: "100%",
+            borderRadius: 2, // Para que la sombra se vea bien en los bordes
+            transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+            "&:hover": {
+              transform: "translateY(-4px)",
+              boxShadow: 6,
+            },
+          }}>
+          <CartelInformacionSocio socio={solicitud.socio} />
+        </Box>
 
         <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la Solicitud">
           <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
@@ -167,7 +180,7 @@ export default function DetalleSolicitudPage() {
           {archivosFromDescripcion().map((a, idx) => (
             <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
               <a href={`http://localhost:3000/${a.path}`} target="_blank" rel="noopener noreferrer"
-                 style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}>{a.nombreArchivo}</a>
+                style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}>{a.nombreArchivo}</a>
               <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d", ml: 1 }} />
             </Box>
           ))}
