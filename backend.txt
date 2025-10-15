@@ -1,0 +1,2637 @@
+Backend:
+
+src/controllers:
+	>filtroSolicitudes.js:
+const Solicitud = require('../models/filtroSolicitudes');
+
+exports.getSolicitudes = async (req, res) => {
+    try {
+        const page = Math.max(0, parseInt(req.query.page, 10) || 0);
+        const size = Math.max(1, parseInt(req.query.size, 10) || 10);
+        const { estado, tipo, q } = req.query;
+
+        const filter = {};
+        if (estado) filter.estado = estado;
+        if (tipo) filter.tipo = tipo;
+        if (q) {
+            filter.$or = [
+                { nro: { $regex: q, $options: 'i' } },
+                { afiliadoNombre: { $regex: q, $options: 'i' } },
+            ];
+        }
+
+        const total = await Solicitud.countDocuments(filter);
+        const content = await Solicitud.find(filter)
+            .skip(page * size)
+            .limit(size)
+            .sort({ fechaCreacion: -1 })
+            .lean();
+
+        return res.json({ content, total, page, size });
+    }
+    catch (error) {
+        console.error('Error en getSolicitudes:', error);
+        return res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+	>historiaClinica.js:
+const HistoriaClinica = require("../models/historiaClinica");
+const Nota = require("../models/nota");
+
+exports.getHistoriasClinicas = async (req, res) => {
+    try {
+        const historiasClinicas = await HistoriaClinica.find().populate("socio");
+        res.json({ message: "Historias Clinicas obtenidas correctamente", historiasClinicas });
+    } catch (error) {
+        console.error("Error al obtener Historias Clínicas:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+exports.getHistoriaClinicaById = async (req, res) => {
+    try {
+        const historiaClinicaId = req.params.id;
+
+        //busca la Historia Clínica por su _id de Mongoose
+        const historiaClinica = await HistoriaClinica.findById(historiaClinicaId)
+            .populate("socio")
+            .populate("medico_cabecera"); 
+
+        if (!historiaClinica) {
+            return res.status(404).json({ message: "Historia Clínica no encontrada" });
+        }
+
+        // buscar todas las Notas asociadas a esta Historia Clínica
+        const notas = await Nota.find({ historia_clinica: historiaClinicaId })
+            .populate("prestador") //para saber quien hizo la nota
+            .sort({ fecha_creacion: -1 }); //en orden de mas reciente a mas vieja
+
+        //combinar HHC y Notas para la respuesta
+        const respuestaDetalle = {
+            ...historiaClinica.toObject(),
+            notas: notas,
+        };
+
+        res.json({ 
+            message: "Detalle de Historia Clínica obtenido correctamente", 
+            historiaClinica: respuestaDetalle 
+        });
+
+    } catch (error) {
+        console.error("Error al obtener detalle de Historia Clínica:", error);
+        res.status(500).json({ 
+            message: "Error interno del servidor", 
+            error: error.message 
+        });
+    }
+};
+
+exports.createHistoriaClinica = async (req, res) => {
+    try {
+        const historiaClinica = await HistoriaClinica.create(req.body);
+        const historiaClinicaPopulated = await HistoriaClinica.findById(historiaClinica._id).populate(
+            "socio"
+        );
+        res.status(201).json({
+            message: "Historia Clinica creada correctamente",
+            historiaClinica: historiaClinicaPopulated,
+        });
+    } catch (error) {
+        console.error("Error al crear Historia Clínica:", error);
+        res.status(400).json({ message: "Error al crear la Historia Clínica", error: error.message });
+    }
+};
+
+exports.updateHistoriaClinica = async (req, res) => {
+    try {
+        const historiaClinica = await HistoriaClinica.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        }).populate("socio");
+        if (!historiaClinica) {
+            return res.status(404).json({ message: "Historia Clínica no encontrada para actualizar" });
+        }
+        res.json({ message: "Historia Clinica actualizada correctamente", historiaClinica });
+    } catch (error) {
+        console.error("Error al actualizar Historia Clínica:", error);
+        res.status(400).json({ message: "Error al actualizar la Historia Clínica", error: error.message });
+    }
+};
+
+exports.deleteHistoriaClinica = async (req, res) => {
+    try {
+        const result = await HistoriaClinica.findByIdAndDelete(req.params.id);
+        if (!result) {
+            return res.status(404).json({ message: "Historia Clínica no encontrada para eliminar" });
+        }
+        res.json({ message: "Historia Clinica eliminada correctamente" });
+    } catch (error) {
+        console.error("Error al eliminar Historia Clínica:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+//agregar nota a una historia clinica
+exports.addNotaAHC = async (req, res) => {
+    const { historiaClinicaId } = req.params;
+    const { nota, prestadorId } = req.body; 
+
+    try {
+        //verifica si la Historia Clínica existe
+        const historiaClinica = await HistoriaClinica.findById(historiaClinicaId);
+
+        if (!historiaClinica) {
+            return res.status(404).json({ message: "Historia Clínica no encontrada para agregar nota" });
+        }
+
+        //crea la nueva nota
+        const nuevaNota = await Nota.create({
+            nota: nota,
+            historia_clinica: historiaClinicaId,
+            prestador: prestadorId,
+            socio: historiaClinica.socio,
+        });
+
+        // opcional: Popular la nota para devolver la info completa al frontend
+        const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador");
+
+        res.status(201).json({
+            message: "Nota agregada correctamente a la Historia Clínica",
+            nota: notaPopulated,
+        });
+
+    } catch (error) {
+        console.error("Error al agregar nota a Historia Clínica:", error);
+        res.status(500).json({ 
+            message: "Error interno del servidor al crear la nota.", 
+            error: error.message 
+        });
+    }
+};
+	>situacionTerapeutica.js:
+const SituacionTerapeutica = require('../models/situacionTerapeutica')
+const Socio = require('../models/socio')
+const Prestador = require('../models/prestador')
+
+exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
+  try {
+    const { input } = req.query;
+
+    if (!input || String(input).trim() === '') {
+      return res.status(400).json({ message: "El query param 'input' es obligatorio." });
+    }
+
+    const socioFilter = {
+      $or: [
+        { dni: input },
+        { telefono: input },
+        { apellidos: { $regex: input, $options: 'i' } }
+        // expresion regular en Mongoose que indica búsqueda insensible a mayúsculas/minúsculas.
+      ]
+    };
+
+    const socios = await Socio.find(socioFilter).select('_id');
+
+    if (!socios.length) {
+      return res.status(200).json([]);
+    }
+
+    const socioIds = socios.map(s => s._id);
+
+    const situaciones = await SituacionTerapeutica.find({ socio: { $in: socioIds } })
+      .populate('socio')
+      .populate('prestador');
+
+    return res.status(200).json(situaciones);
+  } catch (error) {
+    console.error('Error al obtener la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: error.message || "Error interno del servidor"
+    })
+  }
+};
+
+ exports.getSituacionTerapeuticaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const situacion = await SituacionTerapeutica.findById(id)
+      .populate('socio')
+      
+
+    if (!situacion) {
+      return res.status(404).json({ message: 'Situación terapéutica no encontrada' });
+    }
+
+    res.status(200).json(situacion);
+  } catch (error) {
+    console.error('Error al obtener la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: error.message || "Error interno del servidor"
+    })
+  }
+};
+
+exports.updateSituacionTerapeutica = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No se recibieron datos para actualizar.' });
+    }
+
+    
+    const situacionActualizada = await SituacionTerapeutica.findByIdAndUpdate(
+      id,
+      { ...updates },
+      { new: true, runValidators: true }
+    )
+      .populate('socio')
+      
+
+    if (!situacionActualizada) {
+      return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
+    }
+
+    res.status(200).json(situacionActualizada);
+  } catch (error) {
+    console.error('Error al actualizar la situación terapéutica:', error);
+    res.status(500).json({ 
+            message: error.message || "Error interno del servidor"
+        });
+  }
+};
+
+exports.agregarNovedad = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nota } = req.body;
+
+    if (!nota) {
+      return res.status(400).json({ message: 'La nota es obligatoria.' });
+    }
+
+    
+    const situacion = await SituacionTerapeutica.findByIdAndUpdate(
+      id,
+      { $push: { novedadesMedicas: { nota } } },
+      { new: true, runValidators: true }
+    )
+      .populate('socio')
+      
+
+    if (!situacion) {
+      return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
+    }
+
+    res.status(200).json(situacion);
+  } catch (error) {
+    console.error('Error al agregar novedad:', error);
+    res.status(500).json({ 
+            message: error.message || "Error interno del servidor"
+        })};
+};
+
+exports.createSituacionTerapeutica = async (req, res) => {
+  try {
+    const socio = await Socio.findOne({ dni: req.body.dniAfiliado });
+    if (!socio) {
+      return res.status(404).json({ message: 'Socio no encontrado' });
+    }
+    req.body.socio = socio._id;
+    const prestador = await Prestador.findById(req.body.prestador);
+    if (!prestador) {
+      return res.status(404).json({ message: 'Prestador no encontrado' });
+    }
+    req.body.prestador = prestador._id;
+
+    const situacion = await SituacionTerapeutica.create(req.body);
+    res.status(201).json(situacion);
+  } catch (error) {
+    console.error('Error al crear la situación terapéutica:', error);
+    res.status(500).json({ 
+      message: error.message || "Error interno del servidor"
+    });
+  }
+};
+src/models:
+	>filtroSolicitudes.js:
+const mongoose = require('mongoose');
+
+const SolicitudSchema = new mongoose.Schema({
+    nro: {
+        type: String
+    },
+
+    afiliadoNombre: {
+        type: String
+    },
+
+    afiliadoId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'Socio'
+    },
+
+    tipo: {
+        type: String,
+        required: true,
+        enum: ['Reintegro', 'Autorizacion', 'Receta'],
+    },
+
+    estado: {
+        type: String,
+        required: true,
+        enum: ['Aprobado', 'Rechazado', 'Observado', 'EnAnalisis', 'Recibido'],
+    },
+
+
+    fechaCreacion: {
+        type: Date,
+        default: Date.now,
+    },
+}, {
+    timestamps: true
+});
+
+const Solicitud = mongoose.model('Solicitud', SolicitudSchema);
+module.exports = Solicitud;
+	>historiaClinica.js:
+const mongoose = require("mongoose");
+
+const historiaClinicaSchema = new mongoose.Schema(
+  {
+    // ===== INFORMACIÓN BÁSICA =====
+    socio: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Socio",
+    },
+    medico_cabecera: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: false,
+      ref: "Prestador",
+    },
+    numero_historia: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+
+    // ===== ANTECEDENTES PATOLÓGICOS PERSONALES =====
+    antecedentes_patologicos: [
+      {
+        patologia: String,
+        año_diagnostico: Number,
+        estado: {
+          type: String,
+          enum: ["Activo", "Controlado", "Curado", "En tratamiento"],
+          default: "Activo",
+        },
+        observaciones: String,
+      },
+    ],
+
+    // ===== ANTECEDENTES FAMILIARES =====
+    antecedentes_familiares: [
+      {
+        parentesco: {
+          type: String,
+          enum: [
+            "Padre",
+            "Madre",
+            "Hermano/a",
+            "Abuelo/a paterno/a",
+            "Abuelo/a materno/a",
+            "Tío/a",
+            "Primo/a",
+            "Otro",
+          ],
+        },
+        patologia: String,
+        edad_diagnostico: Number,
+        observaciones: String,
+      },
+    ],
+
+    // ===== ANTECEDENTES QUIRÚRGICOS =====
+    antecedentes_quirurgicos: [
+      {
+        cirugia: String,
+        fecha: Date,
+        hospital: String,
+        cirujano: String,
+        complicaciones: String,
+        observaciones: String,
+      },
+    ],
+
+    // ===== ALERGIAS E INTOLERANCIAS =====
+    alergias: [
+      {
+        tipo: {
+          type: String,
+          enum: ["Medicamento", "Alimento", "Ambiental", "Contacto", "Otros"],
+        },
+        sustancia: String,
+        reaccion: String,
+        gravedad: {
+          type: String,
+          enum: ["Leve", "Moderada", "Grave", "Mortal"],
+        },
+        fecha_deteccion: Date,
+      },
+    ],
+
+    // ===== MEDICACIÓN HABITUAL =====
+    medicacion_habitual: [
+      {
+        medicamento: String,
+        dosis: String,
+        frecuencia: String,
+        via_administracion: {
+          type: String,
+          enum: [
+            "Oral",
+            "Intramuscular",
+            "Intravenosa",
+            "Subcutánea",
+            "Tópica",
+            "Inhalatoria",
+            "Otras",
+          ],
+        },
+        fecha_inicio: Date,
+        medico_prescriptor: String,
+        indicacion: String,
+        activo: {
+          type: Boolean,
+          default: true,
+        },
+      },
+    ],
+
+    // ===== HÁBITOS =====
+    habitos: {
+      tabaquismo: {
+        fuma: {
+          type: Boolean,
+          default: false,
+        },
+        cigarrillos_por_dia: Number,
+        años_fumando: Number,
+        fecha_cese: Date,
+        observaciones: String,
+      },
+      alcoholismo: {
+        consume: {
+          type: Boolean,
+          default: false,
+        },
+        frecuencia: {
+          type: String,
+          enum: ["Ocasional", "Semanal", "Diario", "Varios por día"],
+        },
+        tipo_bebida: String,
+        cantidad_semanal: Number,
+        observaciones: String,
+      },
+      drogas: {
+        consume: {
+          type: Boolean,
+          default: false,
+        },
+        tipo_droga: String,
+        frecuencia: String,
+        observaciones: String,
+      },
+      ejercicio: {
+        practica: {
+          type: Boolean,
+          default: false,
+        },
+        tipo_ejercicio: String,
+        frecuencia_semanal: Number,
+        intensidad: {
+          type: String,
+          enum: ["Leve", "Moderada", "Intensa"],
+        },
+      },
+      alimentacion: {
+        tipo_dieta: {
+          type: String,
+          enum: [
+            "Omnívora",
+            "Vegetariana",
+            "Vegana",
+            "Sin gluten",
+            "Diabética",
+            "Hiposódica",
+            "Otra",
+          ],
+        },
+        observaciones: String,
+      },
+    },
+
+    // ===== SIGNOS VITALES RECIENTES =====
+    signos_vitales: {
+      presion_sistolica: Number,
+      presion_diastolica: Number,
+      frecuencia_cardiaca: Number,
+      temperatura: Number,
+      frecuencia_respiratoria: Number,
+      saturacion_oxigeno: Number,
+      fecha_medicion: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+
+    // ===== DATOS ANTROPOMÉTRICOS =====
+    antropometria: {
+      peso: Number, // kg
+      altura: Number, // cm
+      imc: Number,
+      perimetro_cintura: Number, // cm
+      perimetro_cadera: Number, // cm
+      fecha_medicion: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+
+    // ===== VACUNACIÓN =====
+    vacunas: [
+      {
+        nombre_vacuna: String,
+        fecha_aplicacion: Date,
+        dosis: String, // "1ra dosis", "2da dosis", "Refuerzo", etc.
+        lote: String,
+        centro_vacunacion: String,
+        observaciones: String,
+      },
+    ],
+
+    // ===== GRUPO SANGUÍNEO =====
+    grupo_sanguineo: {
+      tipo: {
+        type: String,
+        enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      },
+      fecha_determinacion: Date,
+    },
+
+    // ===== CONTACTO DE EMERGENCIA =====
+    contacto_emergencia: {
+      nombre: String,
+      parentesco: String,
+      telefono: String,
+      direccion: String,
+    },
+
+    // ===== INFORMACIÓN GINECO-OBSTÉTRICA (si aplica) =====
+    gineco_obstetrica: {
+      aplica: {
+        type: Boolean,
+        default: false,
+      },
+      menarca: Number, // edad
+      menopausia: {
+        fecha: Date,
+        natural: Boolean,
+      },
+      gestaciones: Number,
+      partos: Number,
+      cesareas: Number,
+      abortos: Number,
+      fecha_ultima_regla: Date,
+      metodo_anticonceptivo: String,
+      fecha_ultimo_papanicolau: Date,
+      fecha_ultima_mamografia: Date,
+    },
+
+    // ===== ESTUDIOS COMPLEMENTARIOS RECIENTES =====
+    estudios_recientes: [
+      {
+        tipo_estudio: {
+          type: String,
+          enum: [
+            "Laboratorio",
+            "Radiografía",
+            "Ecografía",
+            "Tomografía",
+            "Resonancia",
+            "Electrocardiograma",
+            "Otros",
+          ],
+        },
+        nombre_estudio: String,
+        fecha_realizacion: Date,
+        resultado_resumen: String,
+        archivo_url: String, // URL del archivo si está digitalizado
+        medico_solicitante: String,
+        centro_realizacion: String,
+      },
+    ],
+
+    // ===== DIAGNÓSTICOS ACTUALES =====
+    diagnosticos_actuales: [
+      {
+        codigo_cie10: String,
+        descripcion: String,
+        tipo: {
+          type: String,
+          enum: ["Principal", "Secundario", "Presuntivo", "Descartado"],
+        },
+        fecha_diagnostico: Date,
+        medico_diagnosticador: String,
+        estado: {
+          type: String,
+          enum: ["Activo", "Controlado", "Resuelto", "En seguimiento"],
+        },
+      },
+    ],
+
+    // ===== INFORMACIÓN ADMINISTRATIVA =====
+    obra_social: {
+      nombre: String,
+      dni: String,
+      plan: String,
+      vigencia: Date,
+    },
+
+    // ===== OBSERVACIONES GENERALES =====
+    observaciones_generales: String,
+
+    // ===== ESTADO DE LA HISTORIA =====
+    estado: {
+      type: String,
+      enum: ["Activa", "Inactiva", "Archivada"],
+      default: "Activa",
+    },
+
+    // ===== FECHAS DE CONTROL =====
+    fecha_creacion: {
+      type: Date,
+      default: Date.now,
+    },
+    fecha_actualizacion: {
+      type: Date,
+      default: Date.now,
+    },
+    ultima_consulta: Date,
+    proxima_cita: Date,
+  },
+  {
+    timestamps: true, // Agrega automáticamente createdAt y updatedAt
+  }
+);
+
+// Middleware para calcular IMC automáticamente
+historiaClinicaSchema.pre("save", function (next) {
+  if (this.antropometria && this.antropometria.peso && this.antropometria.altura) {
+    const alturaEnMetros = this.antropometria.altura / 100;
+    this.antropometria.imc = this.antropometria.peso / (alturaEnMetros * alturaEnMetros);
+    this.antropometria.imc = Math.round(this.antropometria.imc * 100) / 100; // Redondear a 2 decimales
+  }
+  next();
+});
+
+// Índices para mejorar rendimiento
+historiaClinicaSchema.index({ socio: 1 });
+historiaClinicaSchema.index({ numero_historia: 1 });
+historiaClinicaSchema.index({ medico_cabecera: 1 });
+historiaClinicaSchema.index({ estado: 1 });
+
+const HistoriaClinicaModel = mongoose.model("HistoriaClinica", historiaClinicaSchema);
+
+module.exports = HistoriaClinicaModel;
+
+	>nota.js:
+const mongoose = require("mongoose");
+
+const notaSchema = new mongoose.Schema({
+  nota: {
+    type: String,
+    required: false,
+  },
+  socio: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "Socio",
+  },
+  historia_clinica: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "HistoriaClinica",
+  },
+  prestador: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "Prestador",
+  },
+  fecha_creacion: {
+    type: Date,
+    default: Date.now,
+  },
+  fecha_actualizacion: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const NotaModel = mongoose.model("Nota", notaSchema);
+
+module.exports = NotaModel;
+
+	>prestador.js:
+const mongoose = require("mongoose");
+
+const prestadorSchema = new mongoose.Schema({
+  nombres: {
+    type: String,
+    required: true,
+  },
+  apellidos: {
+    type: String,
+    required: true,
+  },
+  telefono: {
+    type: String,
+    required: false,
+  },
+  email: {
+    type: String,
+    required: false,
+  },
+  direccion: {
+    type: String,
+    required: false,
+  },
+  ciudad: {
+    type: String,
+    required: false,
+  },
+  provincia: {
+    type: String,
+    required: false,
+  },
+  especialidad: {
+    type: String,
+    required: true,
+  },
+  cuit: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function (v) {
+        return /^\d{11}$/.test(v);
+      },
+      message: "El CUIT debe tener exactamente 11 dígitos",
+    },
+  },
+  password: {
+    type: String,
+    required: false,
+  },
+  matricula: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  es_centro_medico: {
+    type: Boolean,
+    default: false,
+  },
+  estado: {
+    type: String,
+    enum: ["Activo", "Inactivo"],
+    default: "Activo",
+  },
+  fecha_creacion: {
+    type: Date,
+    default: Date.now,
+  },
+  fecha_actualizacion: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const PrestadorModel = mongoose.model("Prestador", prestadorSchema);
+
+module.exports = PrestadorModel;
+
+	situacionTerapeutica.js:
+const mongoose = require("mongoose");
+
+const SituacionTerapeuticaSchema = new mongoose.Schema({
+  socio: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Socio', 
+    required: true 
+  },
+  prestador: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Prestador', 
+    required: true 
+  },
+  diagnostico: { 
+    type: String, 
+    required: true 
+  },
+  tratamiento: { 
+    type: String, 
+    required: true 
+  },
+  fechaInicio: { 
+    type: Date, 
+    default: Date.now 
+  },
+  fechaFin: Date,
+  
+  observaciones: String,
+  novedadesMedicas: [
+    {
+      nota: { type: String, required: true },
+      fechaCreacion: { type: Date, default: Date.now }
+    }
+  ],
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  }
+});
+
+const SituacionTerapeutica = mongoose.model("SituacionTerapeutica", SituacionTerapeuticaSchema);
+
+module.exports = SituacionTerapeutica;
+
+	>socio.js:
+const mongoose = require("mongoose");
+
+const socioSchema = new mongoose.Schema({
+  nombres: {
+    type: String,
+    required: true,
+  },
+  apellidos: {
+    type: String,
+    required: true,
+  },
+  dni: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  rol: {
+    type: String,
+    enum: ["Titular", "Familiar"],
+    default: "Titular",
+  },
+  genero: {
+    type: String,
+    enum: ["Masculino", "Femenino"],
+  },
+  fecha_nacimiento: {
+    type: Date,
+    required: true,
+  },
+  telefono: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  direccion: {
+    type: String,
+    required: true,
+  },
+  ciudad: {
+    type: String,
+    required: true,
+  },
+  provincia: {
+    type: String,
+    required: true,
+  },
+  fecha_creacion: {
+    type: Date,
+    default: Date.now,
+  },
+  fecha_actualizacion: {
+    type: Date,
+    default: Date.now,
+  },
+  estado: {
+    type: String,
+    enum: ["Activo", "Inactivo"],
+    default: "Activo",
+  },
+  historia_clinica: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "HistoriaClinica",
+  },
+});
+
+const SocioModel = mongoose.model("Socio", socioSchema);
+
+module.exports = SocioModel;
+
+src/routes:
+	>filtroSolicitudes.js:
+const express = require('express');
+const router = express.Router();
+const SolicitudController = require('../controllers/filtroSolicitudes');
+
+router.get('/', SolicitudController.getSolicitudes);
+
+	>historiaClinica.js:
+const express = require("express");
+const {
+  getHistoriasClinicas,
+  getHistoriaClinicaById,
+  createHistoriaClinica,
+  updateHistoriaClinica,
+  deleteHistoriaClinica,
+  addNotaAHC,
+} = require("../controllers/historiaClinica.js");
+
+const router = express.Router();
+
+router.get("/", getHistoriasClinicas);
+router.get("/:id", getHistoriaClinicaById); 
+router.post("/", createHistoriaClinica);
+router.put("/:id", updateHistoriaClinica);
+router.delete("/:id", deleteHistoriaClinica);
+
+router.post("/:historiaClinicaId/notas", addNotaAHC);
+
+module.exports = router;
+	>situacionTerapeutica.js:
+const express = require("express");
+const {
+    getSituacionTerapeuticaById,
+    getSituacionesTerapeuticasByMultipleEntries,
+    updateSituacionTerapeutica,
+    agregarNovedad,
+    createSituacionTerapeutica
+} = require("../controllers/situacionTerapeutica");
+
+const router = express.Router();
+
+router.get("/search", getSituacionesTerapeuticasByMultipleEntries);
+
+router.get("/:id", getSituacionTerapeuticaById); 
+
+router.put("/:id", updateSituacionTerapeutica);
+
+router.post("/", createSituacionTerapeutica);
+
+router.post("/:situacionTerapeuticaId/novedades", agregarNovedad);
+
+module.exports = router;
+	
+scripts/seed
+	>seed-database.js:
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+// Configurar dotenv
+dotenv.config();
+
+// Importar modelos
+const SocioModel = require("../models/socio");
+const HistoriaClinicaModel = require("../models/historiaClinica");
+const PrestadorModel = require("../models/prestador");
+
+// Datos proporcionados por el usuario
+const sociosData = [
+  {
+    id: "1000034",
+    nombres: "Claudia Verónica",
+    apellidos: "Benítez Ramírez",
+    rol: "Familiar",
+    dni: "1000034",
+  },
+  {
+    id: "1000035",
+    nombres: "Marcos Sin Notas Daniel",
+    apellidos: "Silva",
+    rol: "Titular",
+    dni: "1000035",
+  },
+  {
+    id: "1000036",
+    nombres: "Florencia Isabel",
+    apellidos: "Córdoba",
+    rol: "Familiar",
+    dni: "1000036",
+  },
+  {
+    id: "1000037",
+    nombres: "Pablo Nicolás",
+    apellidos: "Álvarez",
+    rol: "Titular",
+    dni: "1000037",
+  },
+  {
+    id: "1000038",
+    nombres: "Tamara Julieta",
+    apellidos: "Ríos Gutiérrez",
+    rol: "Familiar",
+    dni: "1000038",
+  },
+  {
+    id: "1000039",
+    nombres: "Federico Andrés",
+    apellidos: "Molina",
+    rol: "Titular",
+    dni: "1000039",
+  },
+  {
+    id: "1000040",
+    nombres: "Rocío Belén",
+    apellidos: "Serrano Díaz",
+    rol: "Familiar",
+    dni: "1000040",
+  },
+  {
+    id: "1000041",
+    nombres: "Mauricio Gabriel",
+    apellidos: "Giménez",
+    rol: "Titular",
+    dni: "1000041",
+  },
+  {
+    id: "1000042",
+    nombres: "Natalia Soledad",
+    apellidos: "Luna Fernández",
+    rol: "Familiar",
+    dni: "1000042",
+  },
+  {
+    id: "1000043",
+    nombres: "Oscar Javier",
+    apellidos: "Ponce",
+    rol: "Titular",
+    dni: "1000043",
+  },
+  {
+    id: "1000044",
+    nombres: "Marta Alejandra",
+    apellidos: "Acuña Ramírez",
+    rol: "Familiar",
+    dni: "1000044",
+  },
+  {
+    id: "1000045",
+    nombres: "Tomás Emiliano",
+    apellidos: "Romero",
+    rol: "Titular",
+    dni: "1000045",
+  },
+  {
+    id: "1000046",
+    nombres: "Camila Eugenia",
+    apellidos: "Ortiz Cabrera",
+    rol: "Familiar",
+    dni: "1000046",
+  },
+  {
+    id: "1000047",
+    nombres: "Gonzalo Adrián",
+    apellidos: "Peralta",
+    rol: "Titular",
+    dni: "1000047",
+  },
+  {
+    id: "1000048",
+    nombres: "Julieta Vanesa",
+    apellidos: "Márquez",
+    rol: "Familiar",
+    dni: "1000048",
+  },
+  {
+    id: "1000049",
+    nombres: "Sergio Esteban",
+    apellidos: "Aguilar Ruiz",
+    rol: "Titular",
+    dni: "1000049",
+  },
+  {
+    id: "1000050",
+    nombres: "Paula Antonella",
+    apellidos: "Campos",
+    rol: "Familiar",
+    dni: "1000050",
+  },
+  {
+    id: "1000051",
+    nombres: "Rodrigo Javier",
+    apellidos: "Espinoza Torres",
+    rol: "Titular",
+    dni: "1000051",
+  },
+  {
+    id: "1000052",
+    nombres: "Mariana Daniela",
+    apellidos: "Quiroga",
+    rol: "Familiar",
+    dni: "1000052",
+  },
+  {
+    id: "1000053",
+    nombres: "Alejandro Luis",
+    apellidos: "Godoy Ramírez",
+    rol: "Titular",
+    dni: "1000053",
+  },
+  {
+    id: "1000054",
+    nombres: "Lorena Gabriela",
+    apellidos: "Mendoza",
+    rol: "Familiar",
+    dni: "1000054",
+  },
+  {
+    id: "1000059",
+    nombres: "Maximiliano José",
+    apellidos: "Paredes Martínez",
+    rol: "Titular",
+    dni: "1000059",
+  },
+  {
+    id: "1000060",
+    nombres: "Eliana Verónica",
+    apellidos: "Campos Suárez",
+    rol: "Familiar",
+    dni: "1000060",
+  },
+];
+
+// Arrays para generar datos aleatorios
+const ciudades = [
+  "Buenos Aires",
+  "Córdoba",
+  "Rosario",
+  "Mendoza",
+  "La Plata",
+  "Tucumán",
+  "Mar del Plata",
+  "Salta",
+  "Santa Fe",
+  "San Juan",
+];
+
+const provincias = [
+  "Buenos Aires",
+  "Córdoba",
+  "Santa Fe",
+  "Mendoza",
+  "Tucumán",
+  "Salta",
+  "Entre Ríos",
+  "Misiones",
+  "Chaco",
+  "San Juan",
+];
+
+const calles = [
+  "Av. Corrientes",
+  "San Martín",
+  "Belgrano",
+  "Rivadavia",
+  "Mitre",
+  "Sarmiento",
+  "Alsina",
+  "Moreno",
+  "Urquiza",
+  "Av. 9 de Julio",
+];
+
+// Datos médicos para historia clínica
+const patologiasComunes = [
+  "Hipertensión arterial",
+  "Diabetes mellitus tipo 2",
+  "Asma bronquial",
+  "Artritis reumatoidea",
+  "Gastritis crónica",
+  "Migraña",
+  "Osteoporosis",
+  "Hipotiroidismo",
+  "Colesterol alto",
+  "Ansiedad generalizada",
+  "Lumbalgia crónica",
+  "Sinusitis crónica",
+  "Dermatitis atópica",
+  "Reflujo gastroesofágico",
+  "Fibromialgia",
+];
+
+const parentescos = [
+  "Padre",
+  "Madre",
+  "Hermano/a",
+  "Abuelo/a paterno/a",
+  "Abuelo/a materno/a",
+  "Tío/a",
+  "Primo/a",
+];
+
+const cirugias = [
+  "Apendicectomía",
+  "Colecistectomía",
+  "Herniorrafia inguinal",
+  "Cesárea",
+  "Artroscopia de rodilla",
+  "Extracción de cataratas",
+  "Amigdalectomía",
+  "Cirugía de vesícula",
+];
+
+const alergenos = [
+  { tipo: "Medicamento", sustancia: "Penicilina", reaccion: "Rash cutáneo", gravedad: "Moderada" },
+  { tipo: "Medicamento", sustancia: "Aspirina", reaccion: "Broncoespasmo", gravedad: "Grave" },
+  { tipo: "Alimento", sustancia: "Mariscos", reaccion: "Urticaria", gravedad: "Leve" },
+  { tipo: "Alimento", sustancia: "Frutos secos", reaccion: "Anafilaxia", gravedad: "Mortal" },
+  { tipo: "Ambiental", sustancia: "Polen", reaccion: "Rinitis", gravedad: "Leve" },
+  { tipo: "Ambiental", sustancia: "Ácaros", reaccion: "Asma", gravedad: "Moderada" },
+];
+
+const medicamentos = [
+  { nombre: "Enalapril", dosis: "10mg", frecuencia: "2 veces al día", via: "Oral" },
+  { nombre: "Metformina", dosis: "850mg", frecuencia: "2 veces al día", via: "Oral" },
+  { nombre: "Omeprazol", dosis: "20mg", frecuencia: "1 vez al día", via: "Oral" },
+  { nombre: "Atorvastatina", dosis: "20mg", frecuencia: "1 vez al día", via: "Oral" },
+  { nombre: "Salbutamol", dosis: "100mcg", frecuencia: "Según necesidad", via: "Inhalatoria" },
+  { nombre: "Losartán", dosis: "50mg", frecuencia: "1 vez al día", via: "Oral" },
+];
+
+const vacunas = [
+  "COVID-19 (Pfizer)",
+  "Gripe estacional",
+  "Neumococo",
+  "Hepatitis B",
+  "Tétanos-Difteria",
+  "Fiebre Amarilla",
+];
+
+const gruposSanguineos = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+const obrasSociales = [
+  { nombre: "OSDE", plan: "210" },
+  { nombre: "Swiss Medical", plan: "SMG01" },
+  { nombre: "Galeno", plan: "Plan Azul" },
+  { nombre: "PAMI", plan: "Básico" },
+  { nombre: "IOMA", plan: "Titular" },
+  { nombre: "OSECAC", plan: "Plan A" },
+];
+
+const estudiosComplementarios = [
+  { tipo: "Laboratorio", nombre: "Hemograma completo" },
+  { tipo: "Laboratorio", nombre: "Glucemia basal" },
+  { tipo: "Laboratorio", nombre: "Perfil lipídico" },
+  { tipo: "Radiografía", nombre: "Tórax frente y perfil" },
+  { tipo: "Ecografía", nombre: "Abdominal completa" },
+  { tipo: "Electrocardiograma", nombre: "ECG de 12 derivaciones" },
+];
+
+// Nombres femeninos típicos para determinar género
+const nombresFemeninos = [
+  "Sol",
+  "Magalí",
+  "Laura",
+  "Ana",
+  "María",
+  "Valeria",
+  "Cecilia",
+  "Lucía",
+  "Patricia",
+  "Marcela",
+  "Verónica",
+  "Silvia",
+  "Daniela",
+  "Juliana",
+  "Mónica",
+  "Adriana",
+  "Claudia",
+  "Florencia",
+  "Tamara",
+  "Rocío",
+  "Natalia",
+  "Marta",
+  "Camila",
+  "Julieta",
+  "Paula",
+  "Mariana",
+  "Lorena",
+  "Carolina",
+  "Agustina",
+  "Eliana",
+];
+
+// Funciones de generación
+
+function determinarGenero(nombres) {
+  const primerNombre = nombres.split(" ")[0];
+  return nombresFemeninos.includes(primerNombre) ? "Femenino" : "Masculino";
+}
+
+function generarFechaNacimiento() {
+  const year = Math.floor(Math.random() * (2005 - 1950) + 1950);
+  const month = Math.floor(Math.random() * 12);
+  const day = Math.floor(Math.random() * 28) + 1;
+  return new Date(year, month, day);
+}
+
+function generarTelefono() {
+  const codigo = Math.floor(Math.random() * 900) + 100;
+  const numero = Math.floor(Math.random() * 9000000) + 1000000;
+  return `+54 ${codigo} ${numero}`;
+}
+
+function generarEmail(nombres, apellidos, nroAfiliado) {
+  const nombre = nombres.split(" ")[0].toLowerCase();
+  const apellido = apellidos.split(" ")[0].toLowerCase();
+  const dominios = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com"];
+  const dominio = dominios[Math.floor(Math.random() * dominios.length)];
+  return `${nombre}.${apellido}.${nroAfiliado}@${dominio}`;
+}
+
+function generarDireccion() {
+  const calle = calles[Math.floor(Math.random() * calles.length)];
+  const numero = Math.floor(Math.random() * 9999) + 1;
+  return `${calle} ${numero}`;
+}
+
+function generarFechaAleatoria(añosAtras = 5) {
+  const ahora = new Date();
+  const fechaMinima = new Date();
+  fechaMinima.setFullYear(ahora.getFullYear() - añosAtras);
+  return new Date(
+    fechaMinima.getTime() + Math.random() * (ahora.getTime() - fechaMinima.getTime())
+  );
+}
+
+function generarNumeroHistoria(nroAfiliado) {
+  const año = new Date().getFullYear();
+  return `HC-${año}-${nroAfiliado}`;
+}
+
+// Funciones para generar datos de historia clínica
+function generarAntecedentesPatologicos() {
+  const antecedentes = [];
+  const cantidad = Math.floor(Math.random() * 3); // 0-2 antecedentes
+
+  for (let i = 0; i < cantidad; i++) {
+    const patologia = patologiasComunes[Math.floor(Math.random() * patologiasComunes.length)];
+    antecedentes.push({
+      patologia: patologia,
+      año_diagnostico: 2024 - Math.floor(Math.random() * 20), // Últimos 20 años
+      estado: ["Activo", "Controlado", "En tratamiento"][Math.floor(Math.random() * 3)],
+      observaciones: `Paciente refiere antecedentes de ${patologia.toLowerCase()}`,
+    });
+  }
+  return antecedentes;
+}
+
+function generarAntecedentesFamiliares() {
+  const antecedentes = [];
+  const cantidad = Math.floor(Math.random() * 4); // 0-3 antecedentes
+
+  for (let i = 0; i < cantidad; i++) {
+    antecedentes.push({
+      parentesco: parentescos[Math.floor(Math.random() * parentescos.length)],
+      patologia: patologiasComunes[Math.floor(Math.random() * patologiasComunes.length)],
+      edad_diagnostico: Math.floor(Math.random() * 40) + 30, // Entre 30-70 años
+      observaciones: "Antecedente familiar relevante",
+    });
+  }
+  return antecedentes;
+}
+
+function generarAntecedentesQuirurgicos() {
+  if (Math.random() < 0.7) return []; // 70% sin cirugías
+
+  const cantidad = Math.floor(Math.random() * 2) + 1; // 1-2 cirugías
+  const antecedentes = [];
+
+  for (let i = 0; i < cantidad; i++) {
+    antecedentes.push({
+      cirugia: cirugias[Math.floor(Math.random() * cirugias.length)],
+      fecha: generarFechaAleatoria(10),
+      hospital: "Hospital Regional",
+      cirujano: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
+      complicaciones: Math.random() < 0.1 ? "Infección menor" : "Sin complicaciones",
+      observaciones: "Cirugía realizada sin incidentes",
+    });
+  }
+  return antecedentes;
+}
+
+function generarAlergias() {
+  if (Math.random() < 0.8) return []; // 80% sin alergias conocidas
+
+  const cantidad = Math.floor(Math.random() * 2) + 1; // 1-2 alergias
+  const alergias = [];
+
+  for (let i = 0; i < cantidad; i++) {
+    const alergia = alergenos[Math.floor(Math.random() * alergenos.length)];
+    alergias.push({
+      tipo: alergia.tipo,
+      sustancia: alergia.sustancia,
+      reaccion: alergia.reaccion,
+      gravedad: alergia.gravedad,
+      fecha_deteccion: generarFechaAleatoria(15),
+    });
+  }
+  return alergias;
+}
+
+function generarMedicacionHabitual() {
+  const medicacion = [];
+  const cantidad = Math.floor(Math.random() * 3); // 0-2 medicamentos
+
+  for (let i = 0; i < cantidad; i++) {
+    const med = medicamentos[Math.floor(Math.random() * medicamentos.length)];
+    medicacion.push({
+      medicamento: med.nombre,
+      dosis: med.dosis,
+      frecuencia: med.frecuencia,
+      via_administracion: med.via,
+      fecha_inicio: generarFechaAleatoria(2),
+      medico_prescriptor: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
+      indicacion: "Tratamiento crónico",
+      activo: true,
+    });
+  }
+  return medicacion;
+}
+
+function generarHabitos(genero) {
+  return {
+    tabaquismo: {
+      fuma: Math.random() < 0.25, // 25% fuma
+      cigarrillos_por_dia: Math.random() < 0.25 ? Math.floor(Math.random() * 20) + 5 : undefined,
+      años_fumando: Math.random() < 0.25 ? Math.floor(Math.random() * 20) + 5 : undefined,
+      fecha_cese: Math.random() < 0.1 ? generarFechaAleatoria(5) : undefined,
+      observaciones: Math.random() < 0.25 ? "Intenta dejar de fumar" : undefined,
+    },
+    alcoholismo: {
+      consume: Math.random() < 0.4, // 40% consume alcohol
+      frecuencia:
+        Math.random() < 0.4 ? ["Ocasional", "Semanal"][Math.floor(Math.random() * 2)] : undefined,
+      tipo_bebida: Math.random() < 0.4 ? "Vino" : undefined,
+      cantidad_semanal: Math.random() < 0.4 ? Math.floor(Math.random() * 7) + 1 : undefined,
+    },
+    drogas: {
+      consume: false, // Por simplicidad, ningún consumo
+      tipo_droga: undefined,
+      frecuencia: undefined,
+    },
+    ejercicio: {
+      practica: Math.random() < 0.6, // 60% hace ejercicio
+      tipo_ejercicio:
+        Math.random() < 0.6
+          ? ["Caminata", "Natación", "Gimnasio"][Math.floor(Math.random() * 3)]
+          : undefined,
+      frecuencia_semanal: Math.random() < 0.6 ? Math.floor(Math.random() * 5) + 1 : undefined,
+      intensidad:
+        Math.random() < 0.6 ? ["Leve", "Moderada"][Math.floor(Math.random() * 2)] : undefined,
+    },
+    alimentacion: {
+      tipo_dieta: ["Omnívora", "Vegetariana"][Math.floor(Math.random() * 2)],
+      observaciones: Math.random() < 0.3 ? "Intenta comer saludable" : undefined,
+    },
+  };
+}
+
+function generarSignosVitales() {
+  return {
+    presion_sistolica: Math.floor(Math.random() * 60) + 100, // 100-160
+    presion_diastolica: Math.floor(Math.random() * 40) + 60, // 60-100
+    frecuencia_cardiaca: Math.floor(Math.random() * 40) + 60, // 60-100
+    temperatura: Math.round((Math.random() * 2 + 36) * 10) / 10, // 36.0-38.0
+    frecuencia_respiratoria: Math.floor(Math.random() * 8) + 12, // 12-20
+    saturacion_oxigeno: Math.floor(Math.random() * 5) + 96, // 96-100
+    fecha_medicion: generarFechaAleatoria(0.5),
+  };
+}
+
+function generarAntropometria(genero) {
+  const altura = Math.floor(Math.random() * 40) + (genero === "Femenino" ? 150 : 160); // cm
+  const peso = Math.floor(Math.random() * 40) + (genero === "Femenino" ? 50 : 60); // kg
+
+  return {
+    peso: peso,
+    altura: altura,
+    // IMC se calcula automáticamente en el middleware
+    perimetro_cintura: Math.floor(Math.random() * 40) + 70,
+    perimetro_cadera: Math.floor(Math.random() * 30) + 90,
+    fecha_medicion: generarFechaAleatoria(0.5),
+  };
+}
+
+function generarVacunas() {
+  const vacunasGeneradas = [];
+  const cantidad = Math.floor(Math.random() * 3) + 1; // 1-3 vacunas
+
+  for (let i = 0; i < cantidad; i++) {
+    vacunasGeneradas.push({
+      nombre_vacuna: vacunas[Math.floor(Math.random() * vacunas.length)],
+      fecha_aplicacion: generarFechaAleatoria(2),
+      dosis: ["1ra dosis", "2da dosis", "Refuerzo"][Math.floor(Math.random() * 3)],
+      lote: `L${Math.floor(Math.random() * 10000)}`,
+      centro_vacunacion: "Centro de Salud Municipal",
+      observaciones: "Vacuna aplicada sin complicaciones",
+    });
+  }
+  return vacunasGeneradas;
+}
+
+function generarContactoEmergencia() {
+  const nombres = ["María García", "Juan Pérez", "Ana López", "Carlos Martínez"];
+  const parentescos = ["Esposo/a", "Hijo/a", "Madre", "Padre", "Hermano/a"];
+
+  return {
+    nombre: nombres[Math.floor(Math.random() * nombres.length)],
+    parentesco: parentescos[Math.floor(Math.random() * parentescos.length)],
+    telefono: generarTelefono(),
+    direccion: generarDireccion(),
+  };
+}
+
+function generarGinecoObstetrica(genero) {
+  if (genero !== "Femenino") return { aplica: false };
+
+  const edad = Math.floor(Math.random() * 50) + 20;
+  const gestaciones = edad > 25 ? Math.floor(Math.random() * 4) : 0;
+
+  return {
+    aplica: true,
+    menarca: Math.floor(Math.random() * 5) + 11, // 11-15 años
+    menopausia:
+      edad > 45
+        ? {
+            fecha: generarFechaAleatoria(10),
+            natural: true,
+          }
+        : undefined,
+    gestaciones: gestaciones,
+    partos: Math.floor(gestaciones * 0.8),
+    cesareas: Math.floor(gestaciones * 0.2),
+    abortos: Math.floor(gestaciones * 0.1),
+    fecha_ultima_regla: edad < 50 ? generarFechaAleatoria(0.1) : undefined,
+    metodo_anticonceptivo: edad < 45 ? "Anticonceptivos orales" : undefined,
+    fecha_ultimo_papanicolau: generarFechaAleatoria(1),
+    fecha_ultima_mamografia: edad > 40 ? generarFechaAleatoria(2) : undefined,
+  };
+}
+
+function generarEstudiosRecientes() {
+  const estudios = [];
+  const cantidad = Math.floor(Math.random() * 3) + 1; // 1-3 estudios
+
+  for (let i = 0; i < cantidad; i++) {
+    const estudio =
+      estudiosComplementarios[Math.floor(Math.random() * estudiosComplementarios.length)];
+    estudios.push({
+      tipo_estudio: estudio.tipo,
+      nombre_estudio: estudio.nombre,
+      fecha_realizacion: generarFechaAleatoria(1),
+      resultado_resumen: "Valores dentro de parámetros normales",
+      medico_solicitante: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
+      centro_realizacion: "Laboratorio Central",
+    });
+  }
+  return estudios;
+}
+
+function generarDiagnosticosActuales() {
+  const diagnosticos = [];
+  const cantidad = Math.floor(Math.random() * 2) + 1; // 1-2 diagnósticos
+
+  for (let i = 0; i < cantidad; i++) {
+    const patologia = patologiasComunes[Math.floor(Math.random() * patologiasComunes.length)];
+    diagnosticos.push({
+      codigo_cie10: `I${Math.floor(Math.random() * 99)}.${Math.floor(Math.random() * 9)}`,
+      descripcion: patologia,
+      tipo: i === 0 ? "Principal" : "Secundario",
+      fecha_diagnostico: generarFechaAleatoria(2),
+      medico_diagnosticador:
+        "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
+      estado: ["Activo", "Controlado", "En seguimiento"][Math.floor(Math.random() * 3)],
+    });
+  }
+  return diagnosticos;
+}
+
+// Función principal para poblar la base de datos
+async function poblarBaseDeDatos() {
+  try {
+    // Conectar a MongoDB
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log("✅ Conectado a MongoDB");
+
+    // Obtener prestadores existentes
+    const prestadores = await PrestadorModel.find({});
+    console.log(`👨‍⚕️ Prestadores encontrados: ${prestadores.length}`);
+
+    // Limpiar colecciones existentes
+    console.log("🧹 Limpiando colecciones existentes...");
+    await SocioModel.deleteMany({});
+    await HistoriaClinicaModel.deleteMany({});
+
+    console.log("🏥 Creando socios e historias clínicas expandidas...");
+
+    for (const socioData of sociosData) {
+      // Generar datos adicionales para el socio
+      const genero = determinarGenero(socioData.nombres);
+      const fechaNacimiento = generarFechaNacimiento();
+
+      const socioCompleto = {
+        nombres: socioData.nombres,
+        apellidos: socioData.apellidos,
+        dni: socioData.dni,
+        rol: socioData.rol,
+        genero: genero,
+        fecha_nacimiento: fechaNacimiento,
+        telefono: generarTelefono(),
+        email: generarEmail(socioData.nombres, socioData.apellidos, socioData.dni),
+        direccion: generarDireccion(),
+        ciudad: ciudades[Math.floor(Math.random() * ciudades.length)],
+        provincia: provincias[Math.floor(Math.random() * provincias.length)],
+        estado: "Activo",
+      };
+
+      // Crear el socio
+      const socio = await SocioModel.create(socioCompleto);
+
+      // Seleccionar médico de cabecera aleatorio si hay prestadores
+      const medicoCabecera =
+        prestadores.length > 0 ? prestadores[Math.floor(Math.random() * prestadores.length)] : null;
+
+      // Seleccionar obra social
+      const obraSocial = obrasSociales[Math.floor(Math.random() * obrasSociales.length)];
+
+      // Crear historia clínica completa
+      const historiaClinicaCompleta = {
+        socio: socio._id,
+        medico_cabecera: medicoCabecera ? medicoCabecera._id : null,
+        numero_historia: generarNumeroHistoria(socio.dni),
+
+        // Generar todos los campos del modelo expandido
+        antecedentes_patologicos: generarAntecedentesPatologicos(),
+        antecedentes_familiares: generarAntecedentesFamiliares(),
+        antecedentes_quirurgicos: generarAntecedentesQuirurgicos(),
+        alergias: generarAlergias(),
+        medicacion_habitual: generarMedicacionHabitual(),
+        habitos: generarHabitos(genero),
+        signos_vitales: generarSignosVitales(),
+        antropometria: generarAntropometria(genero),
+        vacunas: generarVacunas(),
+        grupo_sanguineo: {
+          tipo: gruposSanguineos[Math.floor(Math.random() * gruposSanguineos.length)],
+          fecha_determinacion: generarFechaAleatoria(5),
+        },
+        contacto_emergencia: generarContactoEmergencia(),
+        gineco_obstetrica: generarGinecoObstetrica(genero),
+        estudios_recientes: generarEstudiosRecientes(),
+        diagnosticos_actuales: generarDiagnosticosActuales(),
+        obra_social: {
+          nombre: obraSocial.nombre,
+          dni: socio.dni,
+          plan: obraSocial.plan,
+          vigencia: new Date(2025, 11, 31), // Vigente hasta fin de 2025
+        },
+        observaciones_generales: "Historia clínica generada automáticamente para testing",
+        estado: "Activa",
+        ultima_consulta: generarFechaAleatoria(1),
+        proxima_cita:
+          Math.random() < 0.5
+            ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000)
+            : null,
+      };
+
+      const historiaClinica = await HistoriaClinicaModel.create(historiaClinicaCompleta);
+
+      // Actualizar el socio con la referencia a la historia clínica
+      await SocioModel.findByIdAndUpdate(socio._id, {
+        historia_clinica: historiaClinica._id,
+      });
+
+      const medicoCabeceraInfo = medicoCabecera
+        ? `Dr. ${medicoCabecera.nombres} ${medicoCabecera.apellidos}`
+        : "Sin médico asignado";
+
+      console.log(
+        `✅ ${socio.nombres} ${socio.apellidos} - HC: ${historiaClinica.numero_historia} - Médico: ${medicoCabeceraInfo}`
+      );
+    }
+
+    console.log(`\n🎉 ¡Proceso completado exitosamente!`);
+    console.log(
+      `📊 Se crearon ${sociosData.length} socios y ${sociosData.length} historias clínicas completas.`
+    );
+    console.log(`🏥 Cada historia clínica incluye:`);
+    console.log(`   • Antecedentes médicos y familiares`);
+    console.log(`   • Alergias y medicación habitual`);
+    console.log(`   • Hábitos y signos vitales`);
+    console.log(`   • Datos antropométricos (IMC automático)`);
+    console.log(`   • Vacunas y grupo sanguíneo`);
+    console.log(`   • Estudios complementarios`);
+    console.log(`   • Diagnósticos actuales`);
+    console.log(`   • Información gineco-obstétrica (cuando aplique)`);
+  } catch (error) {
+    console.error("❌ Error al poblar la base de datos:", error);
+  } finally {
+    // Cerrar la conexión
+    await mongoose.connection.close();
+    console.log("🔌 Conexión a MongoDB cerrada");
+    process.exit(0);
+  }
+}
+
+// Ejecutar el script
+console.log("🚀 Iniciando creación de socios e historias clínicas expandidas...");
+poblarBaseDeDatos();
+
+	>seed-notas.js:
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+// Configurar dotenv
+dotenv.config();
+
+// Importar modelos
+const NotaModel = require("../models/nota");
+const SocioModel = require("../models/socio");
+const HistoriaClinicaModel = require("../models/historiaClinica");
+const PrestadorModel = require("../models/prestador");
+
+// Plantillas de notas médicas por tipo de consulta
+const tiposDeNotas = {
+  consultaGeneral: [
+    "Paciente refiere estado general bueno. Sin síntomas actuales. Control de rutina realizado.",
+    "Paciente presenta buen estado de salud. Se recomienda mantener hábitos saludables y controles periódicos.",
+    "Consulta de control. Paciente asintomático. Se sugiere continuar con medicación actual.",
+    "Revisión general sin hallazgos patológicos. Paciente en buenas condiciones generales.",
+    "Control médico preventivo. Paciente refiere sentirse bien. Examen físico normal.",
+  ],
+
+  seguimientoTratamiento: [
+    "Paciente en tratamiento presenta evolución favorable. Se mantiene medicación actual.",
+    "Control post-tratamiento. Buena respuesta terapéutica. Continuar con indicaciones previas.",
+    "Seguimiento de tratamiento iniciado. Paciente tolera bien la medicación.",
+    "Control de evolución. Mejoría progresiva del cuadro clínico. Ajuste de dosis según tolerancia.",
+    "Revisión de tratamiento. Respuesta satisfactoria. Se continúa con plan terapéutico.",
+  ],
+
+  nuevaSintomatologia: [
+    "Paciente consulta por molestias inespecíficas de 3 días de evolución. Se indica tratamiento sintomático.",
+    "Refiere dolor localizado desde hace una semana. Se solicitan estudios complementarios.",
+    "Consulta por síntomas gripales. Se indica reposo y medicación sintomática.",
+    "Presenta cuadro de malestar general. Se recomienda hidratación y control en 48 horas.",
+    "Paciente con sintomatología compatible con proceso viral. Tratamiento de sostén.",
+  ],
+
+  resultadosEstudios: [
+    "Se reciben resultados de laboratorio dentro de parámetros normales. Sin modificaciones en tratamiento.",
+    "Análisis clínicos informan valores levemente alterados. Se ajusta medicación y nuevo control en 30 días.",
+    "Estudios complementarios sin alteraciones significativas. Se mantiene conducta actual.",
+    "Resultados de estudios por imágenes normales. Paciente puede continuar actividad habitual.",
+    "Laboratorio de control muestra mejoría en parámetros. Evolución favorable del tratamiento.",
+  ],
+
+  interconsulta: [
+    "Se deriva a especialista por requerimiento de evaluación específica. Cita coordinada.",
+    "Interconsulta con cardiología solicitada. Paciente será evaluado la próxima semana.",
+    "Derivación a especialidad por complejidad del caso. Se mantiene tratamiento actual hasta evaluación.",
+    "Se solicita opinión de especialista. Paciente en lista de espera para consulta.",
+    "Interconsulta programada. Se continúa seguimiento conjunto con especialidad.",
+  ],
+
+  procedimiento: [
+    "Procedimiento realizado sin complicaciones. Paciente tolera bien la intervención.",
+    "Se efectúa procedimiento menor en consultorio. Evolución satisfactoria inmediata.",
+    "Intervención ambulatoria completada exitosamente. Indicaciones post-procedimiento entregadas.",
+    "Procedimiento diagnóstico realizado. Paciente en observación por tiempo reglamentario.",
+    "Técnica completada según protocolo. Se programa control post-procedimiento.",
+  ],
+
+  urgencia: [
+    "Consulta de urgencia. Paciente estable al momento del alta. Control ambulatorio en 24 horas.",
+    "Atención de emergencia resuelta satisfactoriamente. Se deriva para seguimiento.",
+    "Cuadro agudo controlado. Paciente mejora clínicamente. Alta con medicación.",
+    "Urgencia médica atendida. Evolución favorable. Se programa control estrecho.",
+    "Consulta urgente por exacerbación de cuadro crónico. Ajuste terapéutico realizado.",
+  ],
+};
+
+const recomendacionesComunes = [
+  "Se recomienda control en 30 días.",
+  "Próximo control según evolución clínica.",
+  "Control programado en 15 días.",
+  "Reevaluación en caso de empeoramiento.",
+  "Control de rutina en 3 meses.",
+  "Seguimiento telefónico en 72 horas.",
+  "Control post-tratamiento en 2 semanas.",
+  "Próxima consulta según necesidad.",
+];
+
+const medicamentosComunes = [
+  "Paracetamol 500mg cada 8 horas",
+  "Ibuprofeno 400mg cada 12 horas",
+  "Amoxicilina 500mg cada 8 horas",
+  "Omeprazol 20mg en ayunas",
+  "Losartán 50mg por día",
+  "Atorvastatina 20mg nocturna",
+  "Metformina 850mg cada 12 horas",
+  "Salbutamol inhalador según necesidad",
+];
+
+// Función para generar una fecha aleatoria en los últimos 6 meses
+function generarFechaReciente() {
+  const ahora = new Date();
+  const seiseMesesAtras = new Date();
+  seiseMesesAtras.setMonth(ahora.getMonth() - 6);
+
+  const tiempoRandom =
+    seiseMesesAtras.getTime() + Math.random() * (ahora.getTime() - seiseMesesAtras.getTime());
+  return new Date(tiempoRandom);
+}
+
+// Función para generar nota médica completa
+function generarNotaCompleta() {
+  const tiposArray = Object.keys(tiposDeNotas);
+  const tipoSeleccionado = tiposArray[Math.floor(Math.random() * tiposArray.length)];
+  const notasDelTipo = tiposDeNotas[tipoSeleccionado];
+  const notaBase = notasDelTipo[Math.floor(Math.random() * notasDelTipo.length)];
+
+  let notaCompleta = notaBase;
+
+  // 40% chance de agregar medicación
+  if (Math.random() < 0.4) {
+    const medicamento = medicamentosComunes[Math.floor(Math.random() * medicamentosComunes.length)];
+    notaCompleta += ` Se indica ${medicamento}.`;
+  }
+
+  // 60% chance de agregar recomendación
+  if (Math.random() < 0.6) {
+    const recomendacion =
+      recomendacionesComunes[Math.floor(Math.random() * recomendacionesComunes.length)];
+    notaCompleta += ` ${recomendacion}`;
+  }
+
+  return notaCompleta;
+}
+
+// Función principal para poblar notas
+async function poblarNotas() {
+  try {
+    // Conectar a MongoDB
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log("✅ Conectado a MongoDB");
+
+    // Obtener datos existentes
+    console.log("📋 Obteniendo datos existentes...");
+
+    const socios = await SocioModel.find({});
+    const historiasClinicas = await HistoriaClinicaModel.find({});
+    const prestadores = await PrestadorModel.find({});
+
+    console.log(`👥 Socios encontrados: ${socios.length}`);
+    console.log(`🏥 Historias clínicas encontradas: ${historiasClinicas.length}`);
+    console.log(`👨‍⚕️ Prestadores encontrados: ${prestadores.length}`);
+
+    if (socios.length === 0 || prestadores.length === 0) {
+      console.log(
+        "⚠️  No se encontraron socios o prestadores. Ejecuta primero los scripts de seeding correspondientes."
+      );
+      return;
+    }
+
+    // Limpiar notas existentes (opcional)
+    console.log("🧹 Limpiando notas existentes...");
+    await NotaModel.deleteMany({});
+
+    // Generar múltiples notas por socio
+    console.log(`📝 Generando notas médicas para cada socio...`);
+
+    const notasCreadas = [];
+    let contadorNotas = 0;
+
+    for (const socio of socios) {
+      // Determinar cantidad de notas por socio
+      let cantidadNotasPorSocio;
+
+      // Socio especial con menos notas (ID 1000035)
+      if (socio.dni === "1000035") {
+        cantidadNotasPorSocio = Math.floor(Math.random() * 2) + 1; // 1-2 notas
+        console.log(
+          `📝 Generando ${cantidadNotasPorSocio} notas para ${socio.nombres} ${socio.apellidos} (menos notas)`
+        );
+      } else {
+        cantidadNotasPorSocio = Math.floor(Math.random() * 6) + 4; // 4-9 notas por socio
+        console.log(
+          `📝 Generando ${cantidadNotasPorSocio} notas para ${socio.nombres} ${socio.apellidos}`
+        );
+      }
+
+      for (let j = 0; j < cantidadNotasPorSocio; j++) {
+        contadorNotas++;
+
+        // Buscar historia clínica del socio actual
+        let historiaClinica = historiasClinicas.find(
+          (hc) => hc.socio && hc.socio.toString() === socio._id.toString()
+        );
+
+        if (!historiaClinica && historiasClinicas.length > 0) {
+          historiaClinica = historiasClinicas[Math.floor(Math.random() * historiasClinicas.length)];
+        }
+
+        // Seleccionar prestador aleatorio
+        const prestadorAleatorio = prestadores[Math.floor(Math.random() * prestadores.length)];
+
+        // Generar fechas distribuidas en el tiempo para que parezcan consultas reales
+        const fechaBase = generarFechaReciente();
+        const diasOffset = j * Math.floor(Math.random() * 30) + Math.random() * 7; // Espaciar las notas
+        const fechaNota = new Date(fechaBase.getTime() - diasOffset * 24 * 60 * 60 * 1000);
+
+        // Generar nota
+        const nuevaNota = {
+          nota: generarNotaCompleta(),
+          socio: socio._id,
+          historia_clinica: historiaClinica ? historiaClinica._id : null,
+          prestador: prestadorAleatorio._id,
+          fecha_creacion: fechaNota,
+          fecha_actualizacion: fechaNota,
+        };
+
+        const notaCreada = await NotaModel.create(nuevaNota);
+        notasCreadas.push(notaCreada);
+      }
+
+      // Log progreso por socio
+      console.log(
+        `   ✅ ${cantidadNotasPorSocio} notas creadas para ${socio.nombres} ${socio.apellidos}`
+      );
+    }
+
+    console.log(`\n🎉 ¡Proceso completado exitosamente!`);
+    console.log(`📊 Se crearon ${contadorNotas} notas médicas para ${socios.length} socios.`);
+    console.log(`📈 Promedio de ${Math.round(contadorNotas / socios.length)} notas por socio.`);
+
+    // Estadísticas adicionales
+    const notasConMedicacion = notasCreadas.filter((nota) =>
+      nota.nota.includes("Se indica")
+    ).length;
+    const notasConControl = notasCreadas.filter(
+      (nota) => nota.nota.includes("control") || nota.nota.includes("Control")
+    ).length;
+
+    console.log(`💊 Notas con medicación: ${notasConMedicacion}`);
+    console.log(`📅 Notas con seguimiento: ${notasConControl}`);
+
+    // Estadísticas por socio
+    const notasPorSocio = {};
+    for (const nota of notasCreadas) {
+      const socioId = nota.socio.toString();
+      notasPorSocio[socioId] = (notasPorSocio[socioId] || 0) + 1;
+    }
+
+    console.log(`\n📊 Distribución de notas por socio:`);
+    for (const socio of socios) {
+      const cantidad = notasPorSocio[socio._id.toString()] || 0;
+      const esSocioEspecial = socio.dni === "1000035";
+      console.log(
+        `   ${socio.nombres} ${socio.apellidos}: ${cantidad} notas${
+          esSocioEspecial ? " (menos notas)" : ""
+        }`
+      );
+    }
+
+    // Mostrar ejemplo de notas creadas
+    console.log(`\n📋 Ejemplos de notas creadas:`);
+    for (let i = 0; i < Math.min(3, notasCreadas.length); i++) {
+      const nota = notasCreadas[i];
+      console.log(`\n${i + 1}. "${nota.nota}"`);
+      console.log(`   📅 Fecha: ${nota.fecha_creacion.toLocaleDateString("es-ES")}`);
+    }
+  } catch (error) {
+    console.error("❌ Error al poblar notas:", error);
+
+    if (error.name === "ValidationError") {
+      console.error("💡 Error de validación. Verifica que los datos de referencia existan.");
+    }
+  } finally {
+    // Cerrar la conexión
+    await mongoose.connection.close();
+    console.log("🔌 Conexión a MongoDB cerrada");
+    process.exit(0);
+  }
+}
+
+// Ejecutar el script
+console.log("🚀 Iniciando creación de notas médicas...");
+poblarNotas();
+
+	>seed-prestadores:
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+// Configurar dotenv
+dotenv.config();
+
+// Importar modelo
+const PrestadorModel = require("../models/prestador");
+
+// Datos para generar prestadores
+const especialidades = [
+  "Cardiología",
+  "Dermatología",
+  "Pediatría",
+  "Ginecología",
+  "Traumatología",
+  "Neurología",
+  "Oftalmología",
+  "Gastroenterología",
+  "Psiquiatría",
+  "Endocrinología",
+  "Urología",
+  "Otorrinolaringología",
+  "Medicina General",
+  "Radiología",
+  "Anestesiología",
+  "Cirugía General",
+  "Oncología",
+  "Neumología",
+  "Reumatología",
+  "Infectología",
+];
+
+const nombres = [
+  "Carlos",
+  "María",
+  "Juan",
+  "Ana",
+  "Roberto",
+  "Patricia",
+  "José",
+  "Laura",
+  "Luis",
+  "Carmen",
+  "Miguel",
+  "Isabel",
+  "Antonio",
+  "Teresa",
+  "Francisco",
+  "Rosa",
+  "Alejandro",
+  "Mónica",
+  "Rafael",
+  "Elena",
+  "Fernando",
+  "Silvia",
+  "Eduardo",
+  "Pilar",
+  "Jorge",
+  "Mercedes",
+  "Diego",
+  "Esperanza",
+  "Alberto",
+  "Gloria",
+  "Sergio",
+  "Beatriz",
+  "Raúl",
+  "Dolores",
+  "Andrés",
+  "Cristina",
+  "Javier",
+  "Amparo",
+  "Óscar",
+  "Remedios",
+];
+
+const apellidos = [
+  "García",
+  "Rodríguez",
+  "González",
+  "Fernández",
+  "López",
+  "Martínez",
+  "Sánchez",
+  "Pérez",
+  "Gómez",
+  "Martín",
+  "Jiménez",
+  "Ruiz",
+  "Hernández",
+  "Díaz",
+  "Moreno",
+  "Muñoz",
+  "Álvarez",
+  "Romero",
+  "Alonso",
+  "Gutiérrez",
+  "Navarro",
+  "Torres",
+  "Domínguez",
+  "Vázquez",
+  "Ramos",
+  "Gil",
+  "Ramírez",
+  "Serrano",
+  "Blanco",
+  "Suárez",
+  "Molina",
+  "Morales",
+  "Ortega",
+  "Delgado",
+  "Castro",
+  "Ortiz",
+  "Rubio",
+  "Marín",
+  "Sanz",
+  "Iglesias",
+];
+
+const ciudades = [
+  "Buenos Aires",
+  "Córdoba",
+  "Rosario",
+  "Mendoza",
+  "La Plata",
+  "Tucumán",
+  "Mar del Plata",
+  "Salta",
+  "Santa Fe",
+  "San Juan",
+  "Resistencia",
+  "Neuquén",
+  "Santiago del Estero",
+  "Corrientes",
+  "Posadas",
+];
+
+const provincias = [
+  "Buenos Aires",
+  "Córdoba",
+  "Santa Fe",
+  "Mendoza",
+  "Tucumán",
+  "Salta",
+  "Entre Ríos",
+  "Misiones",
+  "Chaco",
+  "San Juan",
+  "Jujuy",
+  "Río Negro",
+  "Neuquén",
+  "Chubut",
+  "Santa Cruz",
+  "Tierra del Fuego",
+  "La Pampa",
+  "Santiago del Estero",
+  "Corrientes",
+  "Catamarca",
+  "La Rioja",
+  "Formosa",
+];
+
+const calles = [
+  "Av. Corrientes",
+  "San Martín",
+  "Belgrano",
+  "Rivadavia",
+  "Mitre",
+  "Sarmiento",
+  "Alsina",
+  "Moreno",
+  "Urquiza",
+  "Av. 9 de Julio",
+  "Independencia",
+  "25 de Mayo",
+  "Alem",
+  "Pellegrini",
+  "Maipú",
+  "Tucumán",
+  "Santa Fe",
+  "Córdoba",
+];
+
+// Función para generar CUIT de 11 dígitos
+function generarCUIT() {
+  // Genera un CUIT simple de 11 dígitos
+  let cuit = "";
+  for (let i = 0; i < 11; i++) {
+    cuit += Math.floor(Math.random() * 10);
+  }
+  return cuit;
+}
+
+// Función para generar matrícula (letras + números)
+function generarMatricula() {
+  const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let matricula = "";
+
+  // 2-3 letras seguidas de 4-6 números
+  const numLetras = Math.floor(Math.random() * 2) + 2; // 2 o 3 letras
+  const numDigitos = Math.floor(Math.random() * 3) + 4; // 4, 5 o 6 números
+
+  for (let i = 0; i < numLetras; i++) {
+    matricula += letras.charAt(Math.floor(Math.random() * letras.length));
+  }
+
+  for (let i = 0; i < numDigitos; i++) {
+    matricula += Math.floor(Math.random() * 10);
+  }
+
+  return matricula;
+}
+
+// Función para generar teléfono
+function generarTelefono() {
+  const codigo = Math.floor(Math.random() * 900) + 100; // 3 dígitos
+  const numero = Math.floor(Math.random() * 9000000) + 1000000; // 7 dígitos
+  return `+54 ${codigo} ${numero}`;
+}
+
+// Función para generar email profesional
+function generarEmailProfesional(nombres, apellidos, especialidad) {
+  const nombre = nombres.toLowerCase().replace(/\s+/g, "");
+  const apellido = apellidos.toLowerCase().replace(/\s+/g, "");
+  const especialidadCorta = especialidad.toLowerCase().replace(/\s+/g, "");
+
+  const dominios = ["medicos.com.ar", "salud.gov.ar", "hospital.com", "clinica.com.ar"];
+  const dominio = dominios[Math.floor(Math.random() * dominios.length)];
+
+  const opciones = [
+    `dr.${nombre}${apellido}@${dominio}`,
+    `${nombre}.${apellido}@${dominio}`,
+    `${apellido}${especialidadCorta}@${dominio}`,
+    `dr${apellido}@${dominio}`,
+  ];
+
+  return opciones[Math.floor(Math.random() * opciones.length)];
+}
+
+// Función para generar dirección
+function generarDireccion() {
+  const calle = calles[Math.floor(Math.random() * calles.length)];
+  const numero = Math.floor(Math.random() * 9999) + 1;
+  const piso = Math.random() > 0.6 ? `, Piso ${Math.floor(Math.random() * 20) + 1}` : "";
+  return `${calle} ${numero}${piso}`;
+}
+
+// Función para generar contraseña simple
+function generarPassword() {
+  return `medico${Math.floor(Math.random() * 9999) + 1000}`;
+}
+
+// Función para generar prestadores
+function generarPrestadores(cantidad) {
+  const prestadores = [];
+  const cuitsUsados = new Set();
+  const matriculasUsadas = new Set();
+
+  for (let i = 0; i < cantidad; i++) {
+    let cuit, matricula;
+
+    // Generar CUIT único
+    do {
+      cuit = generarCUIT();
+    } while (cuitsUsados.has(cuit));
+    cuitsUsados.add(cuit);
+
+    // Generar matrícula única
+    do {
+      matricula = generarMatricula();
+    } while (matriculasUsadas.has(matricula));
+    matriculasUsadas.add(matricula);
+
+    const nombre = nombres[Math.floor(Math.random() * nombres.length)];
+    const apellido = apellidos[Math.floor(Math.random() * apellidos.length)];
+    const especialidad = especialidades[Math.floor(Math.random() * especialidades.length)];
+    const esCentroMedico = Math.random() > 0.85; // 15% chance de ser centro médico
+
+    const prestador = {
+      nombres: nombre,
+      apellidos: apellido,
+      telefono: generarTelefono(),
+      email: generarEmailProfesional(nombre, apellido, especialidad),
+      direccion: generarDireccion(),
+      ciudad: ciudades[Math.floor(Math.random() * ciudades.length)],
+      provincia: provincias[Math.floor(Math.random() * provincias.length)],
+      especialidad: especialidad,
+      cuit: cuit,
+      password: generarPassword(),
+      matricula: matricula,
+      es_centro_medico: esCentroMedico,
+      estado: "Activo",
+    };
+
+    prestadores.push(prestador);
+  }
+
+  return prestadores;
+}
+
+// Función principal
+async function poblarPrestadores() {
+  try {
+    // Conectar a MongoDB
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log("✅ Conectado a MongoDB");
+
+    // Limpiar colección existente (opcional)
+    console.log("🧹 Limpiando colección de prestadores...");
+    await PrestadorModel.deleteMany({});
+
+    // Generar prestadores
+    const cantidadPrestadores = 30;
+    console.log(`🏥 Generando ${cantidadPrestadores} prestadores...`);
+    const prestadores = generarPrestadores(cantidadPrestadores);
+
+    // Crear prestadores en la base de datos
+    for (let i = 0; i < prestadores.length; i++) {
+      const prestador = prestadores[i];
+      const prestadorCreado = await PrestadorModel.create(prestador);
+
+      const tipo = prestador.es_centro_medico ? "Centro Médico" : "Médico";
+      console.log(
+        `✅ ${tipo} creado: Dr. ${prestadorCreado.nombres} ${prestadorCreado.apellidos} - ${prestadorCreado.especialidad} (CUIT: ${prestadorCreado.cuit})`
+      );
+    }
+
+    console.log(`\n🎉 ¡Proceso completado exitosamente!`);
+    console.log(`📊 Se crearon ${cantidadPrestadores} prestadores.`);
+    console.log(`🏥 Especialidades cubiertas: ${especialidades.length}`);
+
+    // Mostrar estadísticas
+    const centrosMedicos = prestadores.filter((p) => p.es_centro_medico).length;
+    const medicosIndividuales = prestadores.length - centrosMedicos;
+
+    console.log(`👨‍⚕️ Médicos individuales: ${medicosIndividuales}`);
+    console.log(`🏢 Centros médicos: ${centrosMedicos}`);
+  } catch (error) {
+    console.error("❌ Error al poblar prestadores:", error);
+    if (error.code === 11000) {
+      console.error("💡 Error de duplicado: CUIT o matrícula ya existe");
+    }
+  } finally {
+    // Cerrar la conexión
+    await mongoose.connection.close();
+    console.log("🔌 Conexión a MongoDB cerrada");
+    process.exit(0);
+  }
+}
+
+// Ejecutar el script
+console.log("🚀 Iniciando creación de prestadores...");
+poblarPrestadores();
+
+	>seed-sit-terapeuticas.js:
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+// Configurar dotenv
+dotenv.config();
+
+// Importar modelos
+const SocioModel = require("../models/socio");
+const PrestadorModel = require("../models/prestador");
+const SituacionTerapeuticaModel = require("../models/situacionTerapeutica");
+
+// Listas para generar datos
+const diagnosticos = [
+  "Hipertensión arterial", 
+  "Diabetes mellitus tipo 2", 
+  "Asma bronquial", 
+  "Trastorno de ansiedad", 
+  "Lumbalgia crónica", 
+  "Gastritis crónica", 
+  "Migraña", 
+  "Hipotiroidismo"
+];
+
+const tratamientos = [
+  "Tratamiento farmacológico estándar",
+  "Plan de dieta y ejercicio",
+  "Control clínico periódico",
+  "Terapia cognitivo-conductual",
+  "Fisioterapia y analgésicos",
+  "Inhibidores de bomba de protones",
+  "Beta-agonistas a demanda",
+  "Reposición hormonal"
+];
+
+function elegirAleatorio(lista) {
+  return lista[Math.floor(Math.random() * lista.length)];
+}
+
+function generarFechas() {
+  const ahora = new Date();
+  const inicio = new Date(ahora.getTime() - Math.floor(Math.random() * 365) * 24 * 60 * 60 * 1000);
+  const enCurso = Math.random() < 0.7; // 70% siguen activas
+  const fin = enCurso ? null : new Date(inicio.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
+  return { inicio, fin };
+}
+
+async function poblarSituacionesTerapeuticas() {
+  try {
+    // Conectar a MongoDB
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log("✅ Conectado a MongoDB");
+
+    // Obtener datos existentes
+    const socios = await SocioModel.find({});
+    const prestadores = await PrestadorModel.find({});
+
+    console.log(`👥 Socios encontrados: ${socios.length}`);
+    console.log(`👨‍⚕️ Prestadores encontrados: ${prestadores.length}`);
+
+    if (socios.length === 0 || prestadores.length === 0) {
+      console.log("⚠️  No se encontraron socios o prestadores. Ejecuta primero los scripts de seeding correspondientes.");
+      return;
+    }
+
+    // Limpiar situaciones anteriores (opcional)
+    console.log("🧹 Limpiando situaciones terapéuticas existentes...");
+    await SituacionTerapeuticaModel.deleteMany({});
+
+    console.log("🩺 Generando situaciones terapéuticas...");
+
+    const totalPorSocioMin = 1;
+    const totalPorSocioMax = 3; // 1 a 3 situaciones por socio
+
+    let creadas = 0;
+
+    for (const socio of socios) {
+      const cantidad = Math.floor(Math.random() * (totalPorSocioMax - totalPorSocioMin + 1)) + totalPorSocioMin;
+
+      for (let i = 0; i < cantidad; i++) {
+        const prestador = prestadores[Math.floor(Math.random() * prestadores.length)];
+        const { inicio, fin } = generarFechas();
+
+        const situacion = {
+          socio: socio._id,
+          prestador: prestador._id,
+          diagnostico: elegirAleatorio(diagnosticos),
+          tratamiento: elegirAleatorio(tratamientos),
+          fechaInicio: inicio,
+          fechaFin: fin,
+          observaciones: Math.random() < 0.5 ? "Situación generada para pruebas" : undefined,
+          novedadesMedicas: [],
+        };
+
+        await SituacionTerapeuticaModel.create(situacion);
+        creadas++;
+      }
+
+      console.log(`✅ ${cantidad} situaciones creadas para ${socio.nombres} ${socio.apellidos}`);
+    }
+
+    console.log("\n🎉 ¡Proceso completado exitosamente!");
+    console.log(`📊 Se crearon ${creadas} situaciones terapéuticas en total.`);
+  } catch (error) {
+    console.error("❌ Error al poblar situaciones terapéuticas:", error);
+  } finally {
+    await mongoose.connection.close();
+    console.log("🔌 Conexión a MongoDB cerrada");
+    process.exit(0);
+  }
+}
+
+console.log("🚀 Iniciando creación de situaciones terapéuticas...");
+poblarSituacionesTerapeuticas();
+
+// aca
+
+	>seed-solicitudes.js:
+const dotenv = require("dotenv");
+dotenv.config();
+const mongoose = require("mongoose");
+const Socio = require("../models/socio");
+const Solicitud = require("../models/filtroSolicitudes");
+
+const tipos = ['Reintegro', 'Autorizacion', 'Receta'];
+const estados = ['Recibido', 'EnAnalisis', 'Observado', 'Aprobado', 'Rechazado'];
+
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+async function seed() {
+  await mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true, useUnifiedTopology: true,
+  });
+
+
+console.log("Conectado a Mongo para seed de solicitudes");
+
+await Solicitud.deleteMany({});
+console.log("Coleccion de solicitudes limpia");
+
+const socios = await Socio.find({}).lean();
+
+if (!socios.length){
+    console.log("No hay socios en la base de datos")
+    process.exit(1);
+}
+
+const docs = [];
+
+for (const s of socios) {
+    const cantidad = Math.floor(Math.random() * 3) + 1; 
+    for (let i = 0; i < cantidad; i++) {
+      docs.push({
+        nro: `${s.dni}-${i + 1}`,
+        afiliadoNombre: `${s.nombres} ${s.apellidos}`,
+        afiliadoId: s._id,
+        tipo: randomFrom(tipos),
+        estado: randomFrom(estados),
+        fechaCreacion: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 365)),
+      });
+    }
+  }
+
+  await Solicitud.insertMany(docs);
+  console.log(`Insertadas ${docs.length} solicitudes de ejemplo.`);
+  await mongoose.connection.close();
+  process.exit(0);
+}
+
+seed().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
+
+
+>app.js:
+const express = require("express");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
+
+const historiasClinicasRoutes = require("./routes/historiaClinica");
+const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
+const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");  
+// Importar modelos para registrarlos
+require("./models/socio");
+require("./models/historiaClinica");
+require("./models/nota");
+require("./models/prestador");
+require("./models/situacionTerapeutica");
+require("./models/filtroSolicitudes");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+dotenv.config();
+
+// Middleware
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+// Database connection
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.error("MongoDB connection error:", error));
+
+// Routes
+app.use("/historias-clinicas", historiasClinicasRoutes);
+app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
+app.use("/filtro-solicitudes", filtroSolicitudesRoutes); 
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
