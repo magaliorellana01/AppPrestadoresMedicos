@@ -94,7 +94,7 @@ exports.updateSituacionTerapeutica = async (req, res) => {
 
 exports.agregarNovedad = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { situacionTerapeuticaId} = req.params;
     const { nota } = req.body;
 
     if (!nota) {
@@ -103,7 +103,7 @@ exports.agregarNovedad = async (req, res) => {
 
     
     const situacion = await SituacionTerapeutica.findByIdAndUpdate(
-      id,
+      situacionTerapeuticaId,
       { $push: { novedadesMedicas: { nota } } },
       { new: true, runValidators: true }
     )
