@@ -393,7 +393,7 @@ function generarAntecedentesPatologicos() {
     antecedentes.push({
       patologia: patologia,
       año_diagnostico: 2024 - Math.floor(Math.random() * 20), // Últimos 20 años
-      estado: ["Activo", "Controlado", "En tratamiento"Маth.floor(Math.random() * 3)],
+      estado: ["Activo", "Controlado", "En tratamiento"][Math.floor(Math.random() * 3)],
       observaciones: `Paciente refiere antecedentes de ${patologia.toLowerCase()}`,
     });
   }
@@ -426,7 +426,7 @@ function generarAntecedentesQuirurgicos() {
       cirugia: cirugias[Math.floor(Math.random() * cirugias.length)],
       fecha: generarFechaAleatoria(10),
       hospital: "Hospital Regional",
-      cirujano: "Dr. " + ["García", "López", "Martínez"Маth.floor(Math.random() * 3)],
+      cirujano: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
       complicaciones: Math.random() < 0.1 ? "Infección menor" : "Sin complicaciones",
       observaciones: "Cirugía realizada sin incidentes",
     });
@@ -465,7 +465,7 @@ function generarMedicacionHabitual() {
       frecuencia: med.frecuencia,
       via_administracion: med.via,
       fecha_inicio: generarFechaAleatoria(2),
-      medico_prescriptor: "Dr. " + ["García", "López", "Martínez"Маth.floor(Math.random() * 3)],
+      medico_prescriptor: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
       indicacion: "Tratamiento crónico",
       activo: true,
     });
@@ -485,7 +485,7 @@ function generarHabitos(genero) {
     alcoholismo: {
       consume: Math.random() < 0.4, // 40% consume alcohol
       frecuencia:
-        Math.random() < 0.4 ? ["Ocasional", "Semanal"Маth.floor(Math.random() * 2)] : undefined,
+        Math.random() < 0.4 ? ["Ocasional", "Semanal"][Math.floor(Math.random() * 2)] : undefined,
       tipo_bebida: Math.random() < 0.4 ? "Vino" : undefined,
       cantidad_semanal: Math.random() < 0.4 ? Math.floor(Math.random() * 7) + 1 : undefined,
     },
@@ -498,14 +498,14 @@ function generarHabitos(genero) {
       practica: Math.random() < 0.6, // 60% hace ejercicio
       tipo_ejercicio:
         Math.random() < 0.6
-          ? ["Caminata", "Natación", "Gimnasio"Маth.floor(Math.random() * 3)]
+          ? ["Caminata", "Natación", "Gimnasio"][Math.floor(Math.random() * 3)]
           : undefined,
       frecuencia_semanal: Math.random() < 0.6 ? Math.floor(Math.random() * 5) + 1 : undefined,
       intensidad:
-        Math.random() < 0.6 ? ["Leve", "Moderada"Маth.floor(Math.random() * 2)] : undefined,
+        Math.random() < 0.6 ? ["Leve", "Moderada"][Math.floor(Math.random() * 2)] : undefined,
     },
     alimentacion: {
-      tipo_dieta: ["Omnívora", "Vegetariana"Маth.floor(Math.random() * 2)],
+      tipo_dieta: ["Omnívora", "Vegetariana"][Math.floor(Math.random() * 2)],
       observaciones: Math.random() < 0.3 ? "Intenta comer saludable" : undefined,
     },
   };
@@ -545,7 +545,7 @@ function generarVacunas() {
     vacunasGeneradas.push({
       nombre_vacuna: vacunas[Math.floor(Math.random() * vacunas.length)],
       fecha_aplicacion: generarFechaAleatoria(2),
-      dosis: ["1ra dosis", "2da dosis", "Refuerzo"Маth.floor(Math.random() * 3)],
+      dosis: ["1ra dosis", "2da dosis", "Refuerzo"][Math.floor(Math.random() * 3)],
       lote: `L${Math.floor(Math.random() * 10000)}`,
       centro_vacunacion: "Centro de Salud Municipal",
       observaciones: "Vacuna aplicada sin complicaciones",
@@ -605,7 +605,7 @@ function generarEstudiosRecientes() {
       nombre_estudio: estudio.nombre,
       fecha_realizacion: generarFechaAleatoria(1),
       resultado_resumen: "Valores dentro de parámetros normales",
-      medico_solicitante: "Dr. " + ["García", "López", "Martínez"Маth.floor(Math.random() * 3)],
+      medico_solicitante: "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
       centro_realizacion: "Laboratorio Central",
     });
   }
@@ -624,8 +624,8 @@ function generarDiagnosticosActuales() {
       tipo: i === 0 ? "Principal" : "Secundario",
       fecha_diagnostico: generarFechaAleatoria(2),
       medico_diagnosticador:
-        "Dr. " + ["García", "López", "Martínez"Маth.floor(Math.random() * 3)],
-      estado: ["Activo", "Controlado", "En seguimiento"Маth.floor(Math.random() * 3)],
+        "Dr. " + ["García", "López", "Martínez"][Math.floor(Math.random() * 3)],
+      estado: ["Activo", "Controlado", "En seguimiento"][Math.floor(Math.random() * 3)],
     });
   }
   return diagnosticos;

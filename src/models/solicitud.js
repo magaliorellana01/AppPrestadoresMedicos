@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const DetalleSolicitudSchema = new mongoose.Schema({
+const SolicitudSchema = new mongoose.Schema({
     nro: {
         type: String
     },
@@ -61,5 +61,5 @@ const DetalleSolicitudSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const DetalleSolicitud = mongoose.model('DetalleSolicitud', DetalleSolicitudSchema, 'solicituds');
-module.exports = DetalleSolicitud;
+const solicitud = mongoose.model('solicitud', SolicitudSchema, 'solicituds');
+module.exports = solicitud;

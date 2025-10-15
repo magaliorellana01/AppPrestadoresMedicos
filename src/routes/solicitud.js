@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 
-const DetalleSolicitudController = require('../controllers/detalleSolicitud');
+const SolicitudController = require('../controllers/solicitud');
 
 // --- Configuración Multer ---
 const storage = multer.diskStorage({
@@ -12,8 +12,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // --- Rutas principales ---
-router.get('/:id', DetalleSolicitudController.getSolicitudById);      // Detalle de solicitud
-router.put('/:id', DetalleSolicitudController.updateSolicitud);       // Actualizar solicitud
+router.get('/:id', SolicitudController.getSolicitudById);      // Detalle de solicitud
+router.put('/:id', SolicitudController.updateSolicitud);       // Actualizar solicitud
 
 // --- Subida de archivos ---
 router.post(
@@ -22,7 +22,7 @@ router.post(
     { name: 'factura', maxCount: 1 },
     { name: 'receta', maxCount: 1 }
   ]),
-  DetalleSolicitudController.subirArchivos
+  SolicitudController.subirArchivos
 );
 
 module.exports = router;

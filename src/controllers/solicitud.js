@@ -1,4 +1,4 @@
-const Solicitud = require('../models/detalleSolicitud');
+const Solicitud = require('../models/solicitud');
 const Socio = require('../models/socio');
 const Prestador = require('../models/prestador');
 
