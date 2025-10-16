@@ -1,3 +1,4 @@
+// src/components/CartelInformacionSocio.jsx
 import { Box, Typography } from "@mui/material";
 import CredencialIcon from "../icons/icono-credencial.png";
 
@@ -12,10 +13,10 @@ export default function CartelInformacionSocio({ socio }) {
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
       edad--;
     }
-
-    return edad;
+    return edad >= 0 ? edad : "—";
   }
 
+  // Se revierte el componente a su estado original, sin efectos de hover ni transiciones.
   return (
     <Box
       display="flex"
@@ -45,7 +46,6 @@ export default function CartelInformacionSocio({ socio }) {
           pt: { md: 6 },
         }}
       />
-
       <Box
         display="grid"
         gap={0.5}
@@ -65,7 +65,7 @@ export default function CartelInformacionSocio({ socio }) {
           <strong>Género:</strong> {socio?.genero ?? "—"}
         </Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}>
-          <strong>Nro Afiliado:</strong> {socio?.nro_afiliado ?? "—"}
+          <strong>DNI:</strong> {socio?.dni ?? "—"}
         </Typography>
         <Typography variant="body1" sx={{ color: "text.primary" }}>
           <strong>Miembro:</strong> {socio?.rol ?? "—"}
