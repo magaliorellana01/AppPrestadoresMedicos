@@ -115,5 +115,3 @@ async function poblarSituacionesTerapeuticas() {
 
 console.log("🚀 Iniciando creación de situaciones terapéuticas...");
 poblarSituacionesTerapeuticas();
-
-// aca

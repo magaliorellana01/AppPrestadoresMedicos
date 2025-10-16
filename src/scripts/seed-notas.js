@@ -250,9 +250,7 @@ async function poblarNotas() {
       const cantidad = notasPorSocio[socio._id.toString()] || 0;
       const esSocioEspecial = socio.dni === "1000035";
       console.log(
-        `   ${socio.nombres} ${socio.apellidos}: ${cantidad} notas${
-          esSocioEspecial ? " (menos notas)" : ""
-        }`
+        `   ${socio.nombres} ${socio.apellidos}: ${cantidad} notas${ esSocioEspecial ? " (menos notas)" : ""}`
       );
     }
 

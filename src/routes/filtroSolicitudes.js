@@ -4,4 +4,4 @@ const SolicitudController = require('../controllers/filtroSolicitudes');
 
 router.get('/', SolicitudController.getSolicitudes);
 
-module.exports= router;
+module.exports = router;
