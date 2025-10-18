@@ -1,74 +1,150 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableContainer,
+  Paper,
+  Chip,
+} from "@mui/material";
+import { Search } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import HistoriasClinicasSearch from "../components/SearchHistoriasClinicas";
-import HistoriasClinicasTable from "../components/TableHistoriasClinicas";
-import { getAllHistoriasClinicas } from "../services";
+import { getHistoriasClinicasByMultipleParams } from "../services/index.js";
 
-const normalizar = (str) =>
-  String(str)
-    .normalize("NFD") // separa los caracteres compuestos en 2. "á" -> ("a","´")
-    .replace(/[\u0300-\u036f]/g, "") // limpia los caracteres especiales -> "'" con ese rango
-    .toLowerCase();
-
-export default function HistoriasClinicasPage() {
+export default function HistoriasClinicasPage({ theme }) {
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [historiasClinicas, setHistoriasClinicas] = useState([]);
+  const [historiasClinicas, setHistoriasClinicas] = useState(null);
+  const [error, setError] = useState(null);
 
-  // filtrar
-  const filtered = useMemo(() => {
-    const query = normalizar(q.trim());
-    if (!query) return historiasClinicas;
-    return historiasClinicas.filter((x) =>
-      [x.socio.nombres, x.socio.apellidos, x.socio.rol, x.socio.nro_afiliado]
-        .filter(Boolean)
-        .some((v) => normalizar(v).includes(query))
-    );
-  }, [q, historiasClinicas]);
+  const handleBuscar = async () => {
+    const resultados = await getHistoriasClinicasByMultipleParams(q);
+    setHistoriasClinicas(resultados);
+  };
 
-  const pageRows = useMemo(() => {
-    const start = page * rowsPerPage;
-    return filtered.slice(start, start + rowsPerPage);
-  }, [filtered, page, rowsPerPage]);
+  const handleLimpiar = () => {
+    setQ("");
+    setHistoriasClinicas(null);
+  };
 
-  // reset página al cambiar filtro o tamaño
-  useEffect(() => {
-    setPage(0);
-  }, [q, rowsPerPage]);
-
-  useEffect(() => {
-    const fetchHistoriasClinicas = async () => {
-      const historiasClinicas = await getAllHistoriasClinicas();
-      setHistoriasClinicas(historiasClinicas.historiasClinicas);
-    };
-    fetchHistoriasClinicas();
-  }, []);
+  const onKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleBuscar();
+    }
+  };
 
   return (
-    <Box sx={{ maxWidth: 1500, mx: "auto", px: { xs: 2, md: 4 }, py: 1 }}>
+    <Box sx={{ maxWidth: 1500, mx: "auto", px: { xs: 2, md: 2 }, py: 1 }}>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h3" color="primary">
+        <Typography variant="h4" color="primary">
           Historias Clínicas
-        </Typography>
-        <Typography variant="h5" sx={{ color: "text.secondary", mt: 0.5 }}>
-          Listado de titulares y familiares
         </Typography>
       </Box>
 
-      <HistoriasClinicasSearch q={q} onChange={setQ} />
+      <Box
+        mb={2}
+        display="flex"
+        justifyContent={{ xs: "flex-start", md: "space-between" }}
+        flexDirection={{ xs: "column-reverse", md: "row" }}
+        gap={2}
+      >
+        <Box width="100%" display="flex" flexDirection="column" gap={3}>
+          <TextField
+            fullWidth
+            size="small"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Buscar por DNI, Nombre, Apellido"
+            InputProps={{
+              inputProps: { "aria-label": "buscar afiliado" },
+            }}
+            sx={{
+              maxWidth: 660,
+              backgroundColor: "white",
+              "& .MuiInputBase-input": { py: 1 },
+              "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "22px" },
+            }}
+          />
 
-      <HistoriasClinicasTable
-        rows={pageRows}
-        count={filtered.length}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        onPageChange={setPage}
-        onRowsPerPageChange={setRowsPerPage}
-        onSelect={(p) => nav(`/historia-clinica/${p._id}`)}
-      />
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ fontSize: "22px", width: "fit-content" }}
+              onClick={handleLimpiar}
+              disabled={!q.trim() && (!historiasClinicas || historiasClinicas.length === 0)}
+            >
+              Limpiar
+            </Button>
+
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ fontSize: "22px", width: "fit-content" }}
+              onClick={handleBuscar}
+              disabled={!q.trim()}
+            >
+              Buscar
+              <Search sx={{ ml: 1 }} />
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+
+      <Paper>
+        {error && (
+          <Box p={2}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        )}
+
+        {historiasClinicas && (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Nombres</strong></TableCell>
+                  <TableCell><strong>Apellidos</strong></TableCell>
+                  <TableCell><strong>Nro Afiliado</strong></TableCell>
+                  <TableCell><strong>Tipo</strong></TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {historiasClinicas.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">No hay resultados</TableCell>
+                  </TableRow>
+                ) : (
+                  historiasClinicas.map((r) => (
+                    <TableRow
+                      key={r._id ?? `${r.socio?.dni}-${r.socio?.apellidos}-${r.socio?.nombres}`}
+                      hover
+                      onClick={() => nav(`/historia-clinica/${r._id ?? r.socio?._id}`)}
+                      sx={{ cursor: "pointer" }}
+                    >
+                      <TableCell>{r.socio?.nombres ?? r.nombre ?? "-"}</TableCell>
+                      <TableCell>{r.socio?.apellidos ?? r.apellido ?? "-"}</TableCell>
+                      <TableCell>{r.socio?.dni ?? r.dni ?? "-"}</TableCell>
+                      <TableCell>
+                        <Chip label={r.socio?.rol ?? r.tipo ?? "—"} size="small" variant="outlined" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
     </Box>
   );
 }

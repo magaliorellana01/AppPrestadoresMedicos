@@ -26,6 +26,12 @@ export const getHistoriaClinicaByID = async (id) => {
   return data.historiaClinica;
 };
 
+export const getHistoriasClinicasByMultipleParams = async (input) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/historias-clinicas/search/${input}`);
+  if (!res.ok) throw new Error("Error al obtener Historias Clínicas");
+  return res.json();
+};
+
 export const getSituacionTerapeuticaByMultipleParams = async (input) => {
   const response = await fetch(
     `${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/search?input=${input}`
