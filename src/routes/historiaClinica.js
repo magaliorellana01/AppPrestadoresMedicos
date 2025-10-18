@@ -1,17 +1,18 @@
 const express = require("express");
 const {
-  getHistoriasClinicas,
-  getHistoriaClinicaById,
-  createHistoriaClinica,
-  updateHistoriaClinica,
-  deleteHistoriaClinica,
-  addNotaAHC,
+    getHistoriasClinicasByMultipleEntries,
+    getHistoriasClinicas,
+    getHistoriaClinicaById,
+    createHistoriaClinica,
+    updateHistoriaClinica,
+    deleteHistoriaClinica,
+    addNotaAHC,
 } = require("../controllers/historiaClinica.js");
 
 const router = express.Router();
-
+router.get("/search/:input", getHistoriasClinicasByMultipleEntries);
 router.get("/", getHistoriasClinicas);
-router.get("/:id", getHistoriaClinicaById); 
+router.get("/:id", getHistoriaClinicaById);
 router.post("/", createHistoriaClinica);
 router.put("/:id", updateHistoriaClinica);
 router.delete("/:id", deleteHistoriaClinica);

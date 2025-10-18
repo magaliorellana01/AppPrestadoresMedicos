@@ -1,5 +1,41 @@
 const HistoriaClinica = require("../models/historiaClinica");
+const Socio = require("../models/socio");
 const Nota = require("../models/nota");
+
+
+exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
+    try {
+        const { input } = req.params;
+
+        if (!input || String(input).trim() === "") {
+            return res.status(400).json({ message: "El parámetro 'input' es obligatorio." })
+        }
+
+        const socioFilter = {
+            $or: [
+                { dni: input },
+                { nombres: { $regex: input, $options: "i" } },
+                { apellidos: { $regex: input, $options: "i" } },
+            ]
+        };
+
+        const socios = await Socio.find(socioFilter).select('_id');
+
+        if (!socios.length) {
+            return res.status(200).json([]);
+        }
+
+        const socioIds = socios.map(s => s._id);
+
+        const historias = await HistoriaClinica.find({ socio: { $in: socioIds } })
+            .populate("socio");
+        res.status(200).json(historias);
+    } catch (error) {
+        console.error("Error al obtener Historias Clínicas:", error);
+        res.status(500).json({ message: error.message || "Error interno del servidor" });
+    }
+};
+
 
 exports.getHistoriasClinicas = async (req, res) => {
     try {
@@ -18,7 +54,7 @@ exports.getHistoriaClinicaById = async (req, res) => {
         //busca la Historia Clínica por su _id de Mongoose
         const historiaClinica = await HistoriaClinica.findById(historiaClinicaId)
             .populate("socio")
-            .populate("medico_cabecera"); 
+            .populate("medico_cabecera");
 
         if (!historiaClinica) {
             return res.status(404).json({ message: "Historia Clínica no encontrada" });
@@ -35,16 +71,16 @@ exports.getHistoriaClinicaById = async (req, res) => {
             notas: notas,
         };
 
-        res.json({ 
-            message: "Detalle de Historia Clínica obtenido correctamente", 
-            historiaClinica: respuestaDetalle 
+        res.json({
+            message: "Detalle de Historia Clínica obtenido correctamente",
+            historiaClinica: respuestaDetalle
         });
 
     } catch (error) {
         console.error("Error al obtener detalle de Historia Clínica:", error);
-        res.status(500).json({ 
-            message: "Error interno del servidor", 
-            error: error.message 
+        res.status(500).json({
+            message: "Error interno del servidor",
+            error: error.message
         });
     }
 };
@@ -96,7 +132,7 @@ exports.deleteHistoriaClinica = async (req, res) => {
 //agregar nota a una historia clinica
 exports.addNotaAHC = async (req, res) => {
     const { historiaClinicaId } = req.params;
-    const { nota, prestadorId } = req.body; 
+    const { nota, prestadorId } = req.body;
 
     try {
         //verifica si la Historia Clínica existe
@@ -124,9 +160,9 @@ exports.addNotaAHC = async (req, res) => {
 
     } catch (error) {
         console.error("Error al agregar nota a Historia Clínica:", error);
-        res.status(500).json({ 
-            message: "Error interno del servidor al crear la nota.", 
-            error: error.message 
+        res.status(500).json({
+            message: "Error interno del servidor al crear la nota.",
+            error: error.message
         });
     }
 };
