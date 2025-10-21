@@ -10,7 +10,8 @@ dotenv.config();
 const historiasClinicasRoutes = require("./routes/historiaClinica");
 const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
 const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");
-const solicitudRoutes = require("./routes/solicitud"); // <--- CORREGIDO
+const solicitudRoutes = require("./routes/solicitud");
+const prestadorRoutes = require("./routes/prestador");
 
 // Importar modelos para registrarlos
 require("./models/socio");
@@ -19,7 +20,8 @@ require("./models/nota");
 require("./models/prestador");
 require("./models/situacionTerapeutica");
 require("./models/filtroSolicitudes");
-require("./models/solicitud"); // <--- Modelo para el detalle
+require("./models/solicitud");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -46,7 +48,8 @@ mongoose
 app.use("/historias-clinicas", historiasClinicasRoutes);
 app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
 app.use("/filtro-solicitudes", filtroSolicitudesRoutes);
-app.use("/solicitud", solicitudRoutes); // <--- CORREGIDO
+app.use("/solicitud", solicitudRoutes);
+app.use("/prestador", prestadorRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
