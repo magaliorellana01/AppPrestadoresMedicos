@@ -13,6 +13,7 @@ import DetalleHistoriaClinica from "./pages/DetalleHistoriaClinica.jsx";
 import SituacionesTerapeuticasPage from "./pages/SituacionesTerapeuticasPage.jsx";
 import DetalleSolicitudPage from "./pages/DetalleSolicitudPage";
 import DetalleSituacionTerapeutica from "./pages/DetalleSituacionTerapeutica.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export function App() {
   const theme = useTheme();
@@ -32,20 +33,50 @@ export function App() {
           }}
         >
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/historias-clinicas" element={<HistoriasClinicasPage />} />
-            <Route path="/historia-clinica/:id" element={<DetalleHistoriaClinica />} />
-            <Route path="/turnos" element={<TurnosPage theme={theme} />} />
-            <Route path="/solicitudes" element={<SolicitudesPage theme={theme} />} />
-            <Route path="/solicitudes/:id" element={<DetalleSolicitudPage />} />
+            { /* Protected routes */ }
+            <Route path="/historias-clinicas" element={
+              <ProtectedRoute>
+                <HistoriasClinicasPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/historia-clinica/:id" element={
+              <ProtectedRoute>
+                <DetalleHistoriaClinica />
+              </ProtectedRoute>
+            } />
+            <Route path="/turnos" element={
+              <ProtectedRoute>
+                <TurnosPage theme={theme} />
+              </ProtectedRoute>
+            } />
+            <Route path="/solicitudes" element={
+              <ProtectedRoute>
+                <SolicitudesPage theme={theme} />
+              </ProtectedRoute>
+            } />
+            <Route path="/solicitudes/:id" element={
+              <ProtectedRoute>
+                <DetalleSolicitudPage />
+              </ProtectedRoute>
+            } />
             <Route
               path="/situaciones-terapeuticas"
-              element={<SituacionesTerapeuticasPage theme={theme} />}
+              element={
+                <ProtectedRoute>
+                  <SituacionesTerapeuticasPage theme={theme} />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/situaciones-terapeuticas/:id"
-              element={<DetalleSituacionTerapeutica theme={theme} />}
+              element={
+                <ProtectedRoute>
+                  <DetalleSituacionTerapeutica theme={theme} />
+                </ProtectedRoute>
+              }
             />
+            { /* Public routes */ }
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<HomePage theme={theme} />} />
             <Route path="*" element={<NotFoundPage theme={theme} />} />
           </Routes>
