@@ -108,7 +108,6 @@ export const updateSituacionTerapeutica = async (id, updates) => {
 };
 
 export const getSolicitudById = async (id) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
   const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`);
   if (!response.ok) {
     const errorData = await response.json();
@@ -121,7 +120,6 @@ export const getSolicitudById = async (id) => {
 };
 
 export const updateSolicitud = async (id, updateData) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
   const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`, {
     method: "PUT",
     headers: {
@@ -140,7 +138,6 @@ export const updateSolicitud = async (id, updateData) => {
 };
 
 export const uploadArchivosSolicitud = async (id, formData) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
   const response = await fetch(
     `${import.meta.env.VITE_API_URL}/solicitud/${id}/archivos`,
     {
@@ -152,6 +149,22 @@ export const uploadArchivosSolicitud = async (id, formData) => {
     const errorData = await response.json();
     throw new Error(
       errorData.message || `Error ${response.status}: No se pudieron subir los archivos.`
+    );
+  }
+  const data = await response.json();
+  return data;
+};
+
+export const login = async (cuit, password) => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/prestador/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cuit, password }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.message || `Error ${response.status}: No se pudo iniciar sesión.`
     );
   }
   const data = await response.json();
