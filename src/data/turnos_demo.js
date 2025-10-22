@@ -1,5 +1,3 @@
-// src/data/turnos_demo.js
-
 export const ESPECIALIDADES = [
   "Clínica Médica",
   "Pediatría",

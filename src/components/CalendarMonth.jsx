@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Box, Grid, Typography, Chip, Stack, Paper, IconButton } from "@mui/material";
+import { Box, Typography, Chip, Stack, Paper, IconButton } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
@@ -16,52 +16,89 @@ function buildMonth(year, month) {
   return cells;
 }
 
-export default function CalendarMonth({ currentDate, onPrev, onNext, turnosByDate, onSelectDate }) {
+export default function CalendarMonth({
+  currentDate, onPrev, onNext, turnosByDate, onSelectDate
+}) {
   const y = currentDate.getFullYear();
   const m = currentDate.getMonth();
   const cells = useMemo(() => buildMonth(y, m), [y, m]);
-  const monthLabel = currentDate.toLocaleDateString("es-AR", { month:"long", year:"numeric" });
+  const monthLabel = currentDate.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+
+  // misma grilla para header y cuerpo
+  const gridSx = {
+    display: "grid",
+    gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+    gap: 1, // mismo gap para ambos
+    alignItems: "stretch",
+  };
 
   return (
-    <Paper elevation={2} sx={{ p:2, borderRadius:3 }}>
+    <Paper elevation={2} sx={{ p: 2, borderRadius: 3 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
         <IconButton onClick={onPrev} size="small"><ArrowBackIosNewIcon fontSize="inherit" /></IconButton>
-        <Typography variant="h6" sx={{ textTransform:"capitalize" }}>{monthLabel}</Typography>
+        <Typography variant="h6" sx={{ textTransform: "capitalize" }}>{monthLabel}</Typography>
         <IconButton onClick={onNext} size="small"><ArrowForwardIosIcon fontSize="inherit" /></IconButton>
       </Box>
 
-      <Grid container columns={7}>
-        {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map((d) => (
-          <Grid key={d} item xs={1}>
-            <Typography variant="caption" sx={{ fontWeight:600, px:1 }}>{d}</Typography>
-          </Grid>
+      {/* Header de días con misma grilla y gap */}
+      <Box sx={{ ...gridSx, mb: 1 }}>
+        {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d => (
+          <Box key={d}>
+            <Typography variant="caption" sx={{ fontWeight: 600, textAlign: "center", color: "text.secondary" }}>
+              {d}
+            </Typography>
+          </Box>
         ))}
-      </Grid>
+      </Box>
 
-      <Grid container columns={7} spacing={1}>
+      {/* Cuerpo del mes con misma grilla y gap */}
+      <Box sx={gridSx}>
         {cells.map((d, i) => {
-          const key = d.toISOString().slice(0,10);
+          const key = d.toISOString().slice(0, 10);
           const items = turnosByDate[key] ?? [];
           const isOtherMonth = d.getMonth() !== m;
+
           return (
-            <Grid key={i} item xs={1}>
-              <Paper
-                onClick={() => onSelectDate?.(d)}
-                variant="outlined"
-                sx={{ p:1, minHeight:96, cursor:"pointer", borderRadius:2, opacity: isOtherMonth ? 0.5 : 1 }}
+            <Paper
+              key={i}
+              onClick={() => onSelectDate?.(d)}
+              variant="outlined"
+              sx={{
+                p: 1,
+                height: { xs: 120, sm: 132 }, // alto consistente
+                cursor: "pointer",
+                borderRadius: 2,
+                opacity: isOtherMonth ? 0.5 : 1,
+                display: "flex",
+                flexDirection: "column",
+                minWidth: 0, // evita overflow
+              }}
+            >
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>{d.getDate()}</Typography>
+
+              <Stack
+                spacing={0.5}
+                mt={0.5}
+                sx={{
+                  overflow: "hidden",
+                  "& .MuiChip-root": { maxWidth: "100%", height: 22 },
+                  "& .MuiChip-label": {
+                    px: 0.5, fontSize: 11,
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  },
+                }}
               >
-                <Typography variant="caption" sx={{ fontWeight:600 }}>{d.getDate()}</Typography>
-                <Stack spacing={0.5} mt={0.5}>
-                  {items.slice(0,3).map(t => (
-                    <Chip key={t.id} size="small" label={`${t.hora} · ${t.especialidad}`} />
-                  ))}
-                  {items.length > 3 && <Typography variant="caption">+{items.length - 3} más</Typography>}
-                </Stack>
-              </Paper>
-            </Grid>
+                {items.slice(0, 3).map(t => (
+                  <Chip key={t.id} size="small" label={`${t.hora} · ${t.especialidad}`} />
+                ))}
+                {items.length > 3 && (
+                  <Typography variant="caption" color="primary">+{items.length - 3} más</Typography>
+                )}
+              </Stack>
+            </Paper>
           );
         })}
-      </Grid>
+      </Box>
     </Paper>
   );
 }
