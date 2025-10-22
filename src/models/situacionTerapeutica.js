@@ -29,15 +29,6 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
   novedadesMedicas: [
     {
       nota: { type: String, required: true },
-      prestador: {
-        _id: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestador', required: true },
-        nombres: { type: String, required: true },
-        apellidos: { type: String, required: true },
-        especialidad: { type: String, required: true },
-        cuit: { type: String, required: true },
-        matricula: { type: String, required: true },
-        es_centro_medico: { type: Boolean, required: true },
-      },
       fechaCreacion: { type: Date, default: Date.now }
     }
   ],

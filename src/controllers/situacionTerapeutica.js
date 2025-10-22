@@ -104,7 +104,7 @@ exports.agregarNovedad = async (req, res) => {
     
     const situacion = await SituacionTerapeutica.findByIdAndUpdate(
       situacionTerapeuticaId,
-      { $push: { novedadesMedicas: { nota, prestador: {_id: req.prestador._id, nombres: req.prestador.nombres, apellidos: req.prestador.apellidos, especialidad: req.prestador.especialidad, cuit: req.prestador.cuit, matricula: req.prestador.matricula, es_centro_medico: req.prestador.es_centro_medico   } } } },
+      { $push: { novedadesMedicas: { nota } } },
       { new: true, runValidators: true }
     )
       .populate('socio')
@@ -129,7 +129,12 @@ exports.createSituacionTerapeutica = async (req, res) => {
       return res.status(404).json({ message: 'Socio no encontrado' });
     }
     req.body.socio = socio._id;
-    req.body.prestador = req.prestador._id;
+    const prestador = await Prestador.findById(req.body.prestador);
+    if (!prestador) {
+      return res.status(404).json({ message: 'Prestador no encontrado' });
+    }
+    req.body.prestador = prestador._id;
+
     const situacion = await SituacionTerapeutica.create(req.body);
     res.status(201).json(situacion);
   } catch (error) {
