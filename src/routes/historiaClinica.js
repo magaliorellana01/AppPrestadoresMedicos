@@ -10,7 +10,7 @@ const {
 } = require("../controllers/historiaClinica.js");
 
 const router = express.Router();
-router.get("/search/:input", getHistoriasClinicasByMultipleEntries);
+router.get("/search", getHistoriasClinicasByMultipleEntries);
 router.get("/", getHistoriasClinicas);
 router.get("/:id", getHistoriaClinicaById);
 router.post("/", createHistoriaClinica);

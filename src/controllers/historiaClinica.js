@@ -5,7 +5,7 @@ const Nota = require("../models/nota");
 
 exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
     try {
-        const { input } = req.params;
+        const { input } = req.query;
 
         if (!input || String(input).trim() === "") {
             return res.status(400).json({ message: "El parámetro 'input' es obligatorio." })
