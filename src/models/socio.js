@@ -14,6 +14,12 @@ const socioSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  es_familiar_de: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Socio",
+    required: false,
+    default: null,
+  },
   rol: {
     type: String,
     enum: ["Titular", "Familiar"],

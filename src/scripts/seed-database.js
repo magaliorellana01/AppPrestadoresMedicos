@@ -17,6 +17,7 @@ const sociosData = [
     apellidos: "Benítez Ramírez",
     rol: "Familiar",
     dni: "1000034",
+    es_familiar_de: "1000035",
   },
   {
     id: "1000035",
@@ -31,6 +32,7 @@ const sociosData = [
     apellidos: "Córdoba",
     rol: "Familiar",
     dni: "1000036",
+    es_familiar_de: "1000035",
   },
   {
     id: "1000037",
@@ -38,6 +40,7 @@ const sociosData = [
     apellidos: "Álvarez",
     rol: "Titular",
     dni: "1000037",
+    
   },
   {
     id: "1000038",
@@ -45,6 +48,7 @@ const sociosData = [
     apellidos: "Ríos Gutiérrez",
     rol: "Familiar",
     dni: "1000038",
+    es_familiar_de: "1000037",
   },
   {
     id: "1000039",
@@ -59,6 +63,7 @@ const sociosData = [
     apellidos: "Serrano Díaz",
     rol: "Familiar",
     dni: "1000040",
+    es_familiar_de: "1000039",
   },
   {
     id: "1000041",
@@ -73,6 +78,7 @@ const sociosData = [
     apellidos: "Luna Fernández",
     rol: "Familiar",
     dni: "1000042",
+    es_familiar_de: "1000041",
   },
   {
     id: "1000043",
@@ -87,6 +93,7 @@ const sociosData = [
     apellidos: "Acuña Ramírez",
     rol: "Familiar",
     dni: "1000044",
+    es_familiar_de: "1000043",
   },
   {
     id: "1000045",
@@ -101,6 +108,7 @@ const sociosData = [
     apellidos: "Ortiz Cabrera",
     rol: "Familiar",
     dni: "1000046",
+    es_familiar_de: "1000045",
   },
   {
     id: "1000047",
@@ -115,6 +123,7 @@ const sociosData = [
     apellidos: "Márquez",
     rol: "Familiar",
     dni: "1000048",
+    es_familiar_de: "1000047",
   },
   {
     id: "1000049",
@@ -129,6 +138,7 @@ const sociosData = [
     apellidos: "Campos",
     rol: "Familiar",
     dni: "1000050",
+    es_familiar_de: "1000051",
   },
   {
     id: "1000051",
@@ -143,6 +153,7 @@ const sociosData = [
     apellidos: "Quiroga",
     rol: "Familiar",
     dni: "1000052",
+    es_familiar_de: "1000053",
   },
   {
     id: "1000053",
@@ -157,6 +168,7 @@ const sociosData = [
     apellidos: "Mendoza",
     rol: "Familiar",
     dni: "1000054",
+    es_familiar_de: "1000053",
   },
   {
     id: "1000059",
@@ -171,6 +183,7 @@ const sociosData = [
     apellidos: "Campos Suárez",
     rol: "Familiar",
     dni: "1000060",
+    es_familiar_de: "1000059",
   },
 ];
 
@@ -736,6 +749,21 @@ async function poblarBaseDeDatos() {
       console.log(
         `✅ ${socio.nombres} ${socio.apellidos} - HC: ${historiaClinica.numero_historia} - Médico: ${medicoCabeceraInfo}`
       );
+    }
+
+    // Asignar un titular aleatorio a cada familiar
+    const titulares = await SocioModel.find({ rol: "Titular" }).select("_id nombres apellidos dni");
+    const familiares = await SocioModel.find({ rol: "Familiar" }).select("_id nombres apellidos dni");
+    if (titulares.length === 0) {
+      console.log("⚠️ No hay titulares para vincular con familiares.");
+    } else {
+      for (const familiar of familiares) {
+        const titularAleatorio = titulares[Math.floor(Math.random() * titulares.length)];
+        await SocioModel.findByIdAndUpdate(familiar._id, { es_familiar_de: titularAleatorio._id });
+        console.log(
+          `👪 Vinculado ${familiar.nombres} ${familiar.apellidos} con titular ${titularAleatorio.nombres} ${titularAleatorio.apellidos}`
+        );
+      }
     }
 
     console.log(`\n🎉 ¡Proceso completado exitosamente!`);
