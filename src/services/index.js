@@ -1,29 +1,51 @@
-export const getAllHistoriasClinicas = async () => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/historias-clinicas`);
+import axios from "axios";
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo obtener las Historias Clínicas.`
-    );
+// Eliminar el token y limpiar estado simple
+export const logoutUser = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("prestador");
+};
+
+// Instancia de Axios
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL}`,
+});
+
+// Interceptor de solicitud: adjunta Authorization si hay token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor de respuesta: maneja 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error?.response?.status === 401 || error?.status === 401) {
+      console.warn("Token expirado o no válido.");
+      logoutUser();
+      window.location.reload();
+    }
+    return Promise.reject(error);
   }
+);
 
-  const data = await response.json();
-  return data;
+// Servicios
+export const getAllHistoriasClinicas = async () => {
+  const response = await api.get(`/historias-clinicas`);
+  return response.data;
 };
 
 export const getHistoriaClinicaByID = async (id) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/historias-clinicas/${id}`);
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo obtener la Historia Clínica.`
-    );
-  }
-
-  const data = await response.json();
-  return data.historiaClinica;
+  const response = await api.get(`/historias-clinicas/${id}`);
+  return response.data.historiaClinica;
 };
 
 export const getHistoriasClinicasByMultipleParams = async (input) => {
@@ -33,133 +55,67 @@ export const getHistoriasClinicasByMultipleParams = async (input) => {
 };
 
 export const getSituacionTerapeuticaByMultipleParams = async (input) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/search?input=${input}`
-  );
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo obtener la Situación Terapéutica.`
-    );
-  }
-
-  const data = await response.json();
-  return data;
+  const response = await api.get(`/situaciones-terapeuticas/search`, {
+    params: { input },
+  });
+  return response.data;
 };
 
 export const createSituacionTerapeutica = async (form) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(form),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo crear la Situación Terapéutica.`
-    );
-  }
-
-  const data = await response.json();
-  return data;
+  const response = await api.post(`/situaciones-terapeuticas`, form);
+  return response.data;
 };
 
 export const getSituacionTerapeuticaByID = async (id) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/${id}`);
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo obtener la Situación Terapéutica.`
-    );
-  }
-  const data = await response.json();
-  return data;
+  const response = await api.get(`/situaciones-terapeuticas/${id}`);
+  return response.data;
 };
 
 export const createNovedadTerapeutica = async (id, nota) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/${id}/novedades`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nota }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error ${response.status}: ${errorText}`);
-  }
-
-  return await response.json();
+  const response = await api.post(`/situaciones-terapeuticas/${id}/novedades`, { nota });
+  return response.data;
 };
 
 export const updateSituacionTerapeutica = async (id, updates) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/situaciones-terapeuticas/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updates),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error ${response.status}: ${errorText}`);
-  }
-
-  return await response.json();
+  const response = await api.put(`/situaciones-terapeuticas/${id}`, updates);
+  return response.data;
 };
 
 export const getSolicitudById = async (id) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`);
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo obtener la solicitud.`
-    );
-  }
-  const data = await response.json();
-  return data;
+  const response = await api.get(`/solicitud/${id}`);
+  return response.data;
 };
 
 export const updateSolicitud = async (id, updateData) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/solicitud/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(updateData),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudo actualizar la solicitud.`
-    );
-  }
-  const data = await response.json();
-  return data;
+  const response = await api.put(`/solicitud/${id}`, updateData);
+  return response.data;
 };
 
 export const uploadArchivosSolicitud = async (id, formData) => {
-  // CAMBIADO: de 'detalle-solicitudes' a 'solicitud'
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/solicitud/${id}/archivos`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.message || `Error ${response.status}: No se pudieron subir los archivos.`
-    );
+  const response = await api.post(`/solicitud/${id}/archivos`, formData);
+  return response.data;
+};
+
+export const login = async (cuit, password) => {
+  const response = await api.post(`/prestador/login`, { cuit, password });
+  // Si el backend devuelve token, lo persistimos
+  const token = response?.data?.accessToken || response?.data?.token;
+  if (token) {
+    localStorage.setItem("token", token);
+    api.defaults.headers.common.authorization = `Bearer ${token}`;
   }
-  const data = await response.json();
-  return data;
+  return response.data;
+};
+
+// Solicitudes - listado con filtros y paginación
+export const getSolicitudesFiltradas = async ({ page, size, estado, tipo }) => {
+  const response = await api.get(`/filtro-solicitudes`, {
+    params: {
+      page,
+      size,
+      ...(estado ? { estado } : {}),
+      ...(tipo ? { tipo } : {}),
+    },
+  });
+  return response.data;
 };
