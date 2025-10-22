@@ -49,9 +49,10 @@ export const getHistoriaClinicaByID = async (id) => {
 };
 
 export const getHistoriasClinicasByMultipleParams = async (input) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/historias-clinicas/search/${input}`);
-  if (!res.ok) throw new Error("Error al obtener Historias Clínicas");
-  return res.json();
+  const response = await api.get(`/historias-clinicas/search`, {
+    params: { input },
+  });
+  return response.data;
 };
 
 export const getSituacionTerapeuticaByMultipleParams = async (input) => {
