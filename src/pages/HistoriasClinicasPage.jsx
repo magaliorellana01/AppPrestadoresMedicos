@@ -21,7 +21,6 @@ export default function HistoriasClinicasPage({ theme }) {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [historiasClinicas, setHistoriasClinicas] = useState(null);
-  const [error, setError] = useState(null);
 
   const handleBuscar = async () => {
     const resultados = await getHistoriasClinicasByMultipleParams(q);
@@ -100,12 +99,6 @@ export default function HistoriasClinicasPage({ theme }) {
       </Box>
 
       <Paper>
-        {error && (
-          <Box p={2}>
-            <Typography color="error">{error}</Typography>
-          </Box>
-        )}
-
         {historiasClinicas && (
           <TableContainer>
             <Table>
