@@ -69,8 +69,7 @@ export default function DetalleDeHistoriaClinica() {
   const socio = historiaClinicaData.socio;
   const notasBackend = historiaClinicaData.notas || [];
 
-  //TODO: Reemplazar este valor con el ID real del usuario logueado.
-  const usuarioActualId = null;
+  const usuarioActualId = JSON.parse(localStorage.getItem('prestador'))?._id;
 
   const notasFiltradas =
     filtro === "mias"

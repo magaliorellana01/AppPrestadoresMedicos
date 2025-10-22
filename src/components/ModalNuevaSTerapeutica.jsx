@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Divider, IconButton, Modal, Snackbar, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, Box, Button, Divider, IconButton, Modal, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { createSituacionTerapeutica } from "../services";
+import { useNavigate } from "react-router-dom";
 
 
 const formatTodayYYYYMMDD = () => {
@@ -13,16 +14,15 @@ const formatTodayYYYYMMDD = () => {
   };
 
 export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
-
     const theme = useTheme();
-    const [snackbar, setSnackbar] = useState('');
+    const navigate = useNavigate();
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
     const [form, setForm] = useState({
         dniAfiliado: "",
         fechaInicio: formatTodayYYYYMMDD(),
         fechaFin: "",
         diagnostico: "",
         tratamiento: "",
-        prestador: "68e5cbb8f13207b47545ee56", // TODO: agregar prestador cuando se implemente el login
       });
     
       const handleChangeField = (field) => (event) => {
@@ -35,13 +35,13 @@ export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
     
       const handleCrear = async () => {
         try {
-          await createSituacionTerapeutica(form);
-          setSnackbar('Situación terapéutica creada correctamente');
+          const situacion = await createSituacionTerapeutica(form);
+          setSnackbar({ open: true, message: 'Situación terapéutica creada correctamente', severity: "success" });
           setOpenModal(false);
-          // TODO redirigir a la página de detalle de situación terapéutica
+          navigate(`/situaciones-terapeuticas/${situacion._id}`);
         } catch (error) {
           console.log('error', error);
-          setSnackbar(error.message || 'Error al crear la situación terapéutica');
+          setSnackbar({ open: true, message: error.response?.data?.message || error.message || 'Error al crear la situación terapéutica' , severity: "error" });
         }
       };
     
@@ -53,7 +53,6 @@ export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
             fechaFin: "",
             diagnostico: "",
             tratamiento: "",
-            prestador: "68e5cbb8f13207b47545ee56", // TODO: agregar prestador cuando se implemente el login
           });
         }
       }, [openModal, setForm]);
@@ -67,8 +66,8 @@ export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
 
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Typography color={theme.color.primary} fontSize="28px">Nueva Situación Terapéutica</Typography>
-            <IconButton onClick={() => setOpenModal(false)}>
-            <Close />
+              <IconButton onClick={() => setOpenModal(false)}>
+              <Close />
             </IconButton>
         </Box>
 
@@ -145,13 +144,10 @@ export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
         </Box>
         </Box>
         </Modal>
-        <Snackbar
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            open={snackbar !== ''}
-            autoHideDuration={5000}
-            onClose={() => setSnackbar('')}
-            message={snackbar || ''}
-        />
+        <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+          <Alert severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
+        </Snackbar>
     </>
   );
 }

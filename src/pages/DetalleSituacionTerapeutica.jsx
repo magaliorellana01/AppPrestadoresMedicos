@@ -29,24 +29,14 @@ export default function DetalleSituacionTerapeutica() {
         if (!nuevaNovedad.trim()) return;
 
         try {
-
             const situacionActualizada = await createNovedadTerapeutica(id, nuevaNovedad);
-
-
             setNuevaNovedad("");
-
-
             const nuevaNovedadAgregada = situacionActualizada.novedadesMedicas.slice(-1)[0];
-
-
             setSituacion(situacionActualizada);
-
-
             setNovedades(prevNovedades => [
                 ...(prevNovedades || []),
                 nuevaNovedadAgregada
             ]);
-
         } catch (err) {
             console.error("Error al agregar novedad:", err);
             setError(err.message || "Error al agregar novedad");
@@ -376,8 +366,11 @@ export default function DetalleSituacionTerapeutica() {
                         >
                             {novedades && novedades.length > 0 ? (
                                 novedades.map((novedad, index) => (
-                                    <Box key={novedad._id ?? index}>
+                                    <Box key={novedad._id ?? index} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1 }}>
                                         <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                            {novedad.prestador.nombres} {novedad.prestador.apellidos} - {novedad.prestador.especialidad}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                             {novedad.fechaCreacion
                                                 ? new Date(novedad.fechaCreacion).toLocaleString("es-AR", {
                                                     day: "2-digit",
@@ -388,7 +381,7 @@ export default function DetalleSituacionTerapeutica() {
                                                 }).replace(', ', ' ')
                                                 : "—"}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ color: "text.primary", wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                        <Typography variant="body2" sx={{ mt: 1, color: "text.primary", wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                             {novedad.nota ?? "—"}
                                         </Typography>
                                         {index < novedades.length - 1 && <Divider sx={{ my: 1 }} />}
