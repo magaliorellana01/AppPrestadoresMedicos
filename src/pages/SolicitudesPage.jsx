@@ -3,7 +3,7 @@ import { Box, Typography, Button, Container, Grid, MenuItem, Select, FormControl
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TablaGenerica from "../components/TablaGenerica";
 import ComponenteDeEstados from "../components/EstadosComponente";
-export const API_BASE = "http://localhost:3000";
+import { getSolicitudesFiltradas } from "../services";
 import { useNavigate } from "react-router-dom";
 
 // Estados y tipos:
@@ -57,13 +57,12 @@ const SolicitudesPage = ({ theme }) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({ page, size: rowsPerPage });
-      if (estadoFiltro) params.append('estado', estadoFiltro);
-      if (tipoFiltro) params.append('tipo', tipoFiltro);
-
-      const res = await fetch(`${API_BASE}/filtro-solicitudes?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      const json = await getSolicitudesFiltradas({
+        page,
+        size: rowsPerPage,
+        estado: estadoFiltro,
+        tipo: tipoFiltro,
+      });
       setData(json.content || []);
       setCount(json.total || 0);
     } catch (err) {
