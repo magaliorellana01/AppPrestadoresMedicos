@@ -10,7 +10,9 @@ dotenv.config();
 const historiasClinicasRoutes = require("./routes/historiaClinica");
 const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
 const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");
-const solicitudRoutes = require("./routes/solicitud"); // <--- CORREGIDO
+const solicitudRoutes = require("./routes/solicitud");
+const prestadorRoutes = require("./routes/prestador");
+const { verifyTokenMiddleware } = require("./middlewares/authMiddleware");
 
 // Importar modelos para registrarlos
 require("./models/socio");
@@ -19,7 +21,8 @@ require("./models/nota");
 require("./models/prestador");
 require("./models/situacionTerapeutica");
 require("./models/filtroSolicitudes");
-require("./models/solicitud"); // <--- Modelo para el detalle
+require("./models/solicitud");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -43,10 +46,11 @@ mongoose
   .catch((error) => console.error("MongoDB connection error:", error));
   
 // Rutas
-app.use("/historias-clinicas", historiasClinicasRoutes);
-app.use("/situaciones-terapeuticas", situacionTerapeuticaRoutes);
-app.use("/filtro-solicitudes", filtroSolicitudesRoutes);
-app.use("/solicitud", solicitudRoutes); // <--- CORREGIDO
+app.use("/historias-clinicas", verifyTokenMiddleware, historiasClinicasRoutes);
+app.use("/situaciones-terapeuticas", verifyTokenMiddleware, situacionTerapeuticaRoutes);
+app.use("/filtro-solicitudes", verifyTokenMiddleware, filtroSolicitudesRoutes);
+app.use("/solicitud", verifyTokenMiddleware, solicitudRoutes);
+app.use("/prestador", prestadorRoutes); // no necesita authToken porque es para el login
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
