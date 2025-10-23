@@ -19,7 +19,7 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
       ]
     };
 
-    const socios = await Socio.find(socioFilter).select('_id');
+    const socios = await Socio.find(socioFilter).select('_id rol');
 
     if (!socios.length) {
       return res.status(200).json([]);
@@ -31,7 +31,24 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
       .populate('socio')
       .populate('prestador');
 
-    return res.status(200).json(situaciones);
+    const situacionesFinales = [];
+
+    // Si el socio es titular, se agregan las situaciones terapéuticas del titular y las del familiar
+    // Si el socio es familiar, NO se agregan las situaciones terapéuticas del titular
+    for (const socio of socios) {
+      if (socio.rol === 'Titular') {
+        situacionesFinales.push(...situaciones.filter(s => s.socio._id.toString() === socio._id.toString()));
+        const familiares = await Socio.find({ es_familiar_de: socio._id }).select('_id');
+        const familiaresIds = familiares.map(f => f._id);
+        const situacionesFamiliares = await SituacionTerapeutica.find({ socio: { $in: familiaresIds } })
+          .populate('socio')
+          .populate('prestador');
+        situacionesFinales.push(...situacionesFamiliares);
+      } else {
+        situacionesFinales.push(...situaciones.filter(s => s.socio._id.toString() === socio._id.toString()));
+      }
+    }
+    return res.status(200).json(situacionesFinales);
   } catch (error) {
     console.error('Error al obtener la situación terapéutica:', error);
     res.status(500).json({ 
