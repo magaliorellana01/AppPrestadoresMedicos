@@ -19,7 +19,7 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
             ]
         };
 
-        const socios = await Socio.find(socioFilter).select('_id');
+        const socios = await Socio.find(socioFilter).select('_id rol');
 
         if (!socios.length) {
             return res.status(200).json([]);
@@ -29,7 +29,25 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
 
         const historias = await HistoriaClinica.find({ socio: { $in: socioIds } })
             .populate("socio");
-        res.status(200).json(historias);
+
+        const historiasFinales = [];
+
+        // Si el socio es titular, se agregan las situaciones terapéuticas del titular y las del familiar
+        // Si el socio es familiar, NO se agregan las situaciones terapéuticas del titular
+        for (const socio of socios) {
+            if (socio.rol === 'Titular') {
+                historiasFinales.push(...historias.filter(h => h.socio._id.toString() === socio._id.toString()));
+                const familiares = await Socio.find({ es_familiar_de: socio._id }).select('_id');
+                const familiaresIds = familiares.map(f => f._id);
+                const historiasFamiliares = await HistoriaClinica.find({ socio: { $in: familiaresIds } })
+                .populate('socio')
+                .populate('medico_cabecera');
+                historiasFinales.push(...historiasFamiliares);
+            } else {
+                historiasFinales.push(...historias.filter(h => h.socio._id.toString() === socio._id.toString()));
+            }
+        }
+        res.status(200).json(historiasFinales);
     } catch (error) {
         console.error("Error al obtener Historias Clínicas:", error);
         res.status(500).json({ message: error.message || "Error interno del servidor" });
