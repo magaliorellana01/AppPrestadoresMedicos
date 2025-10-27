@@ -49,6 +49,11 @@ const SolicitudSchema = new mongoose.Schema({
         fecha: { type: Date, default: Date.now }
     }],
 
+    prestadorAsignado: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Prestador'
+    },
+
     fechaCreacion: {
         type: Date,
         default: Date.now,
