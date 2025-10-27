@@ -111,7 +111,7 @@ export default function DetalleSolicitudPage() {
       setSnackbar({ open: true, message: "Solicitud actualizada correctamente", severity: "success" });
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: err.message || "No se pudo actualizar la solicitud", severity: "error" });
+      setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudo actualizar la solicitud", severity: "error" });
     }
   };
 
