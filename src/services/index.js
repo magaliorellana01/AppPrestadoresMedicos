@@ -120,3 +120,25 @@ export const getSolicitudesFiltradas = async ({ page, size, estado, tipo }) => {
   });
   return response.data;
 };
+
+// TURNOS API
+export const getTurnos = async (params = {}) => {
+  const { data } = await api.get(`/turnos`, { params });
+  return data;
+};
+
+export const createTurnosSlots = async (payload) => {
+  const { data } = await api.post(`/turnos/slots`, payload);
+  return data;
+};
+
+export const updateTurno = async (id, patch) => {
+  const { data } = await api.patch(`/turnos/${id}`, patch);
+  return data;
+};
+
+export const addNotaTurno = async (id, texto) => {
+  const { data } = await api.post(`/turnos/${id}/notas`, { texto });
+  return data;
+};
+

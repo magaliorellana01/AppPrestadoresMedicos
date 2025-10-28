@@ -5,10 +5,17 @@ import {
 } from "@mui/material";
 import { MEDICOS, CENTROS } from "../data/turnos_demo";
 
-export default function TurnosList({ fecha, turnos, onAgregarNota }) {
-  const sedeNombre = (id) =>
-    CENTROS.find((s) => s.id === id)?.nombre ?? "—";
+const sedeNombre = (id) => CENTROS.find((s) => s.id === id)?.nombre ?? "—";
 
+// Fallbacks para nombre de médico: populate → campo plano → catálogo demo
+const nombreMedico = (t) =>
+  t.medicoNombre
+  || (t.prestador_medico && `${t.prestador_medico.nombres ?? ""} ${t.prestador_medico.apellidos ?? ""}`.trim())
+  || (t.medico && `${t.medico.nombres ?? ""} ${t.medico.apellidos ?? ""}`.trim())
+  || MEDICOS.find((m) => m.id === t.medicoId)?.nombre
+  || "—";
+
+export default function TurnosList({ fecha, turnos, onAgregarNota }) {
   return (
     <Paper elevation={2} sx={{ p: 2, borderRadius: 3 }}>
       <Typography variant="h6">
@@ -24,8 +31,9 @@ export default function TurnosList({ fecha, turnos, onAgregarNota }) {
         )}
 
         {turnos.map((t) => {
-          const med = MEDICOS.find((m) => m.id === t.medicoId)?.nombre ?? "—";
+          const med = nombreMedico(t);
           const sede = sedeNombre(t.centroId || t.sedeId);
+          const paciente = t.paciente || t.afiliado || ""; // compatibilidad
 
           return (
             <ListItem
@@ -42,10 +50,10 @@ export default function TurnosList({ fecha, turnos, onAgregarNota }) {
               }
             >
               <ListItemText
-                primary={`${t.hora} · ${t.afiliado}`}
+                primary={`${t.hora}${paciente ? ` · ${paciente}` : ""}`}
                 secondary={
                   <Stack direction="row" flexWrap="wrap" gap={0.5} alignItems="center">
-                    <Chip size="small" label={t.especialidad} />
+                    {t.especialidad ? <Chip size="small" label={t.especialidad} /> : null}
                     <Chip size="small" label={med} />
                     <Chip size="small" label={sede} />
                     {t.notas?.length > 0 && (
