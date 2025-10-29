@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import { Add, Search } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
 import { getSituacionTerapeuticaByMultipleParams } from "../services";
@@ -10,16 +10,36 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
+  const [filtro, setFiltro] = useState("todas");
+  const [prestadorLogueadoId, setPrestadorLogueadoId] = useState(null);
 
   const handleBuscar = async () => {
     const resultados = await getSituacionTerapeuticaByMultipleParams(q);
     setSituacionesTerapeuticas(resultados);
   };
 
+
+  useEffect(() => {
+    const prestador = JSON.parse(localStorage.getItem("prestador"));
+    if (prestador && prestador._id) {
+      setPrestadorLogueadoId(prestador._id);
+    }
+  }, []);
+
+
   const handleLimpiar = () => {
     setQ("");
     setSituacionesTerapeuticas(null);
+    setFiltro("todas")
   };
+
+  const situacionesFiltradas = (situacionesTerapeuticas || []).filter((sit) => {
+    if (filtro === "mias") {
+      return sit.prestador._id === prestadorLogueadoId;
+    }
+    return true;
+  });
+
 
   return (
     <Box>
@@ -65,20 +85,20 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
             }}
           />
           <Box display="flex" gap={2}>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              sx={{ fontSize: "22px", width: "fit-content" }} 
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ fontSize: "22px", width: "fit-content" }}
               onClick={handleLimpiar}
               disabled={!q.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
             >
               Limpiar
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              sx={{ fontSize: "22px", width: "fit-content" }} 
-              onClick={handleBuscar} 
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ fontSize: "22px", width: "fit-content" }}
+              onClick={handleBuscar}
               disabled={!q.trim()}
             >
               Buscar
@@ -97,11 +117,23 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
           <Add sx={{ ml: 1 }} />
         </Button>
       </Box>
+      {situacionesTerapeuticas !== null && (
+        <>
+          <RadioGroup row value={filtro} onChange={(e) => setFiltro(e.target.value)} sx={{ mb: 2 }}>
+            <FormControlLabel value="todas" control={<Radio />} label="Ver todas las situaciones terapéuticas" />
+            <FormControlLabel
+              value="mias"
+              control={<Radio />}
+              label="Ver las creadas por mi"
+              disabled={!prestadorLogueadoId}
+            />
+          </RadioGroup>
 
-      <TableSituacionesTerapeuticas situacionesTerapeuticas={situacionesTerapeuticas} />
+          <TableSituacionesTerapeuticas situacionesTerapeuticas={situacionesFiltradas} />
+        </>
+      )}
 
       <ModalNuevaSTerapeutica openModal={openModal} setOpenModal={setOpenModal} />
-
     </Box>
   );
 };
