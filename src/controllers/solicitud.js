@@ -99,16 +99,19 @@ exports.getSolicitudById = async (req, res) => {
 exports.updateSolicitud = async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado: nuevoEstado, motivo, usuarioId } = req.body;
+    const { estado: nuevoEstado, motivo } = req.body;
+    const prestadorId = req.prestador._id;
 
     const estadosValidos = ['Recibido', 'En Análisis', 'Observado', 'Aprobado', 'Rechazado'];
     if (!estadosValidos.includes(nuevoEstado)) return res.status(400).json({ message: 'Estado no válido' });
     if ((nuevoEstado === 'Observado' || nuevoEstado === 'Rechazado') && !motivo) return res.status(400).json({ message: 'Motivo obligatorio' });
 
-    if (usuarioId && !(await Prestador.findById(usuarioId))) return res.status(404).json({ message: 'Usuario no encontrado' });
-
     const solicitud = await Solicitud.findById(id);
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
+
+    if (solicitud.prestadorAsignado && solicitud.prestadorAsignado.toString() !== prestadorId.toString()) {
+      return res.status(403).json({ message: "Esta solicitud está siendo gestionada por otro prestador. No tienes permisos para modificarla." });
+    }
 
     // Se flexibilizan las transiciones para permitir todos los cambios de estado.
     const transiciones = {
@@ -129,11 +132,14 @@ exports.updateSolicitud = async (req, res) => {
     const nuevoHistorial = {
         estado: nuevoEstado,
         motivo: motivo,
-        usuario: usuarioId || null,
+        usuario: prestadorId,
         fecha: new Date()
     };
 
     solicitud.estado = nuevoEstado;
+    if (!solicitud.prestadorAsignado) {
+      solicitud.prestadorAsignado = prestadorId;
+    }
     // Inicializar el historial si no existe
     if (!Array.isArray(solicitud.historialEstados)) {
         solicitud.historialEstados = [];
