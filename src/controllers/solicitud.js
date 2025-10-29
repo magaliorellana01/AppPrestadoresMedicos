@@ -137,7 +137,7 @@ exports.updateSolicitud = async (req, res) => {
     };
 
     solicitud.estado = nuevoEstado;
-    if (nuevoEstado === 'En Análisis') {
+    if (!solicitud.prestadorAsignado) {
       solicitud.prestadorAsignado = prestadorId;
     }
     // Inicializar el historial si no existe
