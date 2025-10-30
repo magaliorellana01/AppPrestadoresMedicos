@@ -11,20 +11,13 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const [openModal, setOpenModal] = useState(false);
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
   const [filtro, setFiltro] = useState("todas");
-  const [prestadorLogueadoId, setPrestadorLogueadoId] = useState(null);
+  const prestadorLogueadoId = JSON.parse(localStorage.getItem("prestador"))?._id;
 
   const handleBuscar = async () => {
     const resultados = await getSituacionTerapeuticaByMultipleParams(q);
     setSituacionesTerapeuticas(resultados);
   };
 
-
-  useEffect(() => {
-    const prestador = JSON.parse(localStorage.getItem("prestador"));
-    if (prestador && prestador._id) {
-      setPrestadorLogueadoId(prestador._id);
-    }
-  }, []);
 
 
   const handleLimpiar = () => {
