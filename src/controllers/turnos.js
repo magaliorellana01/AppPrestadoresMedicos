@@ -67,7 +67,7 @@ exports.createSlots = async (req, res) => {
 exports.update = async (req, res) => {
   const { id } = req.params;
   const patch = {};
-  const allowed = ["estado","socio_id","paciente_nombre","prestador_medico_id","centro_id"];
+  const allowed = ["estado","socio_id","paciente_nombre","paciente_apellido","prestador_medico_id","centro_id"];
   for (const k of allowed) if (k in req.body) patch[k] = req.body[k];
 
   const t = await Turno.findById(id);
