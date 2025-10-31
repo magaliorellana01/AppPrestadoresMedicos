@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Box, Stack, Typography, Alert, Chip } from "@mui/material";
+import { Box, Stack, Typography, Alert, Chip, Container } from "@mui/material";
 import CalendarMonth from "../components/CalendarMonth";
 import TurnosFilters from "../components/TurnosFilters";
 import TurnosList from "../components/TurnosList";
@@ -38,6 +38,7 @@ function mapTurnoFromApi(t) {
     especialidad: t.especialidad || "",
     socioId: t.socio_id || "",
     paciente: t.paciente_nombre || "",
+    pacienteApellido: t.paciente_apellido || "",
     notas: (t.notas || []).map((n) => ({
       ts: n.ts || n.createdAt || new Date().toISOString(),
       texto: n.texto,
@@ -245,46 +246,12 @@ export default function TurnosPage() {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h4" color="primary" mb={1}>
-        Turnos
-      </Typography>
-      <Typography variant="body2" color="text.secondary" mb={2}>
-        Calendario y gestión de turnos. Notas por turno.
-      </Typography>
-
-      <TurnosFilters
-        role={role}
-        values={filters}
-        onChange={(p) => setFilters((s) => ({ ...s, ...p }))}
-        medicos={medicosVisibles}
-        especialidades={especialidadesDisponibles}
-        sedes={SEDES}
-        onGenerarAgenda={generarAgendaHoy}
-      />
-
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       {flash && <Alert severity="success" sx={{ mb: 2 }}>{flash}</Alert>}
 
       <Stack direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ mt: 3 }}>
-        <Box sx={{ flex: 2 }}>
-          <CalendarMonth
-            currentDate={currentDate}
-            onPrev={() =>
-              setCurrentDate(
-                new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-              )
-            }
-            onNext={() =>
-              setCurrentDate(
-                new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-              )
-            }
-            turnosByDate={turnosByDate}
-            onSelectDate={handleSelectDate}
-          />
-        </Box>
-
-        <Box sx={{ flex: 1, mt: { xs: 1, lg: 0 } }} ref={listaRef}>
+        {/* Lista de turnos - Principal */}
+        <Box sx={{ flex: 3, order: { xs: 2, lg: 1 } }} ref={listaRef}>
           <TurnosList
             fecha={selectedDate}
             turnos={turnosDelDiaEnriquecidos}
@@ -301,6 +268,26 @@ export default function TurnosPage() {
             onCancelar={cancelar}
           />
         </Box>
+
+        {/* Calendario - Compacto y secundario */}
+        <Box sx={{ flex: 1, order: { xs: 1, lg: 2 } }}>
+          <CalendarMonth
+            currentDate={currentDate}
+            onPrev={() =>
+              setCurrentDate(
+                new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+              )
+            }
+            onNext={() =>
+              setCurrentDate(
+                new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+              )
+            }
+            turnosByDate={turnosByDate}
+            onSelectDate={handleSelectDate}
+            selectedDate={selectedDate}
+          />
+        </Box>
       </Stack>
 
       <NotaDialog
@@ -310,6 +297,6 @@ export default function TurnosPage() {
         onClose={() => setNotaDlg({ open: false, turno: null, texto: "" })}
         onSave={guardarNota}
       />
-    </Box>
+    </Container>
   );
 }
