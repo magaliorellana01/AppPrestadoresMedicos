@@ -16,10 +16,37 @@ const nombreMedico = (t) =>
   || "—";
 
 export default function TurnosList({ fecha, turnos, onAgregarNota }) {
+  // Comparar fechas usando hora local, no UTC
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const esHoy = getLocalDateString(fecha) === getLocalDateString(new Date());
+  const fechaFormateada = fecha.toLocaleDateString("es-AR", {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <Paper elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-      <Typography variant="h6">
-        Turnos · {fecha.toLocaleDateString("es-AR")}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+        <Typography variant="h5" color="primary" sx={{ textTransform: 'capitalize' }}>
+          {esHoy ? 'Turnos de Hoy' : 'Turnos'}
+        </Typography>
+        {esHoy && (
+          <Chip label="HOY" color="primary" size="small" />
+        )}
+      </Stack>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, textTransform: 'capitalize' }}>
+        {fechaFormateada}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        Total: {turnos.length} turno{turnos.length !== 1 ? 's' : ''}
       </Typography>
       <Divider sx={{ my: 1 }} />
 
@@ -33,7 +60,12 @@ export default function TurnosList({ fecha, turnos, onAgregarNota }) {
         {turnos.map((t) => {
           const med = nombreMedico(t);
           const sede = sedeNombre(t.centroId || t.sedeId);
-          const paciente = t.paciente || t.afiliado || ""; // compatibilidad
+
+          // Construir información del paciente
+          const nroAfiliado = t.socioId || "";
+          const nombreCompleto = t.paciente && t.pacienteApellido
+            ? `${t.paciente} ${t.pacienteApellido}`
+            : t.paciente || t.afiliado || "";
 
           return (
             <ListItem
@@ -50,7 +82,19 @@ export default function TurnosList({ fecha, turnos, onAgregarNota }) {
               }
             >
               <ListItemText
-                primary={`${t.hora}${paciente ? ` · ${paciente}` : ""}`}
+                primary={
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="body1" fontWeight="bold">{t.hora}</Typography>
+                    {nroAfiliado && (
+                      <Typography variant="body2" color="text.secondary">
+                        N° {nroAfiliado}
+                      </Typography>
+                    )}
+                    {nombreCompleto && (
+                      <Typography variant="body2">{nombreCompleto}</Typography>
+                    )}
+                  </Stack>
+                }
                 secondary={
                   <Stack direction="row" flexWrap="wrap" gap={0.5} alignItems="center">
                     {t.especialidad ? <Chip size="small" label={t.especialidad} /> : null}

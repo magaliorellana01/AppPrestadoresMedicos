@@ -16,19 +16,31 @@ function buildMonth(year, month) {
   return cells;
 }
 
+// Helper para obtener fecha local en formato YYYY-MM-DD
+const getLocalDateString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function CalendarMonth({
-  currentDate, onPrev, onNext, turnosByDate, onSelectDate
+  currentDate, onPrev, onNext, turnosByDate, onSelectDate, selectedDate
 }) {
   const y = currentDate.getFullYear();
   const m = currentDate.getMonth();
   const cells = useMemo(() => buildMonth(y, m), [y, m]);
   const monthLabel = currentDate.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
 
+  // Fecha seleccionada para destacarla (usar hora local)
+  const selectedKey = selectedDate ? getLocalDateString(selectedDate) : null;
+  const todayKey = getLocalDateString(new Date());
+
   // misma grilla para header y cuerpo
   const gridSx = {
     display: "grid",
     gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-    gap: 1, // mismo gap para ambos
+    gap: 0.5,
     alignItems: "stretch",
   };
 
@@ -42,7 +54,7 @@ export default function CalendarMonth({
 
       {/* Header de días con misma grilla y gap */}
       <Box sx={{ ...gridSx, mb: 1 }}>
-        {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d => (
+        {["L","M","X","J","V","S","D"].map(d => (
           <Box key={d}>
             <Typography variant="caption" sx={{ fontWeight: 600, textAlign: "center", color: "text.secondary" }}>
               {d}
@@ -51,53 +63,63 @@ export default function CalendarMonth({
         ))}
       </Box>
 
-      {/* Cuerpo del mes con misma grilla y gap */}
+      {/* Cuerpo del mes - calendario compacto */}
       <Box sx={gridSx}>
         {cells.map((d, i) => {
-          const key = d.toISOString().slice(0, 10);
+          const key = getLocalDateString(d);
           const items = turnosByDate[key] ?? [];
           const isOtherMonth = d.getMonth() !== m;
+          const isSelected = key === selectedKey;
+          const isToday = key === todayKey;
+          const hasTurnos = items.length > 0;
 
           return (
-            <Paper
+            <Box
               key={i}
               onClick={() => onSelectDate?.(d)}
-              variant="outlined"
               sx={{
-                p: 1,
-                height: { xs: 120, sm: 132 }, // alto consistente
+                p: 0.5,
+                height: 40,
                 cursor: "pointer",
-                borderRadius: 2,
-                opacity: isOtherMonth ? 0.5 : 1,
+                borderRadius: 1,
+                opacity: isOtherMonth ? 0.4 : 1,
                 display: "flex",
-                flexDirection: "column",
-                minWidth: 0, // evita overflow
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: isSelected ? "primary.main" : isToday ? "primary.light" : "transparent",
+                color: isSelected ? "white" : isToday ? "primary.dark" : "text.primary",
+                border: hasTurnos && !isSelected ? "2px solid" : "none",
+                borderColor: "primary.main",
+                "&:hover": {
+                  bgcolor: isSelected ? "primary.dark" : "action.hover",
+                },
+                transition: "all 0.2s",
               }}
             >
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>{d.getDate()}</Typography>
-
-              <Stack
-                spacing={0.5}
-                mt={0.5}
+              <Typography
+                variant="body2"
                 sx={{
-                  overflow: "hidden",
-                  "& .MuiChip-root": { maxWidth: "100%", height: 22 },
-                  "& .MuiChip-label": {
-                    px: 0.5, fontSize: 11,
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                  },
+                  fontWeight: isSelected || isToday ? 700 : 400,
+                  fontSize: 14
                 }}
               >
-                {items.slice(0, 3).map(t => (
-                  <Chip key={t.id} size="small" label={`${t.hora} · ${t.especialidad}`} />
-                ))}
-                {items.length > 3 && (
-                  <Typography variant="caption" color="primary">+{items.length - 3} más</Typography>
-                )}
-              </Stack>
-            </Paper>
+                {d.getDate()}
+              </Typography>
+            </Box>
           );
         })}
+      </Box>
+
+      {/* Leyenda compacta */}
+      <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
+        <Typography variant="caption" color="text.secondary">
+          <Box component="span" sx={{ display: "inline-block", width: 12, height: 12, bgcolor: "primary.light", borderRadius: 0.5, mr: 0.5 }} />
+          Hoy
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          <Box component="span" sx={{ display: "inline-block", width: 12, height: 12, border: "2px solid", borderColor: "primary.main", borderRadius: 0.5, mr: 0.5 }} />
+          Con turnos
+        </Typography>
       </Box>
     </Paper>
   );
