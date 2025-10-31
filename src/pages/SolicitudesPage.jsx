@@ -4,15 +4,15 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TablaGenerica from "../components/TablaGenerica";
 import ComponenteDeEstados from "../components/EstadosComponente";
 import { getSolicitudesFiltradas } from "../services";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Estados y tipos:
 
 const estadosOpciones = [
   { label: 'Recibido', value: 'Recibido' },
-  { label: 'En Análisis', value: 'EnAnalisis' },
+  { label: 'En Análisis', value: 'En Análisis' },
   { label: ' Observado', value: 'Observado' },
-  { label: 'Aprobado', value: 'Aprobado' },
+  { label: 'Aprobado', value: 'Aprobado' }, 
   { label: 'Rechazado', value: 'Rechazado' },
 ];
 
@@ -46,13 +46,12 @@ const SolicitudesPage = ({ theme }) => {
   const [data, setData] = useState([]);
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tipoFiltro, setTipoFiltro] = useState('');
-  const [estadoFiltro, setEstadoFiltro] = useState('');
-
+  const [estadoFiltro, setEstadoFiltro] = useState('Recibido'); 
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -74,9 +73,7 @@ const SolicitudesPage = ({ theme }) => {
 
   useEffect(() => {
     fetchData();
-  }, [page, rowsPerPage, estadoFiltro, tipoFiltro]);
-
-
+  }, [page, rowsPerPage, estadoFiltro, tipoFiltro, location.key]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
@@ -86,21 +83,21 @@ const SolicitudesPage = ({ theme }) => {
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item>
+        <Grid>
           <FormControl size="small" sx={{ minWidth: 200 }} variant="outlined">
             <InputLabel id= "tipo-label">Tipo</InputLabel>
             <Select labelId="tipo-label" value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }} label= "Tipo">
-              <MenuItem value="">Todos</MenuItem>
               {tiposOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
+              <MenuItem value="">Todas</MenuItem>
             </Select>
           </FormControl>
         </Grid>
-        <Grid item>
+        <Grid>
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel id= "estado-label">Estado</InputLabel>
             <Select labelId="estado-label" value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }} label="Estado">
-              <MenuItem value="">Todos</MenuItem>
               {estadosOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
+              <MenuItem value="Todas">Todas</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -117,7 +114,7 @@ const SolicitudesPage = ({ theme }) => {
             onPageChange={(e, p) => setPage(p)}
             onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
             keyFor={keyForSolicitudes}
-            onRowClick={(row) => navigate(`/solicitudes/${row._id}`)} // <-- esto es clave
+            onRowClick={(row) => navigate(`/solicitudes/${row._id}`)} 
           />}
       </Box>
     </Container>
