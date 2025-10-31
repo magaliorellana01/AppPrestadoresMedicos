@@ -7,10 +7,14 @@ export default function NotaDialog({ open, texto, onChange, onClose, onSave }) {
       <DialogTitle>Agregar nota al turno</DialogTitle>
       <DialogContent>
         <TextField
-          autoFocus multiline minRows={3} fullWidth
+          autoFocus
+          multiline
+          minRows={3}
+          fullWidth
           placeholder="Evolución, indicaciones, estudios, etc."
           value={texto}
           onChange={(e)=>onChange(e.target.value)}
+          sx={{ mt: 1 }}
         />
       </DialogContent>
       <DialogActions>
