@@ -16,8 +16,9 @@ const TurnoSchema = new Schema({
   centro_id:          { type: Types.ObjectId, ref: "Prestador" }, // si aplica
   especialidad: { type: String },
 
-  socio_id: { type: String },          // opcional
+  socio_id: { type: String },          // opcional - número de afiliado
   paciente_nombre: { type: String },   // opcional
+  paciente_apellido: { type: String }, // opcional
 
   notas: [NotaSchema],
 }, { timestamps: true });
