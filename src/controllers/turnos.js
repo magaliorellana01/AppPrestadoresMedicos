@@ -1,4 +1,6 @@
 const Turno = require("../models/turno");
+const Socio = require("../models/socio");
+const Nota = require("../models/nota");
 const { startOfDay, endOfDay, addMinutes, parseISO, format } = require("date-fns");
 
 const isCentro = (req) => !!req.prestador?.es_centro_medico;
@@ -29,7 +31,9 @@ exports.list = async (req, res) => {
     q.prestador_medico_id = req.prestador._id;
   }
 
-  const items = await Turno.find(q).sort({ fecha: 1, hora: 1 });
+  const items = await Turno.find(q)
+    .populate('notas.autor_id', 'nombres apellidos')
+    .sort({ fecha: 1, hora: 1 });
   res.json(items);
 };
 
@@ -108,7 +112,29 @@ exports.addNota = async (req, res) => {
     return res.status(403).json({ message: "No autorizado" });
   }
 
+  // 1. Guardar nota en el array del turno
   t.notas.push({ texto, autor_id: req.prestador._id });
   await t.save();
+
+  // 2. Dual storage: Guardar también en colección Nota para historia clínica
+  if (t.socio_id) {
+    try {
+      const socio = await Socio.findOne({ dni: t.socio_id }).select('historia_clinica');
+
+      if (socio && socio.historia_clinica) {
+        await Nota.create({
+          nota: texto,
+          socio: socio._id,
+          historia_clinica: socio.historia_clinica,
+          prestador: req.prestador._id,
+          fecha_creacion: new Date(),
+        });
+      }
+    } catch (err) {
+      console.error("Error al guardar nota en historia clínica:", err);
+      // No bloqueamos la respuesta, la nota ya está en el turno
+    }
+  }
+
   res.status(201).json({ ok: true });
 };
