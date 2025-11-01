@@ -127,6 +127,11 @@ export const getTurnos = async (params = {}) => {
   return data;
 };
 
+export const getEspecialidades = async (params = {}) => {
+  const { data } = await api.get(`/turnos/especialidades`, { params });
+  return data;
+};
+
 export const createTurnosSlots = async (payload) => {
   const { data } = await api.post(`/turnos/slots`, payload);
   return data;
@@ -139,6 +144,32 @@ export const updateTurno = async (id, patch) => {
 
 export const addNotaTurno = async (id, texto) => {
   const { data } = await api.post(`/turnos/${id}/notas`, { texto });
+  return data;
+};
+
+// SEDES API
+export const getSedes = async (params = {}) => {
+  const { data } = await api.get(`/sedes`, { params });
+  return data;
+};
+
+export const getSedeById = async (id) => {
+  const { data } = await api.get(`/sedes/${id}`);
+  return data;
+};
+
+export const createSede = async (payload) => {
+  const { data } = await api.post(`/sedes`, payload);
+  return data;
+};
+
+export const updateSede = async (id, payload) => {
+  const { data } = await api.put(`/sedes/${id}`, payload);
+  return data;
+};
+
+export const asignarMedicoSede = async (sedeId, medicoId) => {
+  const { data } = await api.post(`/sedes/asignar-medico`, { sedeId, medicoId });
   return data;
 };
 

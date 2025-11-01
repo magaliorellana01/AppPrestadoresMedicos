@@ -15,7 +15,7 @@ const nombreMedico = (t) =>
   || MEDICOS.find((m) => m.id === t.medicoId)?.nombre
   || "—";
 
-export default function TurnosList({ fecha, turnos, onAgregarNota, onVerNotas }) {
+export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNotas }) {
   // Comparar fechas usando hora local, no UTC
   const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -59,7 +59,7 @@ export default function TurnosList({ fecha, turnos, onAgregarNota, onVerNotas })
 
         {turnos.map((t) => {
           const med = nombreMedico(t);
-          const sede = sedeNombre(t.centroId || t.sedeId);
+          const sede = t.sedeNombre || "—";
 
           // Construir información del paciente
           const nroAfiliado = t.socioId || "";
@@ -108,8 +108,8 @@ export default function TurnosList({ fecha, turnos, onAgregarNota, onVerNotas })
                 secondary={
                   <Stack direction="row" flexWrap="wrap" gap={0.5} alignItems="center">
                     {t.especialidad ? <Chip size="small" label={t.especialidad} /> : null}
-                    <Chip size="small" label={med} />
-                    <Chip size="small" label={sede} />
+                    {role === "CENTRO" && med && <Chip size="small" label={med} />}
+                    {sede && <Chip size="small" label={sede} />}
                     {t.notas?.length > 0 && (
                       <Typography variant="caption" sx={{ ml: 0.5 }}>
                         Notas: {t.notas.length}
