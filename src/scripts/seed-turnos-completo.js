@@ -10,9 +10,10 @@ dotenv.config();
 const Turno = require("../models/turno");
 const Prestador = require("../models/prestador");
 const Socio = require("../models/socio");
+const Sede = require("../models/sede");
 
 // Genera horarios de turnos para un día
-function genSlots({ fechaISO, medicoId, especialidad, cadaMin = 30, durMin = 30 }) {
+function genSlots({ fechaISO, medicoId, sedeId, especialidad, cadaMin = 30, durMin = 30 }) {
   const out = [];
   const base = new Date(fechaISO);
   base.setHours(0, 0, 0, 0);
@@ -28,6 +29,7 @@ function genSlots({ fechaISO, medicoId, especialidad, cadaMin = 30, durMin = 30 
       hora: t.toISOString().slice(11, 16),
       duracion_min: durMin,
       prestador_medico_id: medicoId,
+      sede_id: sedeId,
       especialidad,
     });
   }
@@ -76,11 +78,11 @@ function sampleDays(year, month, count, diasMes) {
   }
   console.log(`👥 Socios activos encontrados: ${socios.length}\n`);
 
-  // PASO 3: Obtener médicos activos (no centros médicos)
+  // PASO 3: Obtener médicos activos con sus sedes de trabajo
   const medicos = await Prestador.find({
     es_centro_medico: false,
     estado: /Activo/i
-  }).lean();
+  }).populate('sedes_trabajo').lean();
 
   if (!medicos.length) {
     console.log("⚠️ No hay médicos activos en la base.");
@@ -88,7 +90,17 @@ function sampleDays(year, month, count, diasMes) {
     return;
   }
 
-  console.log(`👨‍⚕️ Médicos activos encontrados: ${medicos.length}\n`);
+  // PASO 4: Obtener todas las sedes activas con su centro médico
+  const sedesActivas = await Sede.find({ estado: "activa" }).populate('centro_medico_id').lean();
+
+  if (!sedesActivas.length) {
+    console.log("⚠️ No hay sedes activas. Ejecuta primero npm run seed-sedes");
+    await mongoose.connection.close();
+    return;
+  }
+
+  console.log(`👨‍⚕️ Médicos activos encontrados: ${medicos.length}`);
+  console.log(`🏥 Sedes activas encontradas: ${sedesActivas.length}\n`);
   console.log("🏥 PASO 2: Generando turnos CON PACIENTES para todos los médicos...\n");
 
   const hoy = new Date();
@@ -99,7 +111,26 @@ function sampleDays(year, month, count, diasMes) {
   let totalTurnosCreados = 0;
 
   for (const m of medicos) {
-    console.log(`👨‍⚕️ Procesando: ${m.nombres} ${m.apellidos} (${m.especialidad || "General"})`);
+    const especialidadMedico = m.especialidades && m.especialidades.length > 0 ? m.especialidades[0] : "General";
+    console.log(`👨‍⚕️ Procesando: ${m.nombres} ${m.apellidos} (${especialidadMedico})`);
+
+    // Determinar sede y centro del médico
+    let sedeDelMedico, centroDelMedico;
+    if (m.sedes_trabajo && m.sedes_trabajo.length > 0) {
+      // Usar la primera sede de trabajo del médico
+      const sedeCompleta = m.sedes_trabajo[0];
+      sedeDelMedico = sedeCompleta._id || sedeCompleta;
+      // Buscar la sede en el array de sedes activas para obtener el centro
+      const sedeConCentro = sedesActivas.find(s => String(s._id) === String(sedeDelMedico));
+      centroDelMedico = sedeConCentro?.centro_medico_id?._id || sedeConCentro?.centro_medico_id;
+      console.log(`   📍 Sede asignada: ${sedeCompleta.nombre || 'sede del médico'}`);
+    } else {
+      // Usar una sede aleatoria del pool
+      const sedeAleatoria = sedesActivas[Math.floor(Math.random() * sedesActivas.length)];
+      sedeDelMedico = sedeAleatoria._id;
+      centroDelMedico = sedeAleatoria.centro_medico_id?._id || sedeAleatoria.centro_medico_id;
+      console.log(`   📍 Sede aleatoria asignada`);
+    }
 
     // Limpiar turnos previos de este mes para este médico
     const inicioMes = new Date(year, month, 1);
@@ -120,19 +151,27 @@ function sampleDays(year, month, count, diasMes) {
       const slots = genSlots({
         fechaISO: fecha,
         medicoId: m._id,
-        especialidad: m.especialidad || "General",
+        sedeId: sedeDelMedico,
+        especialidad: especialidadMedico,
       });
 
       // Asignar pacientes aleatoriamente a cada turno
       const turnosConPacientes = slots.map(slot => {
         const socio = socios[Math.floor(Math.random() * socios.length)];
-        return {
+        const turno = {
           ...slot,
           estado: "reservado",
           socio_id: socio.dni,
           paciente_nombre: socio.nombres,
           paciente_apellido: socio.apellidos,
         };
+
+        // Asignar centro médico si existe
+        if (centroDelMedico) {
+          turno.prestador_centro_id = centroDelMedico;
+        }
+
+        return turno;
       });
 
       await Turno.insertMany(turnosConPacientes);
