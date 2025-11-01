@@ -181,6 +181,20 @@ const calles = [
   "Córdoba",
 ];
 
+// Nombres de clínicas y centros médicos
+const nombresClinicas = [
+  "Clínica Mitre",
+  "Sanatorio Modelo",
+  "Centro Médico San Lucas",
+  "Clínica del Sol",
+  "Hospital Privado Central",
+  "Sanatorio Belgrano",
+  "Centro de Salud Integral",
+  "Clínica Santa María",
+  "Instituto Médico del Sur",
+  "Clínica Regional",
+];
+
 // Función para generar CUIT de 11 dígitos
 function generarCUIT() {
   // Genera un CUIT simple de 11 dígitos
@@ -273,18 +287,49 @@ function generarPrestadores(cantidad) {
 
     const nombre = nombres[Math.floor(Math.random() * nombres.length)];
     const apellido = apellidos[Math.floor(Math.random() * apellidos.length)];
-    const especialidad = especialidades[Math.floor(Math.random() * especialidades.length)];
     const esCentroMedico = Math.random() > 0.85; // 15% chance de ser centro médico
 
+    // Generar especialidades según tipo
+    let especialidadesPrestador;
+    if (esCentroMedico) {
+      // Centros médicos: 3-6 especialidades aleatorias
+      const numEspecialidades = Math.floor(Math.random() * 4) + 3; // 3-6
+      const especialidadesSet = new Set();
+      while (especialidadesSet.size < numEspecialidades && especialidadesSet.size < especialidades.length) {
+        const esp = especialidades[Math.floor(Math.random() * especialidades.length)];
+        especialidadesSet.add(esp);
+      }
+      especialidadesPrestador = Array.from(especialidadesSet);
+    } else {
+      // Médicos: 1 especialidad (puede expandirse a 1-2 en el futuro)
+      const especialidad = especialidades[Math.floor(Math.random() * especialidades.length)];
+      especialidadesPrestador = [especialidad];
+    }
+
+    // Para centros médicos usar nombres de clínicas, para médicos usar nombres de personas
+    let nombrePrestador, apellidoPrestador, emailPrestador;
+    if (esCentroMedico) {
+      const nombreClinica = nombresClinicas[Math.floor(Math.random() * nombresClinicas.length)];
+      nombrePrestador = nombreClinica;
+      apellidoPrestador = "";
+      // Email profesional para clínica
+      const clinicaCorta = nombreClinica.toLowerCase().replace(/\s+/g, "").replace(/clínica|sanatorio|centro|hospital|instituto/gi, "");
+      emailPrestador = `info@${clinicaCorta}.com.ar`;
+    } else {
+      nombrePrestador = nombre;
+      apellidoPrestador = apellido;
+      emailPrestador = generarEmailProfesional(nombre, apellido, especialidadesPrestador[0]);
+    }
+
     const prestador = {
-      nombres: nombre,
-      apellidos: apellido,
+      nombres: nombrePrestador,
+      apellidos: apellidoPrestador,
       telefono: generarTelefono(),
-      email: generarEmailProfesional(nombre, apellido, especialidad),
+      email: emailPrestador,
       direccion: generarDireccion(),
       ciudad: ciudades[Math.floor(Math.random() * ciudades.length)],
       provincia: provincias[Math.floor(Math.random() * provincias.length)],
-      especialidad: especialidad,
+      especialidades: especialidadesPrestador,
       cuit: cuit,
       password: generarPassword(),
       matricula: matricula,
@@ -324,8 +369,12 @@ async function poblarPrestadores() {
       const prestadorCreado = await PrestadorModel.create(prestador);
 
       const tipo = prestador.es_centro_medico ? "Centro Médico" : "Médico";
+      const nombreCompleto = prestador.es_centro_medico
+        ? prestadorCreado.nombres
+        : `Dr. ${prestadorCreado.nombres} ${prestadorCreado.apellidos}`;
+      const especialidadesStr = prestadorCreado.especialidades.join(", ");
       console.log(
-        `✅ ${tipo} creado: Dr. ${prestadorCreado.nombres} ${prestadorCreado.apellidos} - ${prestadorCreado.especialidad} (CUIT: ${prestadorCreado.cuit})`
+        `✅ ${tipo} creado: ${nombreCompleto} - [${especialidadesStr}] (CUIT: ${prestadorCreado.cuit})`
       );
     }
 

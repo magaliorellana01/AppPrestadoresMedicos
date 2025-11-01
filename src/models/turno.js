@@ -12,8 +12,9 @@ const TurnoSchema = new Schema({
   duracion_min: { type: Number, default: 30 },
   estado: { type: String, enum: ["disponible","reservado","cancelado"], default: "disponible" },
 
-  prestador_medico_id: { type: Types.ObjectId, ref: "Prestador", required: true },
-  centro_id:          { type: Types.ObjectId, ref: "Prestador" }, // si aplica
+  prestador_medico_id: { type: Types.ObjectId, ref: "Prestador", required: true }, // médico que atiende
+  prestador_centro_id: { type: Types.ObjectId, ref: "Prestador" }, // centro médico dueño del turno (si aplica)
+  sede_id: { type: Types.ObjectId, ref: "Sede" }, // sede donde se realiza el turno
   especialidad: { type: String },
 
   socio_id: { type: String },          // opcional - número de afiliado
@@ -24,7 +25,8 @@ const TurnoSchema = new Schema({
 }, { timestamps: true });
 
 TurnoSchema.index({ prestador_medico_id: 1, fecha: 1 });
-TurnoSchema.index({ centro_id: 1, fecha: 1 });
+TurnoSchema.index({ prestador_centro_id: 1, fecha: 1 });
+TurnoSchema.index({ sede_id: 1, fecha: 1 });
 TurnoSchema.index({ fecha: 1, hora: 1 });
 
 module.exports = model("Turno", TurnoSchema);

@@ -7,7 +7,8 @@ const prestadorSchema = new mongoose.Schema({
   },
   apellidos: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
   telefono: {
     type: String,
@@ -29,9 +30,10 @@ const prestadorSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  especialidad: {
-    type: String,
+  especialidades: {
+    type: [String],
     required: true,
+    default: [],
   },
   cuit: {
     type: String,
@@ -57,6 +59,16 @@ const prestadorSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // Si es centro médico: sedes que posee
+  sedes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Sede",
+  }],
+  // Si es médico: sedes donde trabaja
+  sedes_trabajo: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Sede",
+  }],
   estado: {
     type: String,
     enum: ["Activo", "Inactivo"],
