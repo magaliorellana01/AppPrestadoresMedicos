@@ -3,16 +3,18 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box, Typography, Button, TextField, MenuItem,
-  Select, FormControl, InputLabel, Snackbar, Alert
+  Select, FormControl, InputLabel, Snackbar, Alert, IconButton
 } from "@mui/material";
 import {
   CloudDownload as CloudDownloadIcon,
   Description as DescriptionIcon,
   EditNote as EditNoteIcon,
-  CheckBox as CheckBoxIcon
+  CheckBox as CheckBoxIcon,
+  History as HistoryIcon
 } from "@mui/icons-material";
-import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud } from "../services/index.js";
+import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud, getHistorialDeSolicitud } from "../services/index.js";
 import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
+import HistorialCambiosModal from "../components/HistorialCambiosModal.jsx";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
@@ -22,7 +24,7 @@ const ESTADOS = [
   { value: "Rechazado", label: "Rechazado" },
 ];
 
-const InfoCard = ({ icon, title, children }) => (
+const InfoCard = ({ icon, title, children, action }) => (
   <Box
     display="flex"
     flexDirection={{ xs: "column", sm: "column", md: "row" }}
@@ -43,6 +45,7 @@ const InfoCard = ({ icon, title, children }) => (
         transform: "translateY(-4px)",
         boxShadow: 6,
       },
+      position: 'relative',
     }}
   >
     <Box
@@ -57,9 +60,12 @@ const InfoCard = ({ icon, title, children }) => (
       {icon}
     </Box>
     <Box display="grid" gap={0.5} sx={{ width: "100%", textAlign: { xs: 'center', md: 'left'} }}>
-      <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
-        {title}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
+          {title}
+        </Typography>
+        {action}
+      </Box>
       {children}
     </Box>
   </Box>
@@ -74,6 +80,17 @@ export default function DetalleSolicitudPage() {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [archivoFactura, setArchivoFactura] = useState(null);
   const [archivoReceta, setArchivoReceta] = useState(null);
+  const [isHistorialModalOpen, setHistorialModalOpen] = useState(false);
+  const [historial, setHistorial] = useState([]);
+
+  const loadHistorial = useCallback(async () => {
+    try {
+      const historialData = await getHistorialDeSolicitud(id);
+      setHistorial(historialData);
+    } catch (err) {
+      console.error("Error al cargar el historial", err);
+    }
+  }, [id]);
 
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
@@ -92,7 +109,6 @@ export default function DetalleSolicitudPage() {
 
       setSolicitud({ ...detalle, socio });
       setNuevoEstado(detalle?.estado || detalle?.accion?.estadoActual || "EnAnalisis");
-      setMotivo(detalle?.accion?.motivoActual || "");
     } catch (err) {
       console.error(err);
       setSnackbar({ open: true, message: err.message || "No se pudo cargar la solicitud", severity: "error" });
@@ -101,13 +117,18 @@ export default function DetalleSolicitudPage() {
     }
   }, [id]);
 
-  useEffect(() => { loadSolicitud(); }, [loadSolicitud]);
+  useEffect(() => { 
+    loadSolicitud();
+    loadHistorial();
+  }, [loadSolicitud, loadHistorial]);
 
   const handleGuardarCambios = async () => {
     try {
       await updateSolicitud(id, { estado: nuevoEstado, motivo });
       await loadSolicitud();
+      await loadHistorial();
       setSnackbar({ open: true, message: "Solicitud actualizada correctamente", severity: "success" });
+      setMotivo("");
     } catch (err) {
       console.error(err);
       setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudo actualizar la solicitud", severity: "error" });
@@ -198,7 +219,15 @@ export default function DetalleSolicitudPage() {
           <Button variant="contained" size="small" sx={{ mt: 2, alignSelf: { xs: 'center', md: 'flex-start'} }} onClick={handleSubirArchivos}>Subir Archivos</Button>
         </InfoCard>
 
-        <InfoCard icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} title="Acción">
+                <InfoCard 
+          icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} 
+          title="Acción"
+          action={
+            <IconButton onClick={() => setHistorialModalOpen(true)} color="primary">
+              <HistoryIcon />
+            </IconButton>
+          }
+        >
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel id="estado-label">Cambiar Estado</InputLabel>
             <Select
@@ -231,6 +260,12 @@ export default function DetalleSolicitudPage() {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
       </Snackbar>
+
+      <HistorialCambiosModal 
+        open={isHistorialModalOpen} 
+        onClose={() => setHistorialModalOpen(false)} 
+        historial={historial} 
+      />
     </Box>
   );
 }

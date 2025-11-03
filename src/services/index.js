@@ -97,6 +97,11 @@ export const uploadArchivosSolicitud = async (id, formData) => {
   return response.data;
 };
 
+export const getHistorialDeSolicitud = async (id) => {
+  const response = await api.get(`/solicitud/${id}/historial`);
+  return response.data.historial;
+};
+
 export const login = async (cuit, password) => {
   const response = await api.post(`/prestador/login`, { cuit, password });
   // Si el backend devuelve token, lo persistimos
