@@ -1,19 +1,29 @@
-const Solicitud = require('../models/filtroSolicitudes');
+const Solicitud = require('../models/solicitud.js');
 
 exports.getSolicitudes = async (req, res) => {
     try {
         const page = Math.max(0, parseInt(req.query.page, 10) || 0);
         const size = Math.max(1, parseInt(req.query.size, 10) || 10);
-        const { estado, tipo, q } = req.query;
+        const { estado, tipo } = req.query;
+        const prestadorId = req.prestador._id;
 
         const filter = {};
-        if (estado) filter.estado = estado;
-        if (tipo) filter.tipo = tipo;
-        if (q) {
+
+        if (estado === 'Todas') {
             filter.$or = [
-                { nro: { $regex: q, $options: 'i' } },
-                { afiliadoNombre: { $regex: q, $options: 'i' } },
+                { estado: 'Recibido', prestadorAsignado: { $exists: false } },
+                { prestadorAsignado: prestadorId }
             ];
+        } else if (estado === 'Recibido') {
+            filter.estado = 'Recibido';
+            filter.prestadorAsignado = { $exists: false };
+        } else if (estado) {
+            filter.estado = estado;
+            filter.prestadorAsignado = prestadorId;
+        }
+        
+        if (tipo) {
+            filter.tipo = tipo;
         }
 
         const total = await Solicitud.countDocuments(filter);
