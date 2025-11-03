@@ -11,6 +11,7 @@ const historiasClinicasRoutes = require("./routes/historiaClinica");
 const situacionTerapeuticaRoutes = require("./routes/situacionTerapeutica");
 const filtroSolicitudesRoutes = require("./routes/filtroSolicitudes");
 const solicitudRoutes = require("./routes/solicitud");
+
 const prestadorRoutes = require("./routes/prestador");
 const { verifyTokenMiddleware } = require("./middlewares/authMiddleware");
 const turnosRoutes = require("./routes/turnos");
@@ -53,6 +54,7 @@ app.use("/historias-clinicas", verifyTokenMiddleware, historiasClinicasRoutes);
 app.use("/situaciones-terapeuticas", verifyTokenMiddleware, situacionTerapeuticaRoutes);
 app.use("/filtro-solicitudes", verifyTokenMiddleware, filtroSolicitudesRoutes);
 app.use("/solicitud", verifyTokenMiddleware, solicitudRoutes);
+
 app.use("/prestador", prestadorRoutes); // no necesita authToken porque es para el login
 app.use("/turnos", turnosRoutes);
 app.use("/sedes", sedesRoutes);
