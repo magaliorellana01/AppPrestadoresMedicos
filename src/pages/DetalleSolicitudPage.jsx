@@ -195,8 +195,10 @@ export default function DetalleSolicitudPage() {
           <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
         </InfoCard>
 
-        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Descripción">
-          <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.4 }}>{solicitud.descripcion?.texto ?? "Sin descripción disponible"}</Typography>
+        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Archivos adjuntos">
+          <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.4 }}>
+            Adjunto la documentación indicada por el profesional.
+          </Typography>
           {archivosFromDescripcion().map((a, idx) => (
             <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
               <a href={`http://localhost:3000/${a.path}`} target="_blank" rel="noopener noreferrer"
