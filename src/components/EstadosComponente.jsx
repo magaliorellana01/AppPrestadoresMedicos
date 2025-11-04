@@ -47,7 +47,7 @@ const getEstadoProps = (estado) => {
     switch (estado) {
         case 'Recibido':
             return { label: getEstadoDisplay(estado), variant: 'outlined', sx: { ...estilosDeBoton, backgroundColor: colores.Recibido.bg, color: colores.Recibido.text } };
-        case 'EnAnalisis':
+        case 'En Análisis':
             return { label: getEstadoDisplay(estado), color: 'info', variant: 'filled', sx: { ...estilosDeBoton, backgroundColor: colores.EnAnalisis.bg, color: colores.EnAnalisis.text } };
         case 'Observado':
             return { label: getEstadoDisplay(estado), sx: { ...estilosDeBoton, backgroundColor: colores.Observado.bg, color: colores.Observado.text }, variant: 'filled' };
