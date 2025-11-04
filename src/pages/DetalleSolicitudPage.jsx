@@ -12,7 +12,7 @@ import {
   CheckBox as CheckBoxIcon,
   History as HistoryIcon
 } from "@mui/icons-material";
-import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud, getHistorialDeSolicitud } from "../services/index.js";
+import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud } from "../services/index.js";
 import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
 import HistorialCambiosModal from "../components/HistorialCambiosModal.jsx";
 
@@ -64,7 +64,7 @@ const InfoCard = ({ icon, title, children, action }) => (
         <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
           {title}
         </Typography>
-        {action}
+        {action && action}
       </Box>
       {children}
     </Box>
@@ -83,15 +83,6 @@ export default function DetalleSolicitudPage() {
   const [isHistorialModalOpen, setHistorialModalOpen] = useState(false);
   const [historial, setHistorial] = useState([]);
 
-  const loadHistorial = useCallback(async () => {
-    try {
-      const historialData = await getHistorialDeSolicitud(id);
-      setHistorial(historialData);
-    } catch (err) {
-      console.error("Error al cargar el historial", err);
-    }
-  }, [id]);
-
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
@@ -108,6 +99,7 @@ export default function DetalleSolicitudPage() {
       };
 
       setSolicitud({ ...detalle, socio });
+      setHistorial(detalle.historial || []);
       setNuevoEstado(detalle?.estado || detalle?.accion?.estadoActual || "EnAnalisis");
     } catch (err) {
       console.error(err);
@@ -119,14 +111,12 @@ export default function DetalleSolicitudPage() {
 
   useEffect(() => { 
     loadSolicitud();
-    loadHistorial();
-  }, [loadSolicitud, loadHistorial]);
+  }, [loadSolicitud]);
 
   const handleGuardarCambios = async () => {
     try {
       await updateSolicitud(id, { estado: nuevoEstado, motivo });
       await loadSolicitud();
-      await loadHistorial();
       setSnackbar({ open: true, message: "Solicitud actualizada correctamente", severity: "success" });
       setMotivo("");
     } catch (err) {
