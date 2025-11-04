@@ -3,7 +3,7 @@ import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio
 import { Add, Search } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
 import { getSituacionTerapeuticaByMultipleParams } from "../services";
-import TableSituacionesTerapeuticas from "../components/TableSituacionesTerapeuticas";
+import TablaAgrupadaPorFamilia from "../components/TablaAgrupadaPorFamilia";
 
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
@@ -33,6 +33,31 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
     return true;
   });
 
+  const situacionesAgrupadasPorFamilia = situacionesFiltradas.reduce((acc, sit) => {
+    
+    const socio = sit.socio;
+    const titularId = socio.rol === 'Titular' 
+      ? socio._id 
+      : socio.es_familiar_de; 
+
+  
+    const key = titularId ? titularId.toString() : 'sin_titular';
+
+    if (!acc[key]) {
+      acc[key] = {
+        titularId: key,
+        nombreTitular: socio.rol === 'Titular' ? `${socio.apellidos}, ${socio.nombres}` : 'Familiar (Titular no encontrado)',
+        situaciones: []
+      };
+    }
+    
+    
+    acc[key].situaciones.push(sit);
+
+    return acc;
+  }, {});
+
+  const gruposFamiliares = Object.values(situacionesAgrupadasPorFamilia);
 
   return (
     <Box>
@@ -122,7 +147,8 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
             />
           </RadioGroup>
 
-          <TableSituacionesTerapeuticas situacionesTerapeuticas={situacionesFiltradas} />
+          {/* <TableSituacionesTerapeuticas situacionesTerapeuticas={situacionesFiltradas} /> */}
+          <TablaAgrupadaPorFamilia gruposFamiliares={gruposFamiliares} />
         </>
       )}
 
