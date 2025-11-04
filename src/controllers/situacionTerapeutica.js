@@ -62,7 +62,6 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
 
     const situacion = await SituacionTerapeutica.findById(id)
       .populate('socio')
-      .populate('prestador');
 
     if (!situacion) {
       return res.status(404).json({ message: 'Situación terapéutica no encontrada' });
@@ -92,7 +91,6 @@ exports.updateSituacionTerapeutica = async (req, res) => {
       { new: true, runValidators: true }
     )
       .populate('socio')
-      .populate('prestador');
 
     if (!situacionActualizada) {
       return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
