@@ -21,7 +21,7 @@ exports.getSolicitudById = async (req, res) => {
         select: 'nombres apellidos dni genero rol fecha_nacimiento historia_clinica',
         populate: { path: 'historia_clinica', select: 'fecha_nacimiento genero' }
       })
-      .populate({ path: 'historialEstados.usuario', select: 'nombre apellido email' })
+      .populate({ path: 'historialEstados.usuario', select: 'nombres apellidos cuit' })
       .lean();
 
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
@@ -59,6 +59,14 @@ exports.getSolicitudById = async (req, res) => {
 
     const ultimoCambio = solicitud.historialEstados?.[solicitud.historialEstados.length - 1];
 
+    const historialFormateado = (solicitud.historialEstados || []).map(cambio => ({
+      usuario: cambio.usuario ? `${cambio.usuario.nombres} ${cambio.usuario.apellidos}` : 'Sistema',
+      cuil: cambio.usuario ? cambio.usuario.cuit : 'N/A',
+      fechaHora: new Date(cambio.fecha).toLocaleString('es-AR'),
+      descripcion: cambio.motivo || `Cambio de estado a: ${cambio.estado}`,
+      estado: cambio.estado,
+    })).reverse();
+
     const detalleSolicitud = {
       titulo: `${solicitud.tipo} por Medicación Oncológica`,
       estado: solicitud.estado,
@@ -82,7 +90,8 @@ exports.getSolicitudById = async (req, res) => {
       _id: solicitud._id,
       tipo: solicitud.tipo,
       fechaCreacion: solicitud.fechaCreacion,
-      afiliadoCompleto: afiliado || null
+      afiliadoCompleto: afiliado || null,
+      historial: historialFormateado
     };
 
     res.json({ message: 'Detalle de solicitud obtenido correctamente', solicitud: detalleSolicitud });
@@ -184,34 +193,5 @@ exports.subirArchivos = async (req, res) => {
     res.status(200).json({ message: 'Archivos subidos correctamente', adjuntos: solicitud.descripcion.adjuntos });
   } catch (err) {
     console.error('Error al subir archivos:', err);
-  }
-};
-
-exports.getHistorialPorSolicitud = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const solicitud = await Solicitud.findById(id)
-      .populate({
-        path: 'historialEstados.usuario',
-        select: 'nombres apellidos cuit',
-      })
-      .lean();
-
-    if (!solicitud) {
-      return res.status(404).json({ message: 'Solicitud no encontrada' });
-    }
-
-    const historialFormateado = solicitud.historialEstados.map(cambio => ({
-      usuario: `${cambio.usuario.nombres} ${cambio.usuario.apellidos}`,
-      cuil: cambio.usuario.cuit,
-      fechaHora: new Date(cambio.fecha).toLocaleString('es-AR'),
-      descripcion: cambio.motivo || `Cambio de estado a: ${cambio.estado}`,
-      estado: cambio.estado,
-    })).reverse();
-
-    res.json({ message: 'Historial obtenido correctamente', historial: historialFormateado });
-  } catch (err) {
-    console.error('Error al obtener el historial de cambios:', err);
-    res.status(500).json({ message: 'Error interno del servidor', error: err.message });
   }
 };

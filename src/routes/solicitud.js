@@ -14,7 +14,6 @@ const upload = multer({ storage });
 // --- Rutas principales ---
 router.get('/:id', SolicitudController.getSolicitudById);      // Detalle de solicitud
 router.put('/:id', SolicitudController.updateSolicitud);       // Actualizar solicitud
-router.get('/:id/historial', SolicitudController.getHistorialPorSolicitud); // Historial de cambios
 
 // --- Subida de archivos ---
 router.post(
