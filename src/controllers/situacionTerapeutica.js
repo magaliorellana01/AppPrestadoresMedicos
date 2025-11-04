@@ -1,59 +1,70 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
 const Socio = require('../models/socio')
 const Prestador = require('../models/prestador')
+const mongoose = require("mongoose");
 
 exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
-  try {
-    const { input } = req.query;
+    try {
+        const { input } = req.query;
 
-    if (!input || String(input).trim() === '') {
-      return res.status(400).json({ message: "El query param 'input' es obligatorio." });
-    }
+        if (!input || String(input).trim() === '') {
+            return res.status(400).json({ message: "El query param 'input' es obligatorio." });
+        }
 
-    const socioFilter = {
-      $or: [
-        { dni: input },
-        { telefono: input },
-        { apellidos: { $regex: input, $options: 'i' } }
-      ]
-    };
+        const socioFilter = {
+            $or: [
+                { dni: input },
+                { telefono: input },
+                { apellidos: { $regex: input, $options: 'i' } }
+            ]
+        };
 
-    const socios = await Socio.find(socioFilter).select('_id rol');
+        
+        const sociosEncontrados = await Socio.find(socioFilter).select('_id rol es_familiar_de');
 
-    if (!socios.length) {
-      return res.status(200).json([]);
-    }
+        if (!sociosEncontrados.length) {
+            return res.status(200).json([]);
+        }
 
-    const socioIds = socios.map(s => s._id);
+       
+        const titularesIds = new Set();
+        for (const socio of sociosEncontrados) {
+            if (socio.rol === 'Titular') {
+                titularesIds.add(socio._id.toString());
+            } else if (socio.rol === 'Familiar' && socio.es_familiar_de) {
+                titularesIds.add(socio.es_familiar_de.toString());
+            }
+        }
 
-    const situaciones = await SituacionTerapeutica.find({ socio: { $in: socioIds } })
-      .populate('socio')
-      .populate('prestador');
+        if (titularesIds.size === 0) {
+             return res.status(200).json([]); 
+        }
 
-    const situacionesFinales = [];
+      
+        const familiasIds = Array.from(titularesIds).map(id => new mongoose.Types.ObjectId(id));
 
-    // Si el socio es titular, se agregan las situaciones terapéuticas del titular y las del familiar
-    // Si el socio es familiar, NO se agregan las situaciones terapéuticas del titular
-    for (const socio of socios) {
-      if (socio.rol === 'Titular') {
-        situacionesFinales.push(...situaciones.filter(s => s.socio._id.toString() === socio._id.toString()));
-        const familiares = await Socio.find({ es_familiar_de: socio._id }).select('_id');
-        const familiaresIds = familiares.map(f => f._id);
-        const situacionesFamiliares = await SituacionTerapeutica.find({ socio: { $in: familiaresIds } })
-          .populate('socio')
-          .populate('prestador');
-        situacionesFinales.push(...situacionesFamiliares);
-      } else {
-        situacionesFinales.push(...situaciones.filter(s => s.socio._id.toString() === socio._id.toString()));
-      }
-    }
-    return res.status(200).json(situacionesFinales);
-  } catch (error) {
-    console.error('Error al obtener la situación terapéutica:', error);
-    res.status(500).json({ 
+        const todosLosMiembrosDeLasFamilias = await Socio.find({
+            $or: [
+                { _id: { $in: familiasIds } }, // Los titulares
+                { es_familiar_de: { $in: familiasIds } } // Los familiares de esos titulares
+            ]
+        }).select('_id');
+        
+        const todosLosSocioIds = todosLosMiembrosDeLasFamilias.map(s => s._id);
+
+        
+        const situacionesFinales = await SituacionTerapeutica.find({ socio: { $in: todosLosSocioIds } })
+            .populate('socio')
+            .populate('prestador'); 
+
+        return res.status(200).json(situacionesFinales);
+
+    } catch (error) {
+        console.error('Error al obtener la situación terapéutica:', error);
+        res.status(500).json({
             message: error.message || "Error interno del servidor"
-    })
-  }
+        });
+    }
 };
 
  exports.getSituacionTerapeuticaById = async (req, res) => {
