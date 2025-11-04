@@ -7,6 +7,8 @@ import {
     Button,
     CircularProgress,
     Divider,
+    Snackbar,
+    Alert,
 } from "@mui/material";
 import { getSituacionTerapeuticaByID, createNovedadTerapeutica, updateSituacionTerapeutica } from "../services";
 import CartelInformacionSocio from "../components/CartelInformacionSocio";
@@ -23,7 +25,7 @@ export default function DetalleSituacionTerapeutica() {
     const [tratamientoEditable, setTratamientoEditable] = useState('');
     const [fechaFinEditable, setFechaFinEditable] = useState("");
     const [nuevaNovedad, setNuevaNovedad] = useState("");
-    const [novedades, setNovedades] = useState([]);
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
     const handleAgregarNovedad = async () => {
         if (!nuevaNovedad.trim()) return;
@@ -31,12 +33,8 @@ export default function DetalleSituacionTerapeutica() {
         try {
             const situacionActualizada = await createNovedadTerapeutica(id, nuevaNovedad);
             setNuevaNovedad("");
-            const nuevaNovedadAgregada = situacionActualizada.novedadesMedicas.slice(-1)[0];
             setSituacion(situacionActualizada);
-            setNovedades(prevNovedades => [
-                ...(prevNovedades || []),
-                nuevaNovedadAgregada
-            ]);
+            setSnackbar({ open: true, message: "Novedad agregada correctamente", severity: "success" });
         } catch (err) {
             console.error("Error al agregar novedad:", err);
             setError(err.message || "Error al agregar novedad");
@@ -55,17 +53,13 @@ export default function DetalleSituacionTerapeutica() {
         try {
             
 
-            
             const situacionActualizada = await updateSituacionTerapeutica(id, updates);
 
-           
             setSituacion(situacionActualizada);
-
-           
-
+            setSnackbar({ open: true, message: "Cambios guardados correctamente", severity: "success" });
         } catch (err) {
             console.error("Error al guardar la situación terapéutica:", err);
-            setError("Error al guardar los cambios de la situación terapéutica.");
+            setSnackbar({ open: true, message: err.response?.data?.message || "No se pudieron guardar los cambios", severity: "error" });
         } 
     }, [id, diagnosticoEditable, tratamientoEditable, fechaFinEditable]);
 
@@ -113,7 +107,7 @@ export default function DetalleSituacionTerapeutica() {
 
             setTratamientoEditable(situacion.tratamiento || '');
 
-            setNovedades(situacion.novedadesMedicas.slice().reverse() || [])
+    
 
             setFechaFinEditable(formatDateToInput(situacion.fechaFin))
 
@@ -142,6 +136,8 @@ export default function DetalleSituacionTerapeutica() {
             </Box>
         );
     }
+
+    const novedades = situacion?.novedadesMedicas?.slice().reverse() || [];
     return (
         <Box p={{ xs: 2, md: 4 }} >
             <Box display="flex" flexDirection={{ xs: "column", md: "column", lg: "row" }} justifyContent="center" alignItems="center" mb={3}>
@@ -368,7 +364,7 @@ export default function DetalleSituacionTerapeutica() {
                                 novedades.map((novedad, index) => (
                                     <Box key={novedad._id ?? index} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1 }}>
                                         <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                                            {novedad.prestador.nombres} {novedad.prestador.apellidos} - {novedad.prestador.especialidad}
+                                            {novedad.prestador?.nombres} {novedad.prestador?.apellidos} - {novedad.prestador?.especialidad}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                             {novedad.fechaCreacion
@@ -452,6 +448,12 @@ export default function DetalleSituacionTerapeutica() {
                     >
                         Guardar cambios
                     </Button>
+                    <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+                        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+                            {snackbar.message}
+                        </Alert>
+                    </Snackbar>
 
                 </Box>
             </Box>
