@@ -15,7 +15,6 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
         { dni: input },
         { telefono: input },
         { apellidos: { $regex: input, $options: 'i' } }
-        // expresion regular en Mongoose que indica búsqueda insensible a mayúsculas/minúsculas.
       ]
     };
 
@@ -63,7 +62,7 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
 
     const situacion = await SituacionTerapeutica.findById(id)
       .populate('socio')
-      
+      .populate('prestador');
 
     if (!situacion) {
       return res.status(404).json({ message: 'Situación terapéutica no encontrada' });
@@ -87,14 +86,13 @@ exports.updateSituacionTerapeutica = async (req, res) => {
       return res.status(400).json({ message: 'No se recibieron datos para actualizar.' });
     }
 
-    
     const situacionActualizada = await SituacionTerapeutica.findByIdAndUpdate(
       id,
       { ...updates },
       { new: true, runValidators: true }
     )
       .populate('socio')
-      
+      .populate('prestador');
 
     if (!situacionActualizada) {
       return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
@@ -111,21 +109,30 @@ exports.updateSituacionTerapeutica = async (req, res) => {
 
 exports.agregarNovedad = async (req, res) => {
   try {
-    const { situacionTerapeuticaId} = req.params;
+    const { situacionTerapeuticaId } = req.params;
     const { nota } = req.body;
 
     if (!nota) {
       return res.status(400).json({ message: 'La nota es obligatoria.' });
     }
 
-    
-    const situacion = await SituacionTerapeutica.findByIdAndUpdate(
+    const prestadorData = {
+      _id: req.prestador._id,
+      nombres: req.prestador.nombres,
+      apellidos: req.prestador.apellidos,
+      especialidad: req.prestador.especialidades.join(', '),
+      cuit: req.prestador.cuit,
+      matricula: req.prestador.matricula,
+      es_centro_medico: req.prestador.es_centro_medico,
+    };
+
+    const situacion = await SituacionTerapeutica.findByIdAndUpdate( 
       situacionTerapeuticaId,
-      { $push: { novedadesMedicas: { nota, prestador: {_id: req.prestador._id, nombres: req.prestador.nombres, apellidos: req.prestador.apellidos, especialidad: req.prestador.especialidad, cuit: req.prestador.cuit, matricula: req.prestador.matricula, es_centro_medico: req.prestador.es_centro_medico   } } } },
+      { $push: { novedadesMedicas: { nota, prestador: prestadorData } } }, 
       { new: true, runValidators: true }
     )
       .populate('socio')
-      
+      .populate('prestador');
 
     if (!situacion) {
       return res.status(404).json({ message: 'Situación terapéutica no encontrada.' });
