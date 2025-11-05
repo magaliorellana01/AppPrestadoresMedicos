@@ -37,7 +37,7 @@ export default function DetalleSituacionTerapeutica() {
             setSnackbar({ open: true, message: "Novedad agregada correctamente", severity: "success" });
         } catch (err) {
             console.error("Error al agregar novedad:", err);
-            setError(err.message || "Error al agregar novedad");
+            setSnackbar({ open: true, message: err.response?.data?.message || "No se pudo agregar la novedad", severity: "error" });
         }
     }
 
