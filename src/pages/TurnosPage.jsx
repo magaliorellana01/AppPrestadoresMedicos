@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   Box, Stack, Typography, Alert, Chip, Container,
-  useMediaQuery, useTheme, Drawer, Fab
+  useMediaQuery, useTheme, Drawer, Fab, Paper, TextField, MenuItem
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CalendarMonth from "../components/CalendarMonth";
@@ -9,7 +9,7 @@ import TurnosFilters from "../components/TurnosFilters";
 import TurnosList from "../components/TurnosList";
 import NotaDialog from "../components/NotaDialog";
 import VerNotasDialog from "../components/VerNotasDialog";
-import { ESPECIALIDADES, MEDICOS, CENTROS } from "../data/turnos_demo";
+import { MEDICOS, CENTROS } from "../data/turnos_demo";
 import dayjs from "dayjs";
 
 // Servicios API centralizados
@@ -18,6 +18,8 @@ import {
   createTurnosSlots,
   updateTurno,
   addNotaTurno,
+  getSedes,
+  getEspecialidades,
 } from "../services";
 
 function usePerfilLocalStorage() {
@@ -31,15 +33,18 @@ function usePerfilLocalStorage() {
 const fmt = (d) => d.toISOString().slice(0, 10);
 
 function mapTurnoFromApi(t) {
-  const medicoPop = t.prestador_medico || t.medico || null; // por si el back hace populate
+  // Backend ahora popula prestador_medico_id con nombres y apellidos
+  const medicoPop = typeof t.prestador_medico_id === 'object' ? t.prestador_medico_id : null;
+  const sedePop = t.sede_id || null;
   return {
     id: t._id,
     fecha: dayjs(t.fecha).format("YYYY-MM-DD"),
     hora: t.hora,
     estado: t.estado,
-    medicoId: t.prestador_medico_id,
-    medicoNombre: medicoPop ? `${medicoPop.nombres} ${medicoPop.apellidos}` : "",
-    centroId: t.centro_id || "",
+    medicoId: typeof t.prestador_medico_id === 'object' ? t.prestador_medico_id._id : t.prestador_medico_id,
+    medicoNombre: medicoPop ? `${medicoPop.nombres} ${medicoPop.apellidos}`.trim() : "",
+    sedeId: typeof sedePop === 'object' ? sedePop._id : sedePop || "",
+    sedeNombre: sedePop && typeof sedePop === 'object' ? sedePop.nombre : "",
     especialidad: t.especialidad || "",
     socioId: t.socio_id || "",
     paciente: t.paciente_nombre || "",
@@ -93,33 +98,61 @@ export default function TurnosPage() {
   const [verNotasDlg, setVerNotasDlg] = useState({ open: false, turno: null });
   const [flash, setFlash] = useState("");
   const [calendarDrawerOpen, setCalendarDrawerOpen] = useState(false);
+  const [sedes, setSedes] = useState([]);
+  const [sedeSeleccionada, setSedeSeleccionada] = useState("");
+  const [especialidades, setEspecialidades] = useState([]);
 
   const [filters, setFilters] = useState({
     medicoId: role === "MEDICO" ? medicoIdLogin : "",
     especialidad: "",
-    sedeId: role === "CENTRO" ? centroIdLogin : "",
   });
 
-  const SEDES = useMemo(() => CENTROS.map((c) => ({ id: c.id, nombre: c.nombre })), []);
   const medicosVisibles = useMemo(() => {
-    if (filters.sedeId) {
-      const c = CENTROS.find((x) => x.id === filters.sedeId);
-      const ids = new Set(c?.medicos ?? []);
-      return MEDICOS.filter((m) => ids.has(m.id));
-    }
+    // TODO: filtrar médicos por sede cuando sea necesario
     return MEDICOS;
-  }, [filters.sedeId]);
-
-  const especialidadesDisponibles = useMemo(() => {
-    const sourceMedicoId = role === "MEDICO" ? medicoIdLogin : filters.medicoId;
-    if (sourceMedicoId) {
-      const m = MEDICOS.find((x) => x.id === sourceMedicoId);
-      return m?.especialidades ?? ESPECIALIDADES;
-    }
-    return ESPECIALIDADES;
-  }, [role, medicoIdLogin, filters.medicoId]);
+  }, []);
 
   const fechaSel = useMemo(() => dayjs(selectedDate).format("YYYY-MM-DD"), [selectedDate]);
+
+  // Cargar sedes del prestador logueado
+  useEffect(() => {
+    async function loadSedes() {
+      try {
+        const sedesData = await getSedes();
+        // Ordenar alfabéticamente por nombre
+        const sedesOrdenadas = sedesData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        setSedes(sedesOrdenadas);
+
+        // Si es centro médico, seleccionar la primera sede alfabéticamente por defecto
+        if (role === "CENTRO" && sedesOrdenadas.length > 0) {
+          setSedeSeleccionada(sedesOrdenadas[0]._id);
+        }
+      } catch (error) {
+        console.error("Error cargando sedes:", error);
+        setSedes([]);
+      }
+    }
+    loadSedes();
+  }, [role]);
+
+  // Cargar especialidades dinámicamente
+  useEffect(() => {
+    async function loadEspecialidades() {
+      try {
+        const params = {};
+        // Si es centro y hay sede seleccionada, filtrar por sede
+        if (role === "CENTRO" && sedeSeleccionada) {
+          params.sedeId = sedeSeleccionada;
+        }
+        const especialidadesData = await getEspecialidades(params);
+        setEspecialidades(especialidadesData);
+      } catch (error) {
+        console.error("Error cargando especialidades:", error);
+        setEspecialidades([]);
+      }
+    }
+    loadEspecialidades();
+  }, [role, sedeSeleccionada]);
 
   // Mapa id → nombre para fallback si el back no hace populate
   const medicoNombreById = useMemo(() => {
@@ -143,7 +176,13 @@ export default function TurnosPage() {
   async function fetchTurnos() {
     const params = { desde: fmtISO(mesInicio), hasta: fmtISO(mesFin) };
     if (role === "MEDICO" && medicoIdLogin) params.medicoId = medicoIdLogin;
-    if (role === "CENTRO" && centroIdLogin) params.centroId = centroIdLogin;
+    if (role === "CENTRO" && sedeSeleccionada) params.sedeId = sedeSeleccionada;
+
+    // Si es centro y hay filtro de especialidad, agregarlo
+    if (role === "CENTRO" && filters.especialidad) {
+      params.especialidad = filters.especialidad;
+    }
+
     try {
       const data = await getTurnos(params);
       setTurnos((data || []).map(mapTurnoFromApi));
@@ -155,7 +194,7 @@ export default function TurnosPage() {
 
   useEffect(() => {
     fetchTurnos().catch(console.error);
-  }, [mesInicio.getTime(), mesFin.getTime(), role, medicoIdLogin, centroIdLogin]);
+  }, [mesInicio.getTime(), mesFin.getTime(), role, medicoIdLogin, sedeSeleccionada, filters.especialidad]);
 
   // --- FILTROS ---
   const fechaSeleccionada = useMemo(
@@ -168,14 +207,13 @@ export default function TurnosPage() {
       .filter((t) => {
         if (t.fecha !== fechaSeleccionada) return false;
         if (role === "MEDICO" && medicoIdLogin && t.medicoId !== medicoIdLogin) return false;
-        if (role === "CENTRO" && centroIdLogin && t.centroId !== centroIdLogin) return false;
+        if (role === "CENTRO" && sedeSeleccionada && t.sedeId !== sedeSeleccionada) return false;
         if (filters.medicoId && t.medicoId !== filters.medicoId) return false;
         if (filters.especialidad && t.especialidad !== filters.especialidad) return false;
-        if (filters.sedeId && t.centroId !== filters.sedeId) return false;
         return true;
       })
       .sort((a, b) => a.hora.localeCompare(b.hora));
-  }, [turnos, fechaSeleccionada, role, medicoIdLogin, centroIdLogin, filters]);
+  }, [turnos, fechaSeleccionada, role, medicoIdLogin, sedeSeleccionada, filters]);
 
   // Enriquecer con nombre de médico si falta
   const turnosDelDiaEnriquecidos = useMemo(() => {
@@ -212,11 +250,20 @@ export default function TurnosPage() {
 
   // Crear agenda del día seleccionado
   async function generarAgendaHoy() {
+    // El médico debe elegir en qué sede atiende ese día
+    const sedeParaTurnos = role === "MEDICO"
+      ? (sedes.length > 0 ? sedes[0]._id : undefined)  // Si es médico, toma su primera sede de trabajo
+      : sedeSeleccionada;  // Si es centro, usa la sede seleccionada
+
+    if (!sedeParaTurnos && sedes.length > 0) {
+      setFlash("Por favor seleccione una sede");
+      setTimeout(() => setFlash(""), 2000);
+      return;
+    }
+
     await createTurnosSlots({
-      medicoId:
-        role === "MEDICO" ? medicoIdLogin : filters.medicoId || medicoIdLogin,
-      centroId:
-        role === "CENTRO" ? centroIdLogin : filters.sedeId || undefined,
+      medicoId: role === "MEDICO" ? medicoIdLogin : filters.medicoId || medicoIdLogin,
+      sedeId: sedeParaTurnos,
       fecha: fechaSel,
       desdeHora: "09:00",
       hastaHora: "13:00",
@@ -284,20 +331,48 @@ export default function TurnosPage() {
         </Box>
       )}
 
+      {/* Filtros especiales para centros médicos */}
+      {role === "CENTRO" && (
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+          <TextField
+            select
+            label="Sede"
+            value={sedeSeleccionada}
+            onChange={(e) => setSedeSeleccionada(e.target.value)}
+            size="small"
+            sx={{ minWidth: 200, maxWidth: 250 }}
+          >
+            {sedes.map((sede) => (
+              <MenuItem key={sede._id} value={sede._id}>
+                {sede.nombre}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Especialidad"
+            value={filters.especialidad}
+            onChange={(e) => setFilters({ ...filters, especialidad: e.target.value })}
+            size="small"
+            sx={{ minWidth: 200, maxWidth: 250 }}
+          >
+            <MenuItem value="">Todas</MenuItem>
+            {especialidades.map((esp) => (
+              <MenuItem key={esp} value={esp}>
+                {esp}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+      )}
+
       <Stack direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ mt: 3 }}>
         {/* Lista de turnos - Principal */}
         <Box sx={{ flex: 3, order: { xs: 2, lg: 1 } }} ref={listaRef}>
           <TurnosList
             fecha={selectedDate}
             turnos={turnosDelDiaEnriquecidos}
-            extra={(t) =>
-              t.centroId ? (
-                <Chip
-                  size="small"
-                  label={SEDES.find((s) => s.id === t.centroId)?.nombre || "Sede"}
-                />
-              ) : null
-            }
+            role={role}
             onVerNotas={abrirVerNotas}
             onAgregarNota={(t) => setNotaDlg({ open: true, turno: t, texto: "" })}
             onReservar={reservar}
