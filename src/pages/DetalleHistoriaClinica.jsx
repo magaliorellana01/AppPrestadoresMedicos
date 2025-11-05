@@ -33,7 +33,7 @@ export default function DetalleDeHistoriaClinica() {
       setHistoriaClinicaData(data);
     } catch (err) {
       console.error("Error al cargar la Historia Clínica:", err);
-      setError(err.message || "Error desconocido al cargar la historia clínica.");
+      setError(err.response?.data?.message || err.message || "Error desconocido al cargar la historia clínica.");
     } finally {
       setLoading(false);
     }

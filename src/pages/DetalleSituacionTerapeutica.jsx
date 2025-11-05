@@ -84,10 +84,9 @@ export default function DetalleSituacionTerapeutica() {
         try {
             const data = await getSituacionTerapeuticaByID(id);
             setSituacion(data);
-
         } catch (err) {
             console.error("Error al cargar la situación terapéutica:", err);
-            setError(err.message || "Error desconocido al cargar la situación.");
+            setError(err.response?.data?.message || err.message || "Error desconocido al cargar la situación.");
         } finally {
             setLoading(false);
         }

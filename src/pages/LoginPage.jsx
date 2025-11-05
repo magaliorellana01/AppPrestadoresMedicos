@@ -53,7 +53,7 @@ const LoginPage = ({ theme }) => {
       navigate('/solicitudes');
     } catch (error) {
       console.log('error', error);
-      setSnackbar({ open: true, message: error.message || "No se pudo iniciar sesión", severity: "error" });
+      setSnackbar({ open: true, message: error.response?.data?.message || error.message || "No se pudo iniciar sesión", severity: "error" });
     }
   };
 

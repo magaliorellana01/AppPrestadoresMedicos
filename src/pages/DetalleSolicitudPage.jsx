@@ -103,7 +103,7 @@ export default function DetalleSolicitudPage() {
       setNuevoEstado(detalle?.estado || detalle?.accion?.estadoActual || "EnAnalisis");
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: err.message || "No se pudo cargar la solicitud", severity: "error" });
+      setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudo cargar la solicitud", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ export default function DetalleSolicitudPage() {
       loadSolicitud();
     } catch (err) {
       console.error(err);
-      setSnackbar({ open: true, message: err.message || "No se pudieron subir los archivos", severity: "error" });
+      setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudieron subir los archivos", severity: "error" });
     }
   };
 
