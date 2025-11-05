@@ -98,7 +98,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
                 }
               }
             }}
-            placeholder="Buscar por Nro Afiliado, Apellido o Teléfono"
+            placeholder="Buscar por DNI, Nombres, Apellidos o Teléfono"
             InputProps={{
               inputProps: { "aria-label": "buscar afiliado" },
             }}

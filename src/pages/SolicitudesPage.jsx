@@ -42,14 +42,14 @@ const columnasSolicitudes = [
 const keyForSolicitudes = (item) => item._id || item.id;
 
 
-const SolicitudesPage = ({ theme }) => {
+const SolicitudesPage = () => {
   const [data, setData] = useState([]);
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tipoFiltro, setTipoFiltro] = useState('');
-  const [estadoFiltro, setEstadoFiltro] = useState('Recibido'); 
+  const [estadoFiltro, setEstadoFiltro] = useState('Todas'); 
   const navigate = useNavigate();
   const location = useLocation();
 

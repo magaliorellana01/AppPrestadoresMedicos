@@ -9,7 +9,7 @@ export default function HistoriasClinicasSearch({ q, onChange }) {
         size="small"
         value={q}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Buscar por Nro Afiliado, Nombres, Apellidos o Tipo"
+        placeholder="Buscar por DNI, Nombres, Apellidos o Teléfono"
         InputProps={{
           inputProps: { "aria-label": "buscar afiliado" },
         }}

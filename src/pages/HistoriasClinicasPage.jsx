@@ -11,11 +11,11 @@ import {
   TableRow,
   TableContainer,
   Paper,
-  Chip,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getHistoriasClinicasByMultipleParams } from "../services/index.js";
+import TablaHistoriasAgrupadaPorFamilia from "../components/TablaHistoriasAgrupadaPorFamilia";
 
 export default function HistoriasClinicasPage({ theme }) {
   const nav = useNavigate();
@@ -61,7 +61,7 @@ export default function HistoriasClinicasPage({ theme }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Buscar por DNI, Nombre, Apellido"
+            placeholder="Buscar por DNI, Nombres, Apellidos o Teléfono"
             InputProps={{
               inputProps: { "aria-label": "buscar afiliado" },
             }}
@@ -100,42 +100,58 @@ export default function HistoriasClinicasPage({ theme }) {
 
       <Paper>
         {historiasClinicas && (
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><strong>Nombres</strong></TableCell>
-                  <TableCell><strong>Apellidos</strong></TableCell>
-                  <TableCell><strong>Nro Afiliado</strong></TableCell>
-                  <TableCell><strong>Tipo</strong></TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {historiasClinicas.length === 0 ? (
+          historiasClinicas.length === 0 ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Nombres</strong></TableCell>
+                    <TableCell><strong>Apellidos</strong></TableCell>
+                    <TableCell><strong>DNI</strong></TableCell>
+                    <TableCell><strong>Tipo</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   <TableRow>
                     <TableCell colSpan={4} align="center">No hay resultados</TableCell>
                   </TableRow>
-                ) : (
-                  historiasClinicas.map((r) => (
-                    <TableRow
-                      key={r._id ?? `${r.socio?.dni}-${r.socio?.apellidos}-${r.socio?.nombres}`}
-                      hover
-                      onClick={() => nav(`/historia-clinica/${r._id ?? r.socio?._id}`)}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      <TableCell>{r.socio?.nombres ?? r.nombre ?? "-"}</TableCell>
-                      <TableCell>{r.socio?.apellidos ?? r.apellido ?? "-"}</TableCell>
-                      <TableCell>{r.socio?.dni ?? r.dni ?? "-"}</TableCell>
-                      <TableCell>
-                        <Chip label={r.socio?.rol ?? r.tipo ?? "—"} size="small" variant="outlined" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            (() => {
+              const titularesPorId = (historiasClinicas || []).reduce((map, r) => {
+                const socio = r.socio;
+                if (socio && socio.rol === 'Titular') {
+                  const id = socio._id ? socio._id.toString() : null;
+                  if (id) {
+                    map[id] = `${socio.apellidos}, ${socio.nombres}`;
+                  }
+                }
+                return map;
+              }, {});
+
+              const historiasAgrupadasPorFamilia = (historiasClinicas || []).reduce((acc, r) => {
+                const socio = r.socio;
+                const titularId = socio && (socio.rol === 'Titular' ? socio._id : socio.es_familiar_de);
+                const key = titularId ? titularId.toString() : 'sin_titular';
+
+                if (!acc[key]) {
+                  acc[key] = {
+                    titularId: key,
+                    nombreTitular: titularesPorId[key] || (socio && socio.rol === 'Titular' ? `${socio.apellidos}, ${socio.nombres}` : 'Familiar (Titular no encontrado)'),
+                    historias: []
+                  };
+                }
+                acc[key].historias.push(r);
+                return acc;
+              }, {});
+
+              const gruposFamiliares = Object.values(historiasAgrupadasPorFamilia);
+
+              return <TablaHistoriasAgrupadaPorFamilia gruposFamiliares={gruposFamiliares} />;
+            })()
+          )
         )}
       </Paper>
     </Box>
