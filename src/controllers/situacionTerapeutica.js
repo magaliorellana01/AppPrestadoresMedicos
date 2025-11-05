@@ -109,6 +109,10 @@ exports.agregarNovedad = async (req, res) => {
   try {
     const { situacionTerapeuticaId } = req.params;
     const { nota } = req.body;
+    
+    if (req.prestador.es_centro_medico) {
+      return res.status(403).json({ message: 'Un centro médico no puede agregar una novedad en situaciones terapeuticas.' });
+    }
 
     if (!nota) {
       return res.status(400).json({ message: 'La nota es obligatoria.' });
