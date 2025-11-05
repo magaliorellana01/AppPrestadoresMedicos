@@ -19,13 +19,13 @@ exports.loginPrestador = async (req, res) => {
         }
         const prestador = await Prestador.findOne({ cuit: cuitNormalizado });
         if (!prestador) {
-            return res.status(401).json({ message: 'CUIT incorrecto' });
+            return res.status(400).json({ message: 'CUIT incorrecto' });
         }
         if (prestador.estado !== 'Activo') {
-            return res.status(401).json({ message: 'Prestador inactivo' });
+            return res.status(400).json({ message: 'Prestador inactivo' });
         }
         if (prestador.password !== password) {
-            return res.status(401).json({ message: 'Contraseña incorrecta' });
+            return res.status(400).json({ message: 'Contraseña incorrecta' });
         }
 
         const accessToken = generateToken({ _id: prestador._id });
