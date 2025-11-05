@@ -1,6 +1,5 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
 const Socio = require('../models/socio')
-const Prestador = require('../models/prestador')
 const mongoose = require("mongoose");
 
 exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
@@ -15,7 +14,8 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
             $or: [
                 { dni: input },
                 { telefono: input },
-                { apellidos: { $regex: input, $options: 'i' } }
+                { nombres: { $regex: input, $options: "i" } },
+                { apellidos: { $regex: input, $options: "i" } }
             ]
         };
 
