@@ -33,6 +33,18 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
     return true;
   });
 
+  // Índice de titulares por ID para poder nombrar correctamente los grupos
+  const titularesPorId = situacionesFiltradas.reduce((map, sit) => {
+    const socio = sit.socio;
+    if (socio && socio.rol === 'Titular') {
+      const id = socio._id ? socio._id.toString() : null;
+      if (id) {
+        map[id] = `${socio.apellidos}, ${socio.nombres}`;
+      }
+    }
+    return map;
+  }, {});
+
   const situacionesAgrupadasPorFamilia = situacionesFiltradas.reduce((acc, sit) => {
     
     const socio = sit.socio;
@@ -46,7 +58,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
     if (!acc[key]) {
       acc[key] = {
         titularId: key,
-        nombreTitular: socio.rol === 'Titular' ? `${socio.apellidos}, ${socio.nombres}` : 'Familiar (Titular no encontrado)',
+        nombreTitular: titularesPorId[key] || (socio.rol === 'Titular' ? `${socio.apellidos}, ${socio.nombres}` : 'Familiar (Titular no encontrado)'),
         situaciones: []
       };
     }

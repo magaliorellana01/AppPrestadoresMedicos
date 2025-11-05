@@ -14,7 +14,6 @@ export default function TablaAgrupadaPorFamilia({ gruposFamiliares }) {
         nav(`/situaciones-terapeuticas/${id}`);
     };
     
-
     const headerTextColor = '#2D6A8C';
 
     return (
@@ -24,6 +23,7 @@ export default function TablaAgrupadaPorFamilia({ gruposFamiliares }) {
                     <TableRow>
                         <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>DNI</TableCell>
                         <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>Socio</TableCell> 
+                        <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>Tipo</TableCell>
                         <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>Diagnóstico</TableCell>
                         <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>Teléfono</TableCell>
                         <TableCell sx={{ color: headerTextColor, fontWeight: 'bold' }}>Prestador</TableCell>
@@ -57,7 +57,7 @@ export default function TablaAgrupadaPorFamilia({ gruposFamiliares }) {
                                             {situacionTerapeutica.socio.apellidos}
                                         , {situacionTerapeutica.socio.nombres}
                                     </TableCell>
-                                    
+                                    <TableCell>{situacionTerapeutica.socio.rol === 'Titular' ? 'Titular' : `Familiar de ${grupo.nombreTitular}`}</TableCell>
                                     <TableCell>{situacionTerapeutica.tratamiento}</TableCell>
                                     <TableCell>{situacionTerapeutica.socio.telefono}</TableCell>
                                     
