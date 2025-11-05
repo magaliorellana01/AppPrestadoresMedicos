@@ -23,6 +23,11 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
+  sede: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Sede",
+        required: false, //Cambiar a true cuando esté todo, ahora está así para que no rompa
+      },
   fechaFin: Date,
   
   observaciones: String,

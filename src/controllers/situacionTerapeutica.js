@@ -167,6 +167,7 @@ exports.createSituacionTerapeutica = async (req, res) => {
     }
     req.body.socio = socio._id;
     req.body.prestador = req.prestador._id;
+    // req.body.sede = req.sede._id; (DESCOMENTAR CUANDO SE AGREGUE LA VARIABLE SEDE DE MANERA GLOBAL)
     const situacion = await SituacionTerapeutica.create(req.body);
     res.status(201).json(situacion);
   } catch (error) {

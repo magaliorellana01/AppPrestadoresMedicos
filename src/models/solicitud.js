@@ -53,6 +53,11 @@ const SolicitudSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Prestador'
     },
+    sede: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Sede",
+        required: false, //Cambiar a true cuando esté todo, ahora está así para que no rompa
+      },
 
     fechaCreacion: {
         type: Date,
