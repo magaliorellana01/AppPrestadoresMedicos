@@ -15,7 +15,7 @@ const nombreMedico = (t) =>
   || MEDICOS.find((m) => m.id === t.medicoId)?.nombre
   || "—";
 
-export default function TurnosList({ fecha, turnos, onAgregarNota }) {
+export default function TurnosList({ fecha, turnos, onAgregarNota, onVerNotas }) {
   // Comparar fechas usando hora local, no UTC
   const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -72,13 +72,23 @@ export default function TurnosList({ fecha, turnos, onAgregarNota }) {
               key={t.id}
               alignItems="flex-start"
               secondaryAction={
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => onAgregarNota(t)}
-                >
-                  Agregar Nota
-                </Button>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => onVerNotas(t)}
+                    disabled={!t.notas || t.notas.length === 0}
+                  >
+                    Ver Notas
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() => onAgregarNota(t)}
+                  >
+                    Agregar Nota
+                  </Button>
+                </Stack>
               }
             >
               <ListItemText

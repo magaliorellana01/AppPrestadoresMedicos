@@ -1,9 +1,14 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Box, Stack, Typography, Alert, Chip, Container } from "@mui/material";
+import {
+  Box, Stack, Typography, Alert, Chip, Container,
+  useMediaQuery, useTheme, Drawer, Fab
+} from "@mui/material";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CalendarMonth from "../components/CalendarMonth";
 import TurnosFilters from "../components/TurnosFilters";
 import TurnosList from "../components/TurnosList";
 import NotaDialog from "../components/NotaDialog";
+import VerNotasDialog from "../components/VerNotasDialog";
 import { ESPECIALIDADES, MEDICOS, CENTROS } from "../data/turnos_demo";
 import dayjs from "dayjs";
 
@@ -42,12 +47,17 @@ function mapTurnoFromApi(t) {
     notas: (t.notas || []).map((n) => ({
       ts: n.ts || n.createdAt || new Date().toISOString(),
       texto: n.texto,
+      autorNombre: n.autor_id
+        ? `${n.autor_id.nombres || ''} ${n.autor_id.apellidos || ''}`.trim()
+        : 'Prestador',
     })),
   };
 }
 
 export default function TurnosPage() {
   const listaRef = useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
   // Perfil del usuario logueado (localStorage del login del backend)
   const prestador = useMemo(() => {
@@ -80,7 +90,9 @@ export default function TurnosPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [turnos, setTurnos] = useState([]);
   const [notaDlg, setNotaDlg] = useState({ open: false, turno: null, texto: "" });
+  const [verNotasDlg, setVerNotasDlg] = useState({ open: false, turno: null });
   const [flash, setFlash] = useState("");
+  const [calendarDrawerOpen, setCalendarDrawerOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     medicoId: role === "MEDICO" ? medicoIdLogin : "",
@@ -191,7 +203,12 @@ export default function TurnosPage() {
     window.scrollTo({ top: y, behavior: "smooth" });
   }, [selectedDate, turnosDelDiaEnriquecidos.length]);
 
-  const handleSelectDate = (d) => setSelectedDate(d);
+  const handleSelectDate = (d) => {
+    setSelectedDate(d);
+    if (isMobile) {
+      setCalendarDrawerOpen(false);
+    }
+  };
 
   // Crear agenda del día seleccionado
   async function generarAgendaHoy() {
@@ -245,9 +262,27 @@ export default function TurnosPage() {
     }
   };
 
+  const abrirVerNotas = (turno) => {
+    setVerNotasDlg({ open: true, turno });
+  };
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       {flash && <Alert severity="success" sx={{ mb: 2 }}>{flash}</Alert>}
+
+      {/* Botón de calendario en mobile - arriba a la derecha */}
+      {isMobile && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Fab
+            color="primary"
+            aria-label="abrir calendario"
+            size="medium"
+            onClick={() => setCalendarDrawerOpen(true)}
+          >
+            <CalendarTodayIcon />
+          </Fab>
+        </Box>
+      )}
 
       <Stack direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ mt: 3 }}>
         {/* Lista de turnos - Principal */}
@@ -263,14 +298,43 @@ export default function TurnosPage() {
                 />
               ) : null
             }
+            onVerNotas={abrirVerNotas}
             onAgregarNota={(t) => setNotaDlg({ open: true, turno: t, texto: "" })}
             onReservar={reservar}
             onCancelar={cancelar}
           />
         </Box>
 
-        {/* Calendario - Compacto y secundario */}
-        <Box sx={{ flex: 1, order: { xs: 1, lg: 2 } }}>
+        {/* Calendario - Solo visible en desktop */}
+        {!isMobile && (
+          <Box sx={{ flex: 1, order: { xs: 1, lg: 2 } }}>
+            <CalendarMonth
+              currentDate={currentDate}
+              onPrev={() =>
+                setCurrentDate(
+                  new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+                )
+              }
+              onNext={() =>
+                setCurrentDate(
+                  new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+                )
+              }
+              turnosByDate={turnosByDate}
+              onSelectDate={handleSelectDate}
+              selectedDate={selectedDate}
+            />
+          </Box>
+        )}
+      </Stack>
+
+      {/* Drawer con calendario para mobile */}
+      <Drawer
+        anchor="right"
+        open={isMobile && calendarDrawerOpen}
+        onClose={() => setCalendarDrawerOpen(false)}
+      >
+        <Box sx={{ width: 340, p: 2 }}>
           <CalendarMonth
             currentDate={currentDate}
             onPrev={() =>
@@ -288,7 +352,13 @@ export default function TurnosPage() {
             selectedDate={selectedDate}
           />
         </Box>
-      </Stack>
+      </Drawer>
+
+      <VerNotasDialog
+        open={verNotasDlg.open}
+        notas={verNotasDlg.turno?.notas || []}
+        onClose={() => setVerNotasDlg({ open: false, turno: null })}
+      />
 
       <NotaDialog
         open={notaDlg.open}
