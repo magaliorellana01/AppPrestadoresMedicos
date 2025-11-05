@@ -59,7 +59,7 @@ export default function HistoriasClinicasTable({
             <TableRow>
               <TableCell>Nombres</TableCell>
               <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>Apellidos</TableCell>
-              <TableCell align="center">Nro Afiliado</TableCell>
+              <TableCell align="center">DNI</TableCell>
               <TableCell align="center">Tipo</TableCell>
             </TableRow>
           </TableHead>
