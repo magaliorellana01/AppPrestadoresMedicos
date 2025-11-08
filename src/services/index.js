@@ -173,3 +173,11 @@ export const asignarMedicoSede = async (sedeId, medicoId) => {
   return data;
 };
 
+// DASHBOARD SOLICITUDES API
+export const getDashboardStats = async (fechaDesde, fechaHasta, prestadorId) => {
+  const { data } = await api.get(`/solicitud/dashboard/stats`, {
+    params: { fechaDesde, fechaHasta, prestadorId }
+  });
+  return data;
+};
+

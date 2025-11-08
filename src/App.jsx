@@ -13,6 +13,7 @@ import DetalleHistoriaClinica from "./pages/DetalleHistoriaClinica.jsx";
 import SituacionesTerapeuticasPage from "./pages/SituacionesTerapeuticasPage.jsx";
 import DetalleSolicitudPage from "./pages/DetalleSolicitudPage";
 import DetalleSituacionTerapeutica from "./pages/DetalleSituacionTerapeutica.jsx";
+import DashboardSolicitudesPage from "./pages/DashboardSolicitudesPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export function App() {
@@ -52,6 +53,11 @@ export function App() {
             <Route path="/solicitudes" element={
               <ProtectedRoute>
                 <SolicitudesPage theme={theme} />
+              </ProtectedRoute>
+            } />
+            <Route path="/solicitudes/dashboard" element={
+              <ProtectedRoute>
+                <DashboardSolicitudesPage />
               </ProtectedRoute>
             } />
             <Route path="/solicitudes/:id" element={
