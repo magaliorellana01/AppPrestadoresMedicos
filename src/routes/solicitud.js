@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 
 const SolicitudController = require('../controllers/solicitud');
+const DashboardController = require('../controllers/dashboardSolicitudes');
 
 // --- Configuración Multer ---
 const storage = multer.diskStorage({
@@ -12,6 +13,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // --- Rutas principales ---
+router.get('/dashboard/stats', DashboardController.getDashboardStats);  // Stats del dashboard
 router.get('/:id', SolicitudController.getSolicitudById);      // Detalle de solicitud
 router.put('/:id', SolicitudController.updateSolicitud);       // Actualizar solicitud
 
