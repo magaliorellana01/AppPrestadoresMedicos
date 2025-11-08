@@ -79,7 +79,14 @@ const SolicitudesPage = () => {
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant='h4'>Solicitudes</Typography>
-        <Button endIcon={<ArrowForwardIcon />} variant="text">Ir al Dashboard</Button>
+        <Button
+          endIcon={<ArrowForwardIcon />}
+          variant="contained"
+          onClick={() => navigate('/solicitudes/dashboard')}
+          sx={{ textTransform: 'none', fontWeight: 500 }}
+        >
+          Ver Dashboard
+        </Button>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
