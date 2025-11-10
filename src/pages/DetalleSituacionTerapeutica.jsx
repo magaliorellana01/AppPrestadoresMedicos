@@ -139,15 +139,15 @@ export default function DetalleSituacionTerapeutica() {
     const novedades = situacion?.novedadesMedicas?.slice().reverse() || [];
     return (
         <Box p={{ xs: 2, md: 4 }} >
-            <Box display="flex" flexDirection={{ xs: "column", md: "column", lg: "row" }} justifyContent="center" alignItems="center" mb={3}>
+            <Box display="flex" flexDirection="column" justifyContent="center" alignItems={{ xs: "flex-start", md: "center" }} mb={3} gap={1}>
                 <Typography
                     variant="body2"
-                    sx={{ cursor: "pointer", color: "primary.main", flexShrink: 0 }}
+                    sx={{ cursor: "pointer", color: "primary.main", flexShrink: 0, fontSize: { xs: '14px', sm: '16px' } }}
                     onClick={() => window.history.back()}
                 >
                     ← Volver a Situaciones Terapéuticas
                 </Typography>
-                <Typography variant="h4" sx={{ textAlign: "center", flexGrow: 1, mr: { xs: 0, md: "150px" } }}>
+                <Typography variant="h4" color="primary" sx={{ textAlign: { xs: "left", md: "center" }, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }, width: '100%', wordBreak: 'break-word' }}>
                     {situacion.socio.nombres} {situacion.socio.apellidos} - Situación terapéutica
                 </Typography>
             </Box>
@@ -155,8 +155,8 @@ export default function DetalleSituacionTerapeutica() {
             <Box display="flex" flexDirection={{ xs: "column", md: "column", lg: "row" }} gap={4} justifyContent="center" alignItems={{ xs: "center", md: "center", lg: "stretch" }}>
                 {/* IZQ */}
                 <Box display="flex" flexDirection="column" gap={3} sx={{
-                    width: { xs: 500, md: 500 },
-                    maxWidth: { xs: 500, md: 500 }
+                    width: { xs: '100%', sm: '90%', md: 500 },
+                    maxWidth: { xs: '100%', sm: '90%', md: 500 }
                 }} >
 
                     {/* Cartel de Información de Socio */}
@@ -170,7 +170,7 @@ export default function DetalleSituacionTerapeutica() {
                             borderColor: "border.main",
                             borderRadius: 2,
                             backgroundColor: "background.default",
-                            maxWidth: 500
+                            maxWidth: { xs: '100%', md: 500 }
                         }}
                     >
                         <CartelInformacionSocio socio={situacion.socio} />
@@ -188,7 +188,7 @@ export default function DetalleSituacionTerapeutica() {
                             borderColor: "border.main",
                             borderRadius: 2,
                             backgroundColor: "background.default",
-                            maxWidth: 500
+                            maxWidth: { xs: '100%', md: 500 }
                         }}
                     >
                         <Box
@@ -243,7 +243,7 @@ export default function DetalleSituacionTerapeutica() {
                             borderColor: "border.main",
                             borderRadius: 2,
                             backgroundColor: "background.default",
-                            maxWidth: 500
+                            maxWidth: { xs: '100%', md: 500 }
                         }}
                     >
                         <Box
@@ -293,8 +293,8 @@ export default function DetalleSituacionTerapeutica() {
                     flexShrink: 0,
                     flexGrow: 0,
 
-                    width: { xs: 600, md: 600 },
-                    maxWidth: { xs: 600, md: 600 },
+                    width: { xs: '100%', sm: '90%', md: 600 },
+                    maxWidth: { xs: '100%', sm: '90%', md: 600 },
                 }}>
                     {/* Box de Novedades */}
                     <Box
@@ -310,7 +310,7 @@ export default function DetalleSituacionTerapeutica() {
                             backgroundColor: "background.default",
                             boxSizing: "border-box",
                             flexGrow: 1,
-                            maxWidth: 600
+                            maxWidth: { xs: '100%', md: 600 }
                         }}
                     >
                         <Box
@@ -341,7 +341,7 @@ export default function DetalleSituacionTerapeutica() {
                             <Button
                                 variant="contained"
                                 color="primary"
-                                sx={{ width: "100%" }}
+                                sx={{ width: "100%", fontSize: { xs: "14px", sm: "16px" } }}
                                 onClick={handleAgregarNovedad}
                             >
                                 Agregar Novedad
@@ -402,11 +402,11 @@ export default function DetalleSituacionTerapeutica() {
                             borderRadius: 2,
                             backgroundColor: "background.default",
                             boxSizing: "border-box",
-                            maxWidth: 600
+                            maxWidth: { xs: '100%', md: 600 }
                         }}
                     >
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                            <Typography variant="subtitle2" sx={{ color: "text.secondary", minWidth: 150 }}>
+                        <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" width="100%" gap={{ xs: 1, sm: 0 }}>
+                            <Typography variant="subtitle2" sx={{ color: "text.secondary", minWidth: { xs: 'auto', sm: 150 } }}>
                                 Fecha de Inicio
                             </Typography>
                             <TextField
@@ -420,8 +420,8 @@ export default function DetalleSituacionTerapeutica() {
 
                             />
                         </Box>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                            <Typography variant="subtitle2" sx={{ color: "text.secondary", minWidth: 150 }}>
+                        <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" width="100%" gap={{ xs: 1, sm: 0 }}>
+                            <Typography variant="subtitle2" sx={{ color: "text.secondary", minWidth: { xs: 'auto', sm: 150 } }}>
                                 Fecha de Fin
                             </Typography>
                             <TextField
@@ -441,7 +441,7 @@ export default function DetalleSituacionTerapeutica() {
                     <Button
                         variant="contained"
                         color="primary"
-                        sx={{ width: "100%" }}
+                        sx={{ width: "100%", fontSize: { xs: "14px", sm: "16px" } }}
                         onClick={handleGuardarCambios}
 
                     >

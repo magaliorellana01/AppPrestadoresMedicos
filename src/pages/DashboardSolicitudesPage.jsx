@@ -117,14 +117,14 @@ const DashboardSolicitudesPage = () => {
   }));
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 3, mb: 3 }}>
+    <Container maxWidth="xl" sx={{ mt: 3, mb: 3, px: { xs: 2, sm: 3 } }}>
       {/* Título con botón de volver */}
-      <Box mb={2} display="flex" justifyContent="space-between" alignItems="flex-start">
+      <Box mb={2} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'flex-start' }} gap={{ xs: 2, sm: 0 }}>
         <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+          <Typography variant="h4" color="primary" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
             Dashboard de Solicitudes
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
             Visualización de métricas y estadísticas de solicitudes procesadas
           </Typography>
         </Box>
@@ -134,7 +134,10 @@ const DashboardSolicitudesPage = () => {
           onClick={() => navigate('/solicitudes')}
           sx={{
             textTransform: 'none',
-            fontWeight: 500
+            fontWeight: 500,
+            width: { xs: '100%', sm: 'auto' },
+            fontSize: { xs: '14px', sm: '16px' },
+            whiteSpace: 'nowrap'
           }}
         >
           Volver a Solicitudes

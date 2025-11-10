@@ -124,20 +124,20 @@ export default function ModalNuevaSTerapeutica({ openModal, setOpenModal }) {
             />
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button 
-                variant="contained" 
-                color="primary" 
-                sx={{ fontSize: "22px", width: "175px", borderRadius: "10px", color: 'white', backgroundColor: theme.color.secondary }} 
+        <Box sx={{ display: "flex", flexDirection: { xs: 'column', sm: 'row' }, justifyContent: "flex-end", gap: { xs: 1.5, sm: 0 }, mt: 2 }}>
+            <Button
+                variant="contained"
+                color="primary"
+                sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "175px" }, borderRadius: "10px", color: 'white', backgroundColor: theme.color.secondary }}
                 onClick={() => setOpenModal(false)}
             >
             Cancelar
             </Button>
-            <Button 
-                variant="contained" 
-                color="primary" 
-                sx={{ fontSize: "22px", width: "175px", ml: 2, borderRadius: "10px" }} 
-                onClick={handleCrear} 
+            <Button
+                variant="contained"
+                color="primary"
+                sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "175px" }, ml: { xs: 0, sm: 2 }, borderRadius: "10px" }}
+                onClick={handleCrear}
                 disabled={!form.dniAfiliado || !form.fechaInicio || !form.diagnostico || !form.tratamiento}>
             Crear
             </Button>

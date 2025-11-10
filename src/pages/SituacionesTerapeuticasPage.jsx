@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio } from "@mui/material";
+import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio, useMediaQuery, useTheme, Container } from "@mui/material";
 import { Add, Search } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
 import { getSituacionTerapeuticaByMultipleParams } from "../services";
@@ -7,6 +7,9 @@ import TablaAgrupadaPorFamilia from "../components/TablaAgrupadaPorFamilia";
 
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
+
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
@@ -72,8 +75,8 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const gruposFamiliares = Object.values(situacionesAgrupadasPorFamilia);
 
   return (
-    <Box>
-      <Typography variant="h4" color={theme.color.primary} mb={4}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
+      <Typography variant="h4" color="primary" mb={4}>
         Situaciones Terapéuticas
       </Typography>
 
@@ -114,11 +117,11 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               },
             }}
           />
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
             <Button
               variant="contained"
               color="primary"
-              sx={{ fontSize: "22px", width: "fit-content" }}
+              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
               disabled={!q.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
             >
@@ -127,7 +130,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
             <Button
               variant="contained"
               color="primary"
-              sx={{ fontSize: "22px", width: "fit-content" }}
+              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleBuscar}
               disabled={!q.trim()}
             >
@@ -140,7 +143,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
         <Button
           variant="contained"
           color="primary"
-          sx={{ fontSize: "22px", height: 'fit-content', width: { xs: '100%', md: 500 } }}
+          sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, height: 'fit-content', width: { xs: '100%', sm: 'auto', md: 500 } }}
           onClick={() => setOpenModal(true)}
         >
           Agregar Situación Terapéutica
@@ -149,13 +152,24 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
       </Box>
       {situacionesTerapeuticas !== null && (
         <>
-          <RadioGroup row value={filtro} onChange={(e) => setFiltro(e.target.value)} sx={{ mb: 2 }}>
-            <FormControlLabel value="todas" control={<Radio />} label="Ver todas las situaciones terapéuticas" />
+          <RadioGroup
+            row={!isMobile}
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            <FormControlLabel
+              value="todas"
+              control={<Radio />}
+              label="Ver todas las situaciones terapéuticas"
+              sx={{ '& .MuiFormControlLabel-label': { fontSize: { xs: '14px', sm: '16px' } } }}
+            />
             <FormControlLabel
               value="mias"
               control={<Radio />}
               label="Ver las creadas por mi"
               disabled={!prestadorLogueadoId}
+              sx={{ '& .MuiFormControlLabel-label': { fontSize: { xs: '14px', sm: '16px' } } }}
             />
           </RadioGroup>
 
@@ -165,7 +179,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
       )}
 
       <ModalNuevaSTerapeutica openModal={openModal} setOpenModal={setOpenModal} />
-    </Box>
+    </Container>
   );
 };
 

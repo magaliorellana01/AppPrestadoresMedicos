@@ -87,7 +87,7 @@ export default function DetalleDeHistoriaClinica() {
       </Typography>
 
       {/* Título */}
-      <Typography variant="h4" sx={{ mb: 3 }}>
+      <Typography variant="h4" color="primary" sx={{ mb: 3 }}>
         Historia clínica de {socio.nombres} {socio.apellidos}
       </Typography>
 

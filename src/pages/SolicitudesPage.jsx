@@ -77,38 +77,34 @@ const SolicitudesPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Typography variant='h4'>Solicitudes</Typography>
+      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} mb={4} gap={{ xs: 2, sm: 0 }}>
+        <Typography variant='h4' color="primary" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>Solicitudes</Typography>
         <Button
           endIcon={<ArrowForwardIcon />}
           variant="contained"
           onClick={() => navigate('/solicitudes/dashboard')}
-          sx={{ textTransform: 'none', fontWeight: 500 }}
+          sx={{ textTransform: 'none', fontWeight: 500, width: { xs: '100%', sm: 'auto' }, fontSize: { xs: '14px', sm: '16px' } }}
         >
           Ver Dashboard
         </Button>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid>
-          <FormControl size="small" sx={{ minWidth: 200 }} variant="outlined">
-            <InputLabel id= "tipo-label">Tipo</InputLabel>
-            <Select labelId="tipo-label" value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }} label= "Tipo">
-              {tiposOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
-              <MenuItem value="">Todas</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel id= "estado-label">Estado</InputLabel>
-            <Select labelId="estado-label" value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }} label="Estado">
-              {estadosOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
-              <MenuItem value="Todas">Todas</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} sx={{ mb: 4 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }} variant="outlined">
+          <InputLabel id="tipo-label">Tipo</InputLabel>
+          <Select labelId="tipo-label" value={tipoFiltro} onChange={(e) => { setTipoFiltro(e.target.value); setPage(0); }} label="Tipo">
+            {tiposOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
+            <MenuItem value="">Todas</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
+          <InputLabel id="estado-label">Estado</InputLabel>
+          <Select labelId="estado-label" value={estadoFiltro} onChange={(e) => { setEstadoFiltro(e.target.value); setPage(0); }} label="Estado">
+            {estadosOpciones.map((op) => <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>)}
+            <MenuItem value="Todas">Todas</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
       <Box sx={{ overflowX: 'auto', mb: 4 }}>
         {isLoading ? <Typography align="center" sx={{ py: 4 }}>Cargando solicitudes...</Typography> :
