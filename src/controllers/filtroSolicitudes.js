@@ -21,18 +21,33 @@ exports.getSolicitudes = async (req, res) => {
             filter.estado = estado;
             filter.prestadorAsignado = prestadorId;
         }
-        
+
         if (tipo) {
             filter.tipo = tipo;
         }
 
         const total = await Solicitud.countDocuments(filter);
-        const content = await Solicitud.find(filter)
-            .skip(page * size)
-            .limit(size)
-            .sort({ fechaCreacion: -1 })
-            .lean();
+        const pipeline = [
+            { $match: filter },
+            {
+                $addFields: {
+                    estadoOrder: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$estado", "En Análisis"] }, then: 1 },
+                                { case: { $eq: ["$estado", "Observado"] }, then: 2 },
+                            ],
+                            default: 3
+                        }
+                    }
+                }
+            },
+            { $sort: { estadoOrder: 1, fechaCreacion: -1 } },
+            { $skip: page * size },
+            { $limit: size }
+        ];
 
+        const content = await Solicitud.aggregate(pipeline);
         return res.json({ content, total, page, size });
     }
     catch (error) {
