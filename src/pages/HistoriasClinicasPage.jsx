@@ -11,6 +11,7 @@ import {
   TableRow,
   TableContainer,
   Paper,
+  Container,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +41,7 @@ export default function HistoriasClinicasPage({ theme }) {
   };
 
   return (
-    <Box sx={{ maxWidth: 1500, mx: "auto", px: { xs: 2, md: 2 }, py: 1 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h4" color="primary">
           Historias Clínicas
@@ -73,11 +74,11 @@ export default function HistoriasClinicasPage({ theme }) {
             }}
           />
 
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
             <Button
               variant="contained"
               color="primary"
-              sx={{ fontSize: "22px", width: "fit-content" }}
+              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
               disabled={!q.trim() && (!historiasClinicas || historiasClinicas.length === 0)}
             >
@@ -87,7 +88,7 @@ export default function HistoriasClinicasPage({ theme }) {
             <Button
               variant="contained"
               color="primary"
-              sx={{ fontSize: "22px", width: "fit-content" }}
+              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleBuscar}
               disabled={!q.trim()}
             >
@@ -154,6 +155,6 @@ export default function HistoriasClinicasPage({ theme }) {
           )
         )}
       </Paper>
-    </Box>
+    </Container>
   );
 }

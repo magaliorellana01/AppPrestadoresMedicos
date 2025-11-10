@@ -33,7 +33,7 @@ const InfoCard = ({ icon, title, children, action }) => (
     p={{ xs: 2, sm: 2, md: 3 }}
     sx={{
       width: "100%",
-      maxWidth: 400,
+      maxWidth: { xs: '100%', md: 400 },
       border: "1px solid",
       borderColor: "border.main",
       borderRadius: 2,
@@ -157,19 +157,19 @@ export default function DetalleSolicitudPage() {
   };
 
   return (
-    <Box sx={{ p: 4, backgroundColor: "#f5f7fa", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <Typography variant="h4" sx={{ textAlign: "center", mb: 4, color: "#1976d2", fontWeight: "bold" }}>
+    <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: "#f5f7fa", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Typography variant="h4" color="primary" sx={{ textAlign: "center", mb: 4, fontWeight: "bold", fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }, wordBreak: 'break-word', px: { xs: 1, sm: 0 } }}>
         {solicitud.titulo || solicitud.tipo} - {getEstadoLabel()}
       </Typography>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: 1100, mb: 5, width: "100%", justifyItems: 'center' }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: { xs: '100%', md: 1100 }, mb: 5, width: "100%", justifyItems: 'center', px: { xs: 1, sm: 0 } }}>
         
         {/* MODIFICACIÓN AQUÍ */}
         <Box sx={{
             width: "100%",
-            maxWidth: 400,
+            maxWidth: { xs: '100%', md: 400 },
             height: "100%",
-            borderRadius: 2, // Para que la sombra se vea bien en los bordes
+            borderRadius: 2,
             transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
             "&:hover": {
               transform: "translateY(-4px)",
@@ -196,19 +196,19 @@ export default function DetalleSolicitudPage() {
               <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d", ml: 1 }} />
             </Box>
           ))}
-          <Box sx={{ mt: 2 }}>
-            <Button variant="outlined" component="label" size="small" sx={{ mr: 2 }}>Subir Factura
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
+            <Button variant="outlined" component="label" size="small" sx={{ width: { xs: '100%', sm: 'auto' } }}>Subir Factura
               <input type="file" hidden onChange={e => setArchivoFactura(e.target.files[0])} />
             </Button>
-            {archivoFactura && <Typography variant="caption" sx={{ display: "inline" }}>{archivoFactura.name}</Typography>}
+            {archivoFactura && <Typography variant="caption" sx={{ display: { xs: 'block', sm: 'inline' }, textAlign: { xs: 'center', sm: 'left' } }}>{archivoFactura.name}</Typography>}
           </Box>
-          <Box sx={{ mt: 1 }}>
-            <Button variant="outlined" component="label" size="small" sx={{ mr: 2 }}>Subir Receta
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
+            <Button variant="outlined" component="label" size="small" sx={{ width: { xs: '100%', sm: 'auto' } }}>Subir Receta
               <input type="file" hidden onChange={e => setArchivoReceta(e.target.files[0])} />
             </Button>
-            {archivoReceta && <Typography variant="caption" sx={{ display: "inline" }}>{archivoReceta.name}</Typography>}
+            {archivoReceta && <Typography variant="caption" sx={{ display: { xs: 'block', sm: 'inline' }, textAlign: { xs: 'center', sm: 'left' } }}>{archivoReceta.name}</Typography>}
           </Box>
-          <Button variant="contained" size="small" sx={{ mt: 2, alignSelf: { xs: 'center', md: 'flex-start'} }} onClick={handleSubirArchivos}>Subir Archivos</Button>
+          <Button variant="contained" size="small" sx={{ mt: 2, alignSelf: { xs: 'center', md: 'flex-start'}, width: { xs: '100%', sm: 'auto' } }} onClick={handleSubirArchivos}>Subir Archivos</Button>
         </InfoCard>
 
                 <InfoCard 
@@ -244,7 +244,7 @@ export default function DetalleSolicitudPage() {
       </Box>
 
       <Button variant="contained" size="large" onClick={handleGuardarCambios}
-        sx={{ backgroundColor: "#1976d2", "&:hover": { backgroundColor: "#115293" }, px: 4, py: 1, textTransform: "none", fontSize: "1rem", borderRadius: 2, boxShadow: "none" }}>
+        sx={{ backgroundColor: "#1976d2", "&:hover": { backgroundColor: "#115293" }, px: { xs: 2, sm: 4 }, py: 1, textTransform: "none", fontSize: { xs: '0.875rem', sm: '1rem' }, borderRadius: 2, boxShadow: "none", width: { xs: '90%', sm: 'auto' }, maxWidth: { xs: '100%', sm: 'none' } }}>
         Confirmar Cambios
       </Button>
 

@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Paper, Typography, Divider, List, ListItem, ListItemText,
-  Button, Chip, Stack
+  Button, Chip, Stack, Box, useMediaQuery, useTheme
 } from "@mui/material";
 import { MEDICOS, CENTROS } from "../data/turnos_demo";
 
@@ -16,6 +16,9 @@ const nombreMedico = (t) =>
   || "—";
 
 export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNotas }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // Comparar fechas usando hora local, no UTC
   const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -71,29 +74,23 @@ export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNo
             <ListItem
               key={t.id}
               alignItems="flex-start"
-              secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => onVerNotas(t)}
-                    disabled={!t.notas || t.notas.length === 0}
-                  >
-                    Ver Notas
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => onAgregarNota(t)}
-                  >
-                    Agregar Nota
-                  </Button>
-                </Stack>
-              }
+              sx={{
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'flex-start',
+                pb: isMobile ? 2 : 1,
+              }}
             >
               <ListItemText
+                sx={{
+                  mb: isMobile ? 1.5 : 0,
+                  pr: isMobile ? 0 : 2
+                }}
                 primary={
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack
+                    direction={isMobile ? "column" : "row"}
+                    spacing={isMobile ? 0.5 : 1}
+                    alignItems={isMobile ? "flex-start" : "center"}
+                  >
                     <Typography variant="body1" fontWeight="bold">{t.hora}</Typography>
                     {nroAfiliado && (
                       <Typography variant="body2" color="text.secondary">
@@ -106,7 +103,13 @@ export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNo
                   </Stack>
                 }
                 secondary={
-                  <Stack direction="row" flexWrap="wrap" gap={0.5} alignItems="center">
+                  <Stack
+                    direction="row"
+                    flexWrap="wrap"
+                    gap={isMobile ? 0.75 : 0.5}
+                    alignItems="center"
+                    sx={{ mt: 1 }}
+                  >
                     {t.especialidad ? <Chip size="small" label={t.especialidad} /> : null}
                     {role === "CENTRO" && med && <Chip size="small" label={med} />}
                     {sede && <Chip size="small" label={sede} />}
@@ -118,6 +121,32 @@ export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNo
                   </Stack>
                 }
               />
+              <Stack
+                direction={isMobile ? "column" : "row"}
+                spacing={1}
+                sx={{
+                  width: isMobile ? '100%' : 'auto',
+                  mt: isMobile ? 1 : 0
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => onVerNotas(t)}
+                  disabled={!t.notas || t.notas.length === 0}
+                  fullWidth={isMobile}
+                >
+                  Ver Notas
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => onAgregarNota(t)}
+                  fullWidth={isMobile}
+                >
+                  Agregar Nota
+                </Button>
+              </Stack>
             </ListItem>
           );
         })}
