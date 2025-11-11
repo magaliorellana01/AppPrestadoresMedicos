@@ -59,16 +59,6 @@ const prestadorSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  // Si es centro médico: sedes que posee
-  sedes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Sede",
-  }],
-  // Si es médico: sedes donde trabaja
-  sedes_trabajo: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Sede",
-  }],
   estado: {
     type: String,
     enum: ["Activo", "Inactivo"],
