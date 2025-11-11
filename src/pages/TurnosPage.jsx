@@ -105,6 +105,9 @@ export default function TurnosPage() {
   const [filters, setFilters] = useState({
     medicoId: role === "MEDICO" ? medicoIdLogin : "",
     especialidad: "",
+    sedeId: "",
+    horaDesde: "",
+    horaHasta: "",
   });
 
   const medicosVisibles = useMemo(() => {
@@ -118,9 +121,80 @@ export default function TurnosPage() {
   useEffect(() => {
     async function loadSedes() {
       try {
-        const sedesData = await getSedes();
-        // Ordenar alfabéticamente por nombre
-        const sedesOrdenadas = sedesData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        console.log("Cargando sedes para:", role);
+        console.log("prestador.sedes:", prestador?.sedes);
+
+        let sedesData = [];
+
+        // Para CENTROS: si no tienen sedes asignadas, cargar todas
+        if (role === "CENTRO" && (!prestador?.sedes || !Array.isArray(prestador.sedes) || prestador.sedes.length === 0)) {
+          console.log("Centro sin sedes asignadas, cargando todas las sedes del sistema");
+          sedesData = await getSedes();
+        }
+        // Para MÉDICOS: si no tienen sedes, no pueden trabajar
+        else if (role === "MEDICO" && (!prestador?.sedes || !Array.isArray(prestador.sedes) || prestador.sedes.length === 0)) {
+          console.warn("Médico sin sedes asignadas");
+          setSedes([]);
+          return;
+        }
+        // Si tiene sedes asignadas (tanto médico como centro)
+        else {
+          // Verificar si las sedes ya están pobladas (tienen nombre) o son solo ObjectIds
+          const primeraSede = prestador.sedes[0];
+          const estaPoblada = typeof primeraSede === 'object' && primeraSede !== null && primeraSede.nombre;
+
+          if (estaPoblada) {
+            // Las sedes ya vienen con los datos completos
+            console.log("Sedes ya pobladas");
+            sedesData = prestador.sedes;
+          } else {
+            // Las sedes son ObjectIds, necesitamos buscarlas
+            console.log("Sedes son ObjectIds, buscando datos completos...");
+            const todasLasSedes = await getSedes();
+
+            // Filtrar solo las sedes que están en prestador.sedes
+            sedesData = todasLasSedes.filter(sede => {
+              return prestador.sedes.some(sedeId => {
+                const sedeIdStr = typeof sedeId === 'object' ? sedeId.toString() : sedeId;
+                const currentSedeIdStr = typeof sede._id === 'object' ? sede._id.toString() : sede._id;
+                return sedeIdStr === currentSedeIdStr;
+              });
+            });
+            console.log("Sedes filtradas:", sedesData.length);
+          }
+        }
+
+        // Eliminar duplicados usando Map basado en _id (convertir todo a string)
+        const sedesMap = new Map();
+        sedesData.forEach(sede => {
+          if (sede && sede._id && sede.nombre) {
+            // Normalizar el _id a string para comparación
+            let id;
+            if (typeof sede._id === 'string') {
+              id = sede._id;
+            } else if (sede._id.$oid) {
+              id = sede._id.$oid;
+            } else if (typeof sede._id.toString === 'function') {
+              id = sede._id.toString();
+            } else {
+              id = String(sede._id);
+            }
+
+            if (!sedesMap.has(id)) {
+              sedesMap.set(id, sede);
+            }
+          }
+        });
+
+        console.log("Duplicados eliminados. Sedes únicas:", sedesMap.size);
+
+        // Convertir a array y ordenar alfabéticamente
+        const sedesUnicas = Array.from(sedesMap.values());
+        const sedesOrdenadas = sedesUnicas.sort((a, b) =>
+          (a.nombre || '').localeCompare(b.nombre || '')
+        );
+
+        console.log("Sedes finales cargadas:", sedesOrdenadas.length);
         setSedes(sedesOrdenadas);
 
         // Si es centro médico, seleccionar la primera sede alfabéticamente por defecto
@@ -133,26 +207,37 @@ export default function TurnosPage() {
       }
     }
     loadSedes();
-  }, [role]);
+  }, [role, prestador]);
 
   // Cargar especialidades dinámicamente
   useEffect(() => {
     async function loadEspecialidades() {
       try {
-        const params = {};
-        // Si es centro y hay sede seleccionada, filtrar por sede
-        if (role === "CENTRO" && sedeSeleccionada) {
-          params.sedeId = sedeSeleccionada;
+        if (role === "MEDICO") {
+          // Para médicos, usar las especialidades de su perfil
+          if (prestador?.especialidades && Array.isArray(prestador.especialidades)) {
+            setEspecialidades(prestador.especialidades);
+          } else {
+            // Si no tiene especialidades en el perfil, cargar todas
+            const especialidadesData = await getEspecialidades();
+            setEspecialidades(especialidadesData);
+          }
+        } else {
+          // Para centros, cargar del sistema
+          const params = {};
+          if (sedeSeleccionada) {
+            params.sedeId = sedeSeleccionada;
+          }
+          const especialidadesData = await getEspecialidades(params);
+          setEspecialidades(especialidadesData);
         }
-        const especialidadesData = await getEspecialidades(params);
-        setEspecialidades(especialidadesData);
       } catch (error) {
         console.error("Error cargando especialidades:", error);
         setEspecialidades([]);
       }
     }
     loadEspecialidades();
-  }, [role, sedeSeleccionada]);
+  }, [role, sedeSeleccionada, prestador]);
 
   // Mapa id → nombre para fallback si el back no hace populate
   const medicoNombreById = useMemo(() => {
@@ -205,11 +290,26 @@ export default function TurnosPage() {
   const turnosDelDia = useMemo(() => {
     return turnos
       .filter((t) => {
+        // Filtro por fecha
         if (t.fecha !== fechaSeleccionada) return false;
+
+        // Filtro por médico (si es médico logueado)
         if (role === "MEDICO" && medicoIdLogin && t.medicoId !== medicoIdLogin) return false;
+
+        // Filtro por sede (para centros, usa sedeSeleccionada; para médicos, usa filters.sedeId)
         if (role === "CENTRO" && sedeSeleccionada && t.sedeId !== sedeSeleccionada) return false;
+        if (role === "MEDICO" && filters.sedeId && t.sedeId !== filters.sedeId) return false;
+
+        // Filtro por médico específico (para centros)
         if (filters.medicoId && t.medicoId !== filters.medicoId) return false;
+
+        // Filtro por especialidad
         if (filters.especialidad && t.especialidad !== filters.especialidad) return false;
+
+        // Filtro por rango horario (para centros)
+        if (role === "CENTRO" && filters.horaDesde && t.hora < filters.horaDesde) return false;
+        if (role === "CENTRO" && filters.horaHasta && t.hora > filters.horaHasta) return false;
+
         return true;
       })
       .sort((a, b) => a.hora.localeCompare(b.hora));
@@ -269,7 +369,9 @@ export default function TurnosPage() {
       hastaHora: "13:00",
       intervaloMin: 30,
       duracionMin: 30,
-      especialidad: prestador?.especialidad || filters.especialidad || "",
+      especialidad: (prestador?.especialidades && prestador.especialidades.length > 0)
+        ? prestador.especialidades[0]
+        : filters.especialidad || "",
     });
     await fetchTurnos();
     setFlash("Agenda generada.");
@@ -331,17 +433,95 @@ export default function TurnosPage() {
         </Box>
       )}
 
-      {/* Filtros especiales para centros médicos */}
+      {/* Filtros para centros médicos */}
       {role === "CENTRO" && (
+        <Stack spacing={2} sx={{ mb: 3 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              select
+              label="Sede"
+              value={sedeSeleccionada}
+              onChange={(e) => setSedeSeleccionada(e.target.value)}
+              size="small"
+              sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
+            >
+              {sedes.map((sede) => (
+                <MenuItem key={sede._id} value={sede._id}>
+                  {sede.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Especialidad"
+              value={filters.especialidad}
+              onChange={(e) => setFilters({ ...filters, especialidad: e.target.value })}
+              size="small"
+              sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {especialidades.map((esp) => (
+                <MenuItem key={esp} value={esp}>
+                  {esp}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+
+          {/* Filtro de rango horario */}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              select
+              label="Desde hora"
+              value={filters.horaDesde}
+              onChange={(e) => setFilters({ ...filters, horaDesde: e.target.value })}
+              size="small"
+              sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {Array.from({ length: 24 }, (_, i) => {
+                const hora = i.toString().padStart(2, '0') + ':00';
+                return (
+                  <MenuItem key={hora} value={hora}>
+                    {hora}
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+            <TextField
+              select
+              label="Hasta hora"
+              value={filters.horaHasta}
+              onChange={(e) => setFilters({ ...filters, horaHasta: e.target.value })}
+              size="small"
+              sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {Array.from({ length: 24 }, (_, i) => {
+                const hora = i.toString().padStart(2, '0') + ':00';
+                return (
+                  <MenuItem key={hora} value={hora}>
+                    {hora}
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+          </Stack>
+        </Stack>
+      )}
+
+      {/* Filtros para médicos */}
+      {role === "MEDICO" && (
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
           <TextField
             select
             label="Sede"
-            value={sedeSeleccionada}
-            onChange={(e) => setSedeSeleccionada(e.target.value)}
+            value={filters.sedeId}
+            onChange={(e) => setFilters({ ...filters, sedeId: e.target.value })}
             size="small"
-            sx={{ minWidth: 200, maxWidth: 250 }}
+            sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
           >
+            <MenuItem value="">Todas las sedes</MenuItem>
             {sedes.map((sede) => (
               <MenuItem key={sede._id} value={sede._id}>
                 {sede.nombre}
@@ -354,7 +534,7 @@ export default function TurnosPage() {
             value={filters.especialidad}
             onChange={(e) => setFilters({ ...filters, especialidad: e.target.value })}
             size="small"
-            sx={{ minWidth: 200, maxWidth: 250 }}
+            sx={{ minWidth: { xs: "100%", sm: 200 }, maxWidth: { xs: "100%", sm: 250 } }}
           >
             <MenuItem value="">Todas</MenuItem>
             {especialidades.map((esp) => (
