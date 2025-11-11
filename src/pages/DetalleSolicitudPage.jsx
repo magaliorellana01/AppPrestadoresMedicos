@@ -1,4 +1,3 @@
-// DetalleSolicitudPage.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { 
@@ -214,10 +213,28 @@ export default function DetalleSolicitudPage() {
           <CartelInformacionSocio socio={solicitud.socio} />
         </Box>
 
-        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la Solicitud">
+        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
           <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
           <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
           <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
+          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+            {[
+              { label: 'Descargar Factura', download: 'Factura.pdf' },
+              { label: 'Descargar Receta', download: 'Receta.pdf' }
+            ].map(btn => (
+              <Button
+                key={btn.label}
+                variant="outlined"
+                size="small"
+                component="a"
+                href="/sample.pdf"
+                download={btn.download}
+                sx={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}
+              >
+                {btn.label}
+              </Button>
+            ))}
+          </Box>
         </InfoCard>
 
         <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Archivos adjuntos">
