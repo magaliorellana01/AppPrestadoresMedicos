@@ -30,17 +30,19 @@ exports.loginPrestador = async (req, res) => {
 
         const accessToken = generateToken({ _id: prestador._id });
 
-        res.status(200).json({ 
-            message: 'Inicio de sesión exitoso', 
-            accessToken, 
+        res.status(200).json({
+            message: 'Inicio de sesión exitoso',
+            accessToken,
             prestador: {
             _id: prestador._id,
             nombres: prestador.nombres,
             apellidos: prestador.apellidos,
             especialidad: prestador.especialidad,
+            especialidades: prestador.especialidades,
             cuit: prestador.cuit,
             matricula: prestador.matricula,
             es_centro_medico: prestador.es_centro_medico,
+            sedes: prestador.sedes,
         } });
     } catch (error) {
         console.error('Error al iniciar sesión:', error);
