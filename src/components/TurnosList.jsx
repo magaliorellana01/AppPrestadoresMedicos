@@ -85,6 +85,7 @@ export default function TurnosList({ fecha, turnos, role, onAgregarNota, onVerNo
                   mb: isMobile ? 1.5 : 0,
                   pr: isMobile ? 0 : 2
                 }}
+                secondaryTypographyProps={{ component: 'div' }}
                 primary={
                   <Stack
                     direction={isMobile ? "column" : "row"}
