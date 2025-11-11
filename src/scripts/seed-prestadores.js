@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 
 // Importar modelos
 const PrestadorModel = require("../models/prestador");
-const SedeModel = require("../models/sede"); // ¡NUEVA IMPORTACIÓN!
 
 // Configurar dotenv
 dotenv.config();
@@ -144,38 +143,8 @@ function generarPassword() {
 }
 
 /**
- * Genera de 1 a 3 sedes para un centro médico específico.
+ * Nota: La función generarSedesParaCentro ha sido eliminada.
  */
-function generarSedesParaCentro(centroId, centroNombre) {
-    const sedes = [];
-    const numSedes = Math.floor(Math.random() * 3) + 1; // 1 a 3 sedes
-    
-    const nombresSedes = ["Central", "Anexo Norte", "Consultorios Externos", "Unidad 24h", "Sede Mañana", "Sede Tarde"];
-    
-    for (let i = 0; i < numSedes; i++) {
-        const nombreBase = nombresSedes[i % nombresSedes.length];
-        const nombreSede = `${centroNombre} - ${nombreBase}`;
-        const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
-        const provincia = provincias[Math.floor(Math.random() * provincias.length)];
-
-        // Simple URL para el email basada en el nombre del centro
-        const centroEmailBase = centroNombre.toLowerCase().replace(/[^a-z0-9]/g, '');
-        
-        sedes.push({
-            nombre: nombreSede,
-            direccion: generarDireccion(),
-            ciudad: ciudad,
-            provincia: provincia,
-            telefono: generarTelefono(),
-            email: `sede.${i}@${centroEmailBase}.com.ar`,
-            horario_apertura: "08:00",
-            horario_cierre: "20:00",
-            centro_medico_id: centroId, // Referencia al Prestador (Centro Médico)
-            estado: "activa",
-        });
-    }
-    return sedes;
-}
 
 
 // Función para generar la lista inicial de prestadores (datos simples)
@@ -271,11 +240,11 @@ async function poblarPrestadores() {
 
     console.log("✅ Conectado a MongoDB");
 
-    // Limpiar colecciones existentes (opcional: limpiar sedes también para evitar duplicados)
-    console.log("🧹 Limpiando colecciones: Prestadores y Sedes...");
+    // Limpiar colección de Prestadores
+    console.log("🧹 Limpiando colección: Prestadores...");
     await PrestadorModel.deleteMany({});
-    await SedeModel.deleteMany({});
-    console.log("🧹 Limpieza completa.");
+    // await SedeModel.deleteMany({}); // ¡LIMPIEZA DE SEDES ELIMINADA!
+    console.log("🧹 Limpieza de Prestadores completa.");
 
     // Generar prestadores
     const cantidadPrestadores = 30;
@@ -283,9 +252,9 @@ async function poblarPrestadores() {
     const prestadores = generarPrestadores(cantidadPrestadores);
 
     let centrosMedicosCreados = 0;
-    let totalSedesCreadas = 0;
+    // let totalSedesCreadas = 0; // ¡VARIABLE ELIMINADA!
 
-    // Crear prestadores en la base de datos e insertar sedes si son centros médicos
+    // Crear prestadores en la base de datos
     for (let i = 0; i < prestadores.length; i++) {
       const prestadorData = prestadores[i];
       const prestadorCreado = await PrestadorModel.create(prestadorData);
@@ -294,28 +263,26 @@ async function poblarPrestadores() {
       let nombreCompleto;
 
       if (prestadorData.es_centro_medico) {
-        // LÓGICA DE CREACIÓN DE SEDES
         centrosMedicosCreados++;
         
-        // 1. Generar datos de las sedes
+        /*
+        // LÓGICA DE CREACIÓN Y ASIGNACIÓN DE SEDES ELIMINADA
         const sedesData = generarSedesParaCentro(prestadorCreado._id, prestadorCreado.nombres);
-        
-        // 2. Insertar sedes en la BD
         const sedesCreadas = await SedeModel.insertMany(sedesData);
         
-        // 3. Actualizar el Prestador con las referencias de las sedes
         const sedeIds = sedesCreadas.map(s => s._id);
         await PrestadorModel.findByIdAndUpdate(prestadorCreado._id, {
           $set: { sedes: sedeIds }
         });
         
         totalSedesCreadas += sedeIds.length;
+        console.log(`   └> 🏢 Creadas y asignadas ${sedeIds.length} sede(s).`);
+        */
         
         nombreCompleto = prestadorCreado.nombres;
         console.log(
           `✅ ${tipo} creado: ${nombreCompleto} (CUIT: ${prestadorCreado.cuit})`
         );
-        console.log(`   └> 🏢 Creadas y asignadas ${sedeIds.length} sede(s).`);
 
       } else {
         nombreCompleto = `Dr. ${prestadorCreado.nombres} ${prestadorCreado.apellidos}`;
@@ -330,7 +297,7 @@ async function poblarPrestadores() {
     console.log(`📊 Se crearon ${cantidadPrestadores} prestadores.`);
     console.log(`🏢 Centros médicos: ${centrosMedicosCreados}`);
     console.log(`🏥 Médicos individuales: ${cantidadPrestadores - centrosMedicosCreados}`);
-    console.log(`📍 TOTAL Sedes creadas: ${totalSedesCreadas}`);
+    // console.log(`📍 TOTAL Sedes creadas: ${totalSedesCreadas}`); // ¡LOG DE SEDES ELIMINADO!
 
   } catch (error) {
     console.error("❌ Error al poblar prestadores:", error);
@@ -346,5 +313,5 @@ async function poblarPrestadores() {
 }
 
 // Ejecutar el script
-console.log("🚀 Iniciando creación de prestadores y sedes...");
+console.log("🚀 Iniciando creación de prestadores...");
 poblarPrestadores();
