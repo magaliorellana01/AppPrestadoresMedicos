@@ -9,8 +9,10 @@ import {
     Divider,
     Snackbar,
     Alert,
+    Modal,
+    Paper,
 } from "@mui/material";
-import { getSituacionTerapeuticaByID, createNovedadTerapeutica, updateSituacionTerapeutica } from "../services";
+import { getSituacionTerapeuticaByID, createNovedadTerapeutica, updateSituacionTerapeutica, finalizarSituacionTerapeutica } from "../services";
 import CartelInformacionSocio from "../components/CartelInformacionSocio";
 import DiagnosticoIcon from "../icons/icono-diagnostico.jpg"
 import TratamientoIcon from "../icons/icono-tratamiento.jpg"
@@ -26,6 +28,32 @@ export default function DetalleSituacionTerapeutica() {
     const [fechaFinEditable, setFechaFinEditable] = useState("");
     const [nuevaNovedad, setNuevaNovedad] = useState("");
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+    const [openConfirmModal, setOpenConfirmModal] = useState(false);
+    const handleOpenConfirmModal = () => setOpenConfirmModal(true);
+    const handleCloseConfirmModal = () => setOpenConfirmModal(false);
+
+
+    const handleConfirmFinalizar = async () => {
+        handleCloseConfirmModal();
+
+        try {
+            await finalizarSituacionTerapeutica(id);
+            window.history.back();
+
+        } catch (error) {
+            console.error("Error al finalizar la situación:", error);
+            const errorMessage = error.response
+                ? error.response.data.message || 'Error desconocido del servidor.'
+                : 'No se pudo conectar con el servidor.';
+
+            setSnackbar({
+                open: true,
+                message: `Error al finalizar. Detalles: ${errorMessage}`,
+                severity: "error"
+            });
+        }
+    };
+    const handleFinalizarSituacion = handleOpenConfirmModal;
 
     const handleAgregarNovedad = async () => {
         if (!nuevaNovedad.trim()) return;
@@ -43,7 +71,7 @@ export default function DetalleSituacionTerapeutica() {
 
     const handleGuardarCambios = useCallback(async () => {
         if (!id) return;
-        
+
         const updates = {
             diagnostico: diagnosticoEditable,
             tratamiento: tratamientoEditable,
@@ -51,7 +79,7 @@ export default function DetalleSituacionTerapeutica() {
         };
 
         try {
-            
+
 
             const situacionActualizada = await updateSituacionTerapeutica(id, updates);
 
@@ -60,23 +88,23 @@ export default function DetalleSituacionTerapeutica() {
         } catch (err) {
             console.error("Error al guardar la situación terapéutica:", err);
             setSnackbar({ open: true, message: err.response?.data?.message || "No se pudieron guardar los cambios", severity: "error" });
-        } 
+        }
     }, [id, diagnosticoEditable, tratamientoEditable, fechaFinEditable]);
 
 
     const formatDateToInput = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date)) return ''; 
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date)) return '';
 
-    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-    
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
 
-    return `${year}-${month}-${day}`;
-};
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    };
 
     const fetchSituacionTerapeutica = useCallback(async () => {
         setLoading(true);
@@ -106,7 +134,7 @@ export default function DetalleSituacionTerapeutica() {
 
             setTratamientoEditable(situacion.tratamiento || '');
 
-    
+
 
             setFechaFinEditable(formatDateToInput(situacion.fechaFin))
 
@@ -136,7 +164,9 @@ export default function DetalleSituacionTerapeutica() {
         );
     }
 
+
     const novedades = situacion?.novedadesMedicas?.slice().reverse() || [];
+
     return (
         <Box p={{ xs: 2, md: 4 }} >
             <Box display="flex" flexDirection="column" justifyContent="center" alignItems={{ xs: "flex-start", md: "center" }} mb={3} gap={1}>
@@ -429,31 +459,119 @@ export default function DetalleSituacionTerapeutica() {
                                 variant="outlined"
                                 size="small"
                                 value={fechaFinEditable}
-                                onChange={(e) => {setFechaFinEditable(e.target.value)
-                                            console.log(fechaFinEditable)}
+                                onChange={(e) => {
+                                    setFechaFinEditable(e.target.value)
+                                    console.log(fechaFinEditable)
+                                }
                                 }
                                 InputLabelProps={{ shrink: true }}
                                 sx={{ flexGrow: 1 }}
                             />
                         </Box>
                     </Box>
-
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ width: "100%", fontSize: { xs: "14px", sm: "16px" } }}
-                        onClick={handleGuardarCambios}
-
+                    <Box
+                        display="flex"
+                        flexDirection={{ xs: "column", sm: "row" }}
+                        alignItems={{ xs: "stretch", sm: "center" }}
+                        justifyContent="space-between"
+                        width="100%"
+                        gap={2}
                     >
-                        Guardar cambios
-                    </Button>
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleGuardarCambios}
+
+                            sx={{ flex: 1, fontSize: { xs: "14px", sm: "16px" } }}
+                        >
+                            Guardar cambios
+                        </Button>
+
+
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={handleFinalizarSituacion}
+                            sx={{ flex: 1, fontSize: { xs: "14px", sm: "16px" } }}
+                        >
+                            Finalizar Situación
+                        </Button>
+                    </Box>
+
                     <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}
                         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
                         <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
                             {snackbar.message}
                         </Alert>
-                    </Snackbar>
+                    </Snackbar>                   
+                    <Modal
+                        open={openConfirmModal}
+                        onClose={handleCloseConfirmModal}
+                        aria-labelledby="modal-title"
+                        aria-describedby="modal-description"
+                        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+                    >
+                        <Box
+                            sx={{
+                                width: { xs: "90%", md: "500px" }, 
+                                backgroundColor: "white",
+                                p: 4,
+                                borderRadius: '22px',
+                                border: '1px solid #E5E7EB'
+                            }}
+                        >
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            
+                                <Typography variant="h4" color="primary" sx={{ fontSize: "28px" }}>
+                                    Confirmar Finalización
+                                </Typography>
+                                
+                            </Box>
 
+                            <Divider sx={{ mt: 2, mb: 3 }} />
+
+                            <Typography id="modal-description" sx={{ mt: 2, mb: 3, fontSize: "16px" }}>
+                                ¿Está seguro de que quiere finalizar esta situación terapéutica?
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    justifyContent: "flex-end",
+                                    gap: { xs: 1.5, sm: 2 },
+                                    mt: 2
+                                }}
+                            >
+                                <Button
+                                    variant="contained"
+                                    
+                                    onClick={handleCloseConfirmModal}
+                                    sx={{
+                                        fontSize: { xs: "16px", sm: "18px" },
+                                        width: { xs: "100%", sm: "175px" },
+                                        borderRadius: "10px",
+                                        color:"primary"
+                                    }}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="error" 
+                                    onClick={handleConfirmFinalizar}
+                                    sx={{
+                                        fontSize: { xs: "16px", sm: "18px" },
+                                        width: { xs: "100%", sm: "175px" },
+                                        borderRadius: "10px"
+                                    }}
+                                >
+                                    Finalizar
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Modal>
                 </Box>
             </Box>
         </Box>
