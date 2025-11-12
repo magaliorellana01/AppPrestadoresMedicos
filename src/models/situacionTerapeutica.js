@@ -24,7 +24,11 @@ const SituacionTerapeuticaSchema = new mongoose.Schema({
     default: Date.now 
   },
   fechaFin: Date,
-  
+  activa: {
+        type: Boolean,
+        default: true, 
+        required: true
+    },
   observaciones: String,
   novedadesMedicas: [
     {
