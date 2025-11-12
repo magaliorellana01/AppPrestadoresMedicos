@@ -567,7 +567,7 @@ export default function DetalleSituacionTerapeutica() {
                                         borderRadius: "10px"
                                     }}
                                 >
-                                    Finalizar
+                                    Dar de alta
                                 </Button>
                             </Box>
                         </Box>
