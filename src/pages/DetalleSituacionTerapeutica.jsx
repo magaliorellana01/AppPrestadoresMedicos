@@ -495,7 +495,7 @@ export default function DetalleSituacionTerapeutica() {
                             onClick={handleFinalizarSituacion}
                             sx={{ flex: 1, fontSize: { xs: "14px", sm: "16px" } }}
                         >
-                            Finalizar Situación
+                            Dar de alta situación
                         </Button>
                     </Box>
 
