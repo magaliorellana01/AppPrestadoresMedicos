@@ -1,7 +1,6 @@
-// DetalleSolicitudPage.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import {
+import { 
   Box, Typography, Button, TextField, MenuItem,
   Select, FormControl, InputLabel, Snackbar, Alert, IconButton
 } from "@mui/material";
@@ -23,6 +22,32 @@ const ESTADOS = [
   { value: "Aprobado", label: "Aprobado" },
   { value: "Rechazado", label: "Rechazado" },
 ];
+
+const estadoConfig = {
+  'Recibido': { label: 'Recibido', color: '#777777', backgroundColor: '#F0F0F0' },
+  'En Análisis': { label: 'En Análisis', color: '#2563EB', backgroundColor: '#B5D6FF' },
+  'Observado': { label: 'Observado', color: '#EAB308', backgroundColor: '#FFEDB6' },
+  'Aprobado': { label: 'Aprobado', color: '#4BAE72', backgroundColor: '#D1FFCE' },
+  'Rechazado': { label: 'Rechazado', color: '#DC2626', backgroundColor: '#FFCECE' },
+};
+
+const ActionButton = ({ children, color, backgroundColor, isActive, ...props }) => (
+  <Button
+    variant={isActive ? "contained" : "outlined"}
+    fullWidth
+    sx={{
+      color: isActive ? color : backgroundColor,
+      backgroundColor: isActive ? backgroundColor : 'transparent',
+      borderColor: backgroundColor,
+      '&:hover': {
+        backgroundColor: isActive ? backgroundColor : 'transparent',
+        opacity: isActive ? 0.9 : 1,
+      },
+    }}
+    {...props}>
+    {children}
+  </Button>
+);
 
 const InfoCard = ({ icon, title, children, action }) => (
   <Box
@@ -113,6 +138,15 @@ export default function DetalleSolicitudPage() {
     loadSolicitud();
   }, [loadSolicitud]);
 
+  const handleEstadoToggle = (estadoSeleccionado) => {
+    // Si el estado seleccionado ya es el activo, lo deseleccionamos volviendo al original.
+    if (nuevoEstado === estadoSeleccionado) {
+      setNuevoEstado(solicitud.estado);
+    } else {
+      setNuevoEstado(estadoSeleccionado);
+    }
+  };
+
   const handleGuardarCambios = async () => {
     try {
       await updateSolicitud(id, { estado: nuevoEstado, motivo });
@@ -179,10 +213,28 @@ export default function DetalleSolicitudPage() {
           <CartelInformacionSocio socio={solicitud.socio} />
         </Box>
 
-        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la Solicitud">
+        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
           <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
           <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
           <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
+          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+            {[
+              { label: 'Descargar Factura', download: 'Factura.pdf' },
+              { label: 'Descargar Receta', download: 'Receta.pdf' }
+            ].map(btn => (
+              <Button
+                key={btn.label}
+                variant="outlined"
+                size="small"
+                component="a"
+                href="/sample.pdf"
+                download={btn.download}
+                sx={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}
+              >
+                {btn.label}
+              </Button>
+            ))}
+          </Box>
         </InfoCard>
 
         <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Archivos adjuntos">
@@ -213,30 +265,63 @@ export default function DetalleSolicitudPage() {
 
                 <InfoCard 
           icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} 
-          title="Acción"
+          title="Cambiar estado de solicitud"
           action={
             <IconButton onClick={() => setHistorialModalOpen(true)} color="primary">
               <HistoryIcon />
             </IconButton>
           }
         >
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="estado-label">Cambiar Estado</InputLabel>
-            <Select
-              labelId="estado-label"
-              value={nuevoEstado}
-              label="Cambiar Estado"
-              onChange={e => setNuevoEstado(e.target.value)}
-            >
-              {ESTADOS.map(e => <MenuItem key={e.value} value={e.value}>{e.label}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mb: 2 }}>
+            {solicitud.estado === 'Recibido' && (
+              <ActionButton
+                onClick={() => handleEstadoToggle('En Análisis')}
+                isActive={nuevoEstado === 'En Análisis'}
+                {...estadoConfig['En Análisis']}
+              >
+                Analizar
+              </ActionButton>
+            )}
+            {solicitud.estado === 'En Análisis' && (
+              <ActionButton
+                onClick={() => handleEstadoToggle('Observado')}
+                isActive={nuevoEstado === 'Observado'}
+                {...estadoConfig['Observado']}
+              >
+                Observar
+              </ActionButton>
+            )}
+            {solicitud.estado === 'Observado' && (
+              <>
+                <ActionButton
+                  onClick={() => handleEstadoToggle('Aprobado')}
+                  isActive={nuevoEstado === 'Aprobado'}
+                  {...estadoConfig['Aprobado']}
+                >
+                  Aceptar
+                </ActionButton>
+                <ActionButton
+                  onClick={() => handleEstadoToggle('Rechazado')}
+                  isActive={nuevoEstado === 'Rechazado'}
+                  {...estadoConfig['Rechazado']}
+                >
+                  Rechazar
+                </ActionButton>
+              </>
+            )}
+          </Box>
+          
           <TextField
             label="Ingresar motivo"
             multiline
             minRows={2}
             fullWidth
-            value={motivo}
+            disabled={solicitud.estado === 'Aprobado' || solicitud.estado === 'Rechazado'}
+            value={
+              solicitud.estado === 'Aprobado' || solicitud.estado === 'Rechazado'
+                ? `El estado actual es ${solicitud.estado}.`
+                : motivo
+            }
             onChange={e => setMotivo(e.target.value)}
           />
         </InfoCard>
