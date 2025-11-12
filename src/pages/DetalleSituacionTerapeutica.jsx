@@ -524,7 +524,7 @@ export default function DetalleSituacionTerapeutica() {
                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             
                                 <Typography variant="h4" color="primary" sx={{ fontSize: "28px" }}>
-                                    Confirmar Finalización
+                                    Confirmar alta
                                 </Typography>
                                 
                             </Box>
@@ -532,7 +532,7 @@ export default function DetalleSituacionTerapeutica() {
                             <Divider sx={{ mt: 2, mb: 3 }} />
 
                             <Typography id="modal-description" sx={{ mt: 2, mb: 3, fontSize: "16px" }}>
-                                ¿Está seguro de que quiere finalizar esta situación terapéutica?
+                                ¿Está seguro de que quiere dar de alta esta situación terapéutica?
                             </Typography>
 
                             <Box
