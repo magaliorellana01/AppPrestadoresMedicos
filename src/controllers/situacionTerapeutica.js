@@ -53,7 +53,7 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
         const todosLosSocioIds = todosLosMiembrosDeLasFamilias.map(s => s._id);
 
         
-        const situacionesFinales = await SituacionTerapeutica.find({ socio: { $in: todosLosSocioIds } })
+        const situacionesFinales = await SituacionTerapeutica.find({ socio: { $in: todosLosSocioIds }, activa: true })
             .populate('socio')
             .populate('prestador'); 
 
@@ -167,7 +167,6 @@ exports.createSituacionTerapeutica = async (req, res) => {
     }
     req.body.socio = socio._id;
     req.body.prestador = req.prestador._id;
-    // req.body.sede = req.sede._id; (DESCOMENTAR CUANDO SE AGREGUE LA VARIABLE SEDE DE MANERA GLOBAL)
     const situacion = await SituacionTerapeutica.create(req.body);
     res.status(201).json(situacion);
   } catch (error) {
@@ -176,4 +175,33 @@ exports.createSituacionTerapeutica = async (req, res) => {
       message: error.message || "Error interno del servidor"
     });
   }
+};
+
+exports.darDeBajaSituacionTerapeutica = async (req, res) => {
+     const { situacionTerapeuticaId } = req.params;
+  try {   
+        const situacionActualizada = await SituacionTerapeutica.findByIdAndUpdate(
+           situacionTerapeuticaId,
+            { 
+                activa: false, 
+            },
+            { new: true } 
+        );
+        if (!situacionActualizada) {
+            return res.status(404).json({ message: "Situación terapéutica no encontrada." ,
+              idEnviado: situacionTerapeuticaId
+            });
+        }
+        
+        return res.status(200).json({
+            message: "✅ Situación terapéutica finalizada exitosamente.",
+            situacion: situacionActualizada,
+        });
+
+    } catch (error) {
+        console.error('Error al dar de baja la situación terapéutica:', error);
+        res.status(500).json({
+            message: error.message || "Error interno del servidor al finalizar la situación."
+        });
+    }
 };

@@ -4,7 +4,9 @@ const {
     getSituacionesTerapeuticasByMultipleEntries,
     updateSituacionTerapeutica,
     agregarNovedad,
-    createSituacionTerapeutica
+    createSituacionTerapeutica,
+    darDeBajaSituacionTerapeutica
+
 } = require("../controllers/situacionTerapeutica");
 
 const router = express.Router();
@@ -18,5 +20,7 @@ router.put("/:id", updateSituacionTerapeutica);
 router.post("/", createSituacionTerapeutica);
 
 router.post("/:situacionTerapeuticaId/novedades", agregarNovedad);
+
+router.put('/:situacionTerapeuticaId/finalizar', darDeBajaSituacionTerapeutica);
 
 module.exports = router;
