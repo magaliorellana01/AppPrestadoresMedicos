@@ -88,7 +88,9 @@ export const finalizarSituacionTerapeutica = async (id) => {
 };
 
 export const getSolicitudById = async (id) => {
-  const response = await api.get(`/solicitud/${id}`);
+  const response = await api.get(`/solicitud/${id}`, {
+    params: { populate: 'historial.prestador' }
+  });
   return response.data;
 };
 
@@ -185,4 +187,3 @@ export const getDashboardStats = async (fechaDesde, fechaHasta, prestadorId) => 
   });
   return data;
 };
-
