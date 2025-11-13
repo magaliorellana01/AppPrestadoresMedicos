@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import dayjs from "dayjs";
 import { 
-  Box, Typography, Button, TextField, MenuItem,
-  Select, FormControl, InputLabel, Snackbar, Alert, IconButton
+  Box, Typography, Button, TextField, Snackbar, Alert, IconButton
 } from "@mui/material";
 import {
   CloudDownload as CloudDownloadIcon,
@@ -235,6 +235,32 @@ export default function DetalleSolicitudPage() {
               </Button>
             ))}
           </Box>
+        </InfoCard>
+
+        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del prestador">
+        {solicitud.comentariosPrestador?.length > 0 ? (
+            solicitud.comentariosPrestador.map((c) => (
+              <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
+                <Typography variant="body1">{c.comentario}</Typography>
+                <Typography variant="caption" color="text.secondary">{c.prestador}</Typography>
+                <Typography variant="caption" color="text.secondary">{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body1">No hay comentarios del prestador</Typography>
+          )}
+        </InfoCard>
+        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del afiliado">
+          {solicitud.comentariosSocio?.length > 0 ? (
+            solicitud.comentariosSocio.map((c) => (
+              <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
+                <Typography variant="body1">{c.comentario}</Typography>
+                <Typography variant="caption" color="text.secondary">{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body1">No hay comentarios del afiliado</Typography>
+          )}
         </InfoCard>
 
         <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Archivos adjuntos">
