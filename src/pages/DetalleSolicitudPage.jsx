@@ -147,6 +147,18 @@ export default function DetalleSolicitudPage() {
     }
   };
 
+  const handleAbandonarSolicitud = async () => {
+    try {
+      await updateSolicitud(id, { estado: 'Recibido', motivo: 'Solicitud abandonada por el prestador', prestadorAsignado: null });
+      await loadSolicitud();
+      setSnackbar({ open: true, message: "Solicitud abandonada correctamente", severity: "success" });
+      setMotivo("");
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudo abandonar la solicitud", severity: "error" });
+    }
+  };
+
   const handleGuardarCambios = async () => {
     try {
       await updateSolicitud(id, { estado: nuevoEstado, motivo });
@@ -334,6 +346,22 @@ export default function DetalleSolicitudPage() {
                   Rechazar
                 </ActionButton>
               </>
+            )}
+             {solicitud.estado !== 'Recibido' && solicitud.estado !== 'Aprobado' && solicitud.estado !== 'Rechazado' && (
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{
+                  mt: 1,
+                  backgroundColor: '#DC2626',
+                  '&:hover': {
+                    backgroundColor: '#B91C1C',
+                  },
+                }}
+                onClick={handleAbandonarSolicitud}
+              >
+                Abandonar Solicitud
+              </Button>
             )}
           </Box>
           
