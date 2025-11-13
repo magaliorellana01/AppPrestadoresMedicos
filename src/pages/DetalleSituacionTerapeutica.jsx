@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
     Box,
     Typography,
@@ -10,7 +10,6 @@ import {
     Snackbar,
     Alert,
     Modal,
-    Paper,
 } from "@mui/material";
 import { getSituacionTerapeuticaByID, createNovedadTerapeutica, updateSituacionTerapeutica, finalizarSituacionTerapeutica } from "../services";
 import CartelInformacionSocio from "../components/CartelInformacionSocio";
@@ -29,31 +28,23 @@ export default function DetalleSituacionTerapeutica() {
     const [nuevaNovedad, setNuevaNovedad] = useState("");
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
+    const navigate = useNavigate();
     const handleOpenConfirmModal = () => setOpenConfirmModal(true);
     const handleCloseConfirmModal = () => setOpenConfirmModal(false);
 
 
     const handleConfirmFinalizar = async () => {
-        handleCloseConfirmModal();
-
         try {
             await finalizarSituacionTerapeutica(id);
-            window.history.back();
-
+            setSnackbar({ open: true, message: "Situación terapéutica finalizada correctamente", severity: "success" });
+            navigate('/situaciones-terapeuticas');
         } catch (error) {
             console.error("Error al finalizar la situación:", error);
-            const errorMessage = error.response
-                ? error.response.data.message || 'Error desconocido del servidor.'
-                : 'No se pudo conectar con el servidor.';
-
-            setSnackbar({
-                open: true,
-                message: `Error al finalizar. Detalles: ${errorMessage}`,
-                severity: "error"
-            });
+            setSnackbar({ open: true, message: error.response?.data?.message || "No se pudo finalizar la situación terapéutica", severity: "error" });
+        } finally {
+            handleCloseConfirmModal();
         }
     };
-    const handleFinalizarSituacion = handleOpenConfirmModal;
 
     const handleAgregarNovedad = async () => {
         if (!nuevaNovedad.trim()) return;
@@ -492,7 +483,7 @@ export default function DetalleSituacionTerapeutica() {
                         <Button
                             variant="contained"
                             color="error"
-                            onClick={handleFinalizarSituacion}
+                            onClick={handleOpenConfirmModal}
                             sx={{ flex: 1, fontSize: { xs: "14px", sm: "16px" } }}
                         >
                             Dar de alta situación
