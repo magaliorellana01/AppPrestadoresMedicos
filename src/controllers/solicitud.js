@@ -93,7 +93,14 @@ exports.getSolicitudById = async (req, res) => {
       afiliadoCompleto: afiliado || null,
       historial: historialFormateado,
       comentariosSocio: solicitud.comentariosSocio || [],
-      comentariosPrestador: solicitud.comentariosPrestador || []
+      comentariosPrestador: await Promise.all((solicitud.comentariosPrestador || []).map(async comentario => {
+        const prestador = comentario.prestador ? await Prestador.findById(comentario.prestador).select('nombres apellidos especialidades').lean() : null;
+        return {
+          comentario: comentario.comentario,
+          fecha: comentario.fecha,
+          prestador: prestador ? `${prestador.nombres} ${prestador.apellidos} - ${prestador.especialidades.join(', ')}` : null
+        }
+      }))
     };
 
     res.json({ message: 'Detalle de solicitud obtenido correctamente', solicitud: detalleSolicitud });
