@@ -12,7 +12,6 @@ import {
 } from "@mui/icons-material";
 import { getSolicitudById, updateSolicitud } from "../services/index.js";
 import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
-import HistorialCambiosModal from "../components/HistorialCambiosModal.jsx";
 
 const ESTADOS = [
   { value: "Recibido", label: "Recibido" },
@@ -103,9 +102,6 @@ export default function DetalleSolicitudPage() {
   const [motivo, setMotivo] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
-  const [isHistorialModalOpen, setHistorialModalOpen] = useState(false);
-  const [historial, setHistorial] = useState([]);
-
   const loadSolicitud = useCallback(async () => {
     setLoading(true);
     try {
@@ -122,7 +118,6 @@ export default function DetalleSolicitudPage() {
       };
 
       setSolicitud({ ...detalle, socio });
-      setHistorial(detalle.historial || []);
       setNuevoEstado(detalle?.estado || detalle?.accion?.estadoActual || "EnAnalisis");
     } catch (err) {
       console.error(err);
@@ -137,7 +132,6 @@ export default function DetalleSolicitudPage() {
   }, [loadSolicitud]);
 
   const handleEstadoToggle = (estadoSeleccionado) => {
-    // Si el estado seleccionado ya es el activo, lo deseleccionamos volviendo al original.
     if (nuevoEstado === estadoSeleccionado) {
       setNuevoEstado(solicitud.estado);
     } else {
@@ -190,7 +184,7 @@ export default function DetalleSolicitudPage() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, maxWidth: { xs: '100%', md: 1100 }, mb: 5, width: "100%", justifyItems: 'center', px: { xs: 1, sm: 0 } }}>
         
         {/* MODIFICACIÓN AQUÍ */}
-        <Box sx={{
+        <Box key="cartel-socio" sx={{
             width: "100%",
             maxWidth: { xs: '100%', md: 400 },
             height: "100%",
@@ -204,11 +198,11 @@ export default function DetalleSolicitudPage() {
           <CartelInformacionSocio socio={solicitud.socio} />
         </Box>
 
-        <InfoCard icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
+        <InfoCard key="detalles-solicitud" icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
           <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
           <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
           <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
             {[
               { label: 'Descargar Factura', download: 'Factura.pdf' },
               { label: 'Descargar Receta', download: 'Receta.pdf' }
@@ -228,7 +222,7 @@ export default function DetalleSolicitudPage() {
           </Box>
         </InfoCard>
 
-        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del prestador">
+        <InfoCard key="comentarios-prestador" icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del prestador">
         {solicitud.comentariosPrestador?.length > 0 ? (
             solicitud.comentariosPrestador.map((c) => (
               <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
@@ -241,7 +235,7 @@ export default function DetalleSolicitudPage() {
             <Typography variant="body1">No hay comentarios del prestador</Typography>
           )}
         </InfoCard>
-        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del afiliado">
+        <InfoCard key="comentarios-afiliado" icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del afiliado">
           {solicitud.comentariosSocio?.length > 0 ? (
             solicitud.comentariosSocio.map((c) => (
               <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
@@ -254,18 +248,29 @@ export default function DetalleSolicitudPage() {
           )}
         </InfoCard>
 
-        <InfoCard icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios">
+        <InfoCard key="historial-cambios" icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios" >
+          <Box sx={{ maxHeight: 200, overflowY: 'auto', width: '100%', pr: 1 }}>
+            {solicitud.historial?.length > 0 ? (
+              solicitud.historial.map((h) => (
+                <Box key={h.fechaHora || h._id} sx={{ borderBottom: "1px solid", borderColor: "divider", pb: 1, mb: 1, '&:last-child': { borderBottom: 0, mb: 0 } }}>
+                  <Typography variant="body2">
+                    {h.descripcion || 'Sin descripción del cambio.'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Por: <strong>{h.usuario || 'N/A'}</strong> {h.profesion ? `- ${h.profesion}` : ''} - {h.fechaHora || 'Fecha no disponible'}
+                  </Typography>
+                </Box>
+              ))
+            ) : (
+              <Typography variant="body1">No hay historial de cambios.</Typography>
+            )}
+          </Box>
         </InfoCard>
 
                 <InfoCard 
+          key="cambiar-estado"
           icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} 
-          title="Cambiar estado de solicitud"
-          action={
-            <IconButton onClick={() => setHistorialModalOpen(true)} color="primary">
-              <HistoryIcon />
-            </IconButton>
-          }
-        >
+          title="Cambiar estado de solicitud">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mb: 2 }}>
             {solicitud.estado === 'Recibido' && (
               <ActionButton
@@ -347,12 +352,6 @@ export default function DetalleSolicitudPage() {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
       </Snackbar>
-
-      <HistorialCambiosModal 
-        open={isHistorialModalOpen} 
-        onClose={() => setHistorialModalOpen(false)} 
-        historial={historial} 
-      />
     </Box>
   );
 }
