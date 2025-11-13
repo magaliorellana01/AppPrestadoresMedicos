@@ -5,7 +5,7 @@ const Prestador = require('../models/prestador');
 const calcularEdadNumerica = (fechaNacimiento) => {
   if (!fechaNacimiento) return null;
   const nacimiento = new Date(fechaNacimiento);
-  if (isNaN(nacimiento.getTime())) return null;
+  if (Number.isNaN(nacimiento.getTime())) return null;
   const hoy = new Date();
   let años = hoy.getFullYear() - nacimiento.getFullYear();
   const m = hoy.getMonth() - nacimiento.getMonth();
@@ -91,7 +91,16 @@ exports.getSolicitudById = async (req, res) => {
       tipo: solicitud.tipo,
       fechaCreacion: solicitud.fechaCreacion,
       afiliadoCompleto: afiliado || null,
-      historial: historialFormateado
+      historial: historialFormateado,
+      comentariosSocio: solicitud.comentariosSocio || [],
+      comentariosPrestador: await Promise.all((solicitud.comentariosPrestador || []).map(async comentario => {
+        const prestador = comentario.prestador ? await Prestador.findById(comentario.prestador).select('nombres apellidos especialidades').lean() : null;
+        return {
+          comentario: comentario.comentario,
+          fecha: comentario.fecha,
+          prestador: prestador ? `${prestador.nombres} ${prestador.apellidos} - ${prestador.especialidades.join(', ')}` : null
+        }
+      }))
     };
 
     res.json({ message: 'Detalle de solicitud obtenido correctamente', solicitud: detalleSolicitud });
