@@ -24,7 +24,6 @@ require("./models/nota");
 require("./models/prestador");
 require("./models/sede");
 require("./models/situacionTerapeutica");
-require("./models/filtroSolicitudes");
 require("./models/solicitud");
 
 const app = express();

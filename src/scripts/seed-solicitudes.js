@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 
 // Importar modelos
 const Socio = require("../models/socio"); // Asegúrate de que esta ruta sea correcta
-const Solicitud = require("../models/filtroSolicitudes"); // Asegúrate de que esta ruta sea correcta
+const Solicitud = require("../models/solicitud"); // Modelo completo con prestadorAsignado y comentarios
 const Prestador = require("../models/prestador"); // Importar modelo de Prestador para comentarios
 // const Sede = require("../models/sede"); // ¡IMPORTACIÓN ELIMINADA!
 
 const tipos = ['Reintegro', 'Autorizacion', 'Receta'];
-const estados = ['Recibido', 'Observado', 'Aprobado', 'Rechazado'];
+const estados = ['Recibido', 'Observado', 'Aprobado', 'Rechazado', 'En Análisis'];
 
 // Comentarios predefinidos para socios
 const comentariosSocio = [
