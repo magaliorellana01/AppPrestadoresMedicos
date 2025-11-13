@@ -36,7 +36,7 @@ exports.list = async (req, res) => {
   }
 
   const items = await Turno.find(q)
-    .populate('notas.autor_id', 'nombres apellidos')
+    .populate('notas.autor_id', 'nombres apellidos especialidades')
     .populate('sede_id', 'nombre direccion ciudad')
     .populate('prestador_medico_id', 'nombres apellidos')
     .sort({ fecha: 1, hora: 1 });
