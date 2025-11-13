@@ -53,8 +53,17 @@ const SolicitudSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Prestador'
     },
-
-
+    comentariosSocio: [{
+        comentario: { type: String },
+        fecha: { type: Date, default: Date.now },
+        // siempre va a ser el mismo socio
+    }],
+    comentariosPrestador: [{
+        comentario: { type: String },
+        fecha: { type: Date, default: Date.now },
+        prestador: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestador' } 
+        // prestador que realizo el comentario (los prestadores asignados podrian cambiar en la misma solicitud)
+    }],
     fechaCreacion: {
         type: Date,
         default: Date.now,
