@@ -33,7 +33,7 @@ export default function TableSituacionesTerapeuticas({ situacionesTerapeuticas }
               sx={{ cursor: "pointer" }} >
               <TableCell>{situacionTerapeutica.socio.dni}</TableCell>
               <TableCell>{situacionTerapeutica.socio.apellidos}</TableCell>
-              <TableCell>{situacionTerapeutica.tratamiento}</TableCell>
+              <TableCell>{situacionTerapeutica.diagnostico}</TableCell>
               <TableCell>{situacionTerapeutica.socio.telefono}</TableCell>
               <TableCell>
                 {situacionTerapeutica.prestador.es_centro_medico
