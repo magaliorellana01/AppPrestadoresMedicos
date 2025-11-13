@@ -243,7 +243,7 @@ export default function DetalleSolicitudPage() {
               <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
                 <Typography variant="body1">{c.comentario}</Typography>
                 <Typography variant="caption" color="text.secondary">{c.prestador}</Typography>
-                <Typography variant="caption" color="text.secondary">{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
+                <Typography variant="caption" color="text.secondary" ml={1}>{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
               </Box>
             ))
           ) : (
@@ -255,7 +255,7 @@ export default function DetalleSolicitudPage() {
             solicitud.comentariosSocio.map((c) => (
               <Box key={c._id} sx={{ border: "1px solid", borderColor: "border.main", borderRadius: 2, p: 1, mb: 1 }}>
                 <Typography variant="body1">{c.comentario}</Typography>
-                <Typography variant="caption" color="text.secondary">{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
+                <Typography variant="caption" color="text.secondary" ml={1}>{dayjs(c.fecha).format('DD/MM/YYYY HH:mm')}</Typography>
               </Box>
             ))
           ) : (
