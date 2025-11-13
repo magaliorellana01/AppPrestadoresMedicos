@@ -94,7 +94,7 @@ exports.getHistoriaClinicaById = async (req, res) => {
 
         // buscar todas las Notas asociadas a esta Historia Clínica
         const notas = await Nota.find({ historia_clinica: historiaClinicaId })
-            .populate("prestador") //para saber quien hizo la nota
+            .populate("prestador", "_id nombres apellidos es_centro_medico especialidades") //para saber quien hizo la nota, seleccionando solo los campos necesarios
             .sort({ fecha_creacion: -1 }); //en orden de mas reciente a mas vieja
 
         //combinar HHC y Notas para la respuesta
@@ -183,7 +183,7 @@ exports.addNotaAHC = async (req, res) => {
         });
 
         // opcional: Popular la nota para devolver la info completa al frontend
-        const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador");
+        const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador", "_id nombres apellidos es_centro_medico especialidades");
 
         res.status(201).json({
             message: "Nota agregada correctamente a la Historia Clínica",
