@@ -55,6 +55,7 @@ function mapTurnoFromApi(t) {
       autorNombre: n.autor_id
         ? `${n.autor_id.nombres || ''} ${n.autor_id.apellidos || ''}`.trim()
         : 'Prestador',
+      autorEspecialidades: n.autor_id?.especialidades?.map((e) => e).join(', ') || '',
     })),
   };
 }

@@ -29,9 +29,14 @@ export default function VerNotasDialog({ open, onClose, notas = [] }) {
                   }}
                 >
                   <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="caption" fontWeight="bold" color="primary">
-                      {nota.autorNombre || 'Prestador'}
-                    </Typography>
+                    <Box>
+                      <Typography variant="caption" fontWeight="bold" color="primary">
+                        {nota.autorNombre || 'Prestador'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" ml={1}>
+                        {nota.autorEspecialidades}
+                      </Typography>
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {dayjs(nota.ts).format('DD/MM/YYYY HH:mm')}
                     </Typography>

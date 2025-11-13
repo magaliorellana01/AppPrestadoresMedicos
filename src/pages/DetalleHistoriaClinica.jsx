@@ -128,6 +128,11 @@ export default function DetalleDeHistoriaClinica() {
                           nota.prestador.apellidos || "Prestador Desconocido"
                         }`
                       : "Prestador no especificado"}
+                      <Typography variant="caption" color="subtitle2" ml={1}>
+                        {nota.prestador?.especialidades?.length > 0
+                        ? ` - ${nota.prestador?.especialidades?.map((e) => e).join(', ')}`
+                        : "Especialidad no especificada"}
+                      </Typography>
                   </Typography>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="body1">{nota.nota}</Typography>
