@@ -21,7 +21,7 @@ exports.getSolicitudById = async (req, res) => {
         select: 'nombres apellidos dni genero rol fecha_nacimiento historia_clinica',
         populate: { path: 'historia_clinica', select: 'fecha_nacimiento genero' }
       })
-      .populate({ path: 'historialEstados.usuario', select: 'nombres apellidos cuit' })
+      .populate({ path: 'historialEstados.usuario', select: 'nombres apellidos cuit especialidades' })
       .lean();
 
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
@@ -62,6 +62,7 @@ exports.getSolicitudById = async (req, res) => {
     const historialFormateado = (solicitud.historialEstados || []).map(cambio => ({
       usuario: cambio.usuario ? `${cambio.usuario.nombres} ${cambio.usuario.apellidos}` : 'Sistema',
       cuil: cambio.usuario ? cambio.usuario.cuit : 'N/A',
+      profesion: cambio.usuario?.especialidades?.join(', ') || null,
       fechaHora: new Date(cambio.fecha).toLocaleString('es-AR'),
       descripcion: cambio.motivo || `Cambio de estado a: ${cambio.estado}`,
       estado: cambio.estado,
@@ -123,22 +124,25 @@ exports.updateSolicitud = async (req, res) => {
     const solicitud = await Solicitud.findById(id);
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
 
+    
+    if (nuevoEstado === solicitud.estado) {
+      return res.json({ message: 'No se detectaron cambios en el estado. No se guardó historial.', solicitud });
+    }
+
     if (solicitud.prestadorAsignado && solicitud.prestadorAsignado.toString() !== prestadorId.toString()) {
       return res.status(403).json({ message: "Esta solicitud está siendo gestionada por otro prestador. No tienes permisos para modificarla." });
     }
 
     const transiciones = {
-        'Recibido': ['En Análisis', 'Observado', 'Aprobado', 'Rechazado'],
-        'En Análisis': ['Recibido', 'Observado', 'Aprobado', 'Rechazado'],
-        'Observado': ['Recibido', 'En Análisis', 'Aprobado', 'Rechazado'],
-        'Aprobado': ['Recibido', 'En Análisis', 'Observado', 'Rechazado'],
-        'Rechazado': ['Recibido', 'En Análisis', 'Observado', 'Aprobado']
+        'Recibido': ['En Análisis'],
+        'En Análisis': ['Observado', 'Aprobado', 'Rechazado', 'Recibido'], 
+        'Observado': ['Aprobado', 'Rechazado', 'En Análisis', 'Recibido'],
+        'Aprobado': [],
+        'Rechazado': [] 
     };
 
-    const posiblesTransiciones = transiciones[solicitud.estado]?.filter(e => e !== solicitud.estado) || [];
-
-    if (nuevoEstado !== solicitud.estado && !posiblesTransiciones.includes(nuevoEstado)) {
-        return res.status(400).json({ message: `No se puede cambiar de ${solicitud.estado} a ${nuevoEstado}` });
+    if (!transiciones[solicitud.estado]?.includes(nuevoEstado)) {
+        return res.status(400).json({ message: `Transición de estado no permitida: de '${solicitud.estado}' a '${nuevoEstado}'.` });
     }
 
     const estadoAnterior = solicitud.estado;
