@@ -5,13 +5,12 @@ import {
   Box, Typography, Button, TextField, Snackbar, Alert, IconButton
 } from "@mui/material";
 import {
-  CloudDownload as CloudDownloadIcon,
   Description as DescriptionIcon,
   EditNote as EditNoteIcon,
   CheckBox as CheckBoxIcon,
   History as HistoryIcon
 } from "@mui/icons-material";
-import { getSolicitudById, updateSolicitud, uploadArchivosSolicitud } from "../services/index.js";
+import { getSolicitudById, updateSolicitud } from "../services/index.js";
 import CartelInformacionSocio from "../components/CartelInformacionSocio.jsx";
 import HistorialCambiosModal from "../components/HistorialCambiosModal.jsx";
 
@@ -36,7 +35,7 @@ const ActionButton = ({ children, color, backgroundColor, isActive, ...props }) 
     variant={isActive ? "contained" : "outlined"}
     fullWidth
     sx={{
-      color: isActive ? color : backgroundColor,
+      color: color,
       backgroundColor: isActive ? backgroundColor : 'transparent',
       borderColor: backgroundColor,
       '&:hover': {
@@ -103,8 +102,7 @@ export default function DetalleSolicitudPage() {
   const [nuevoEstado, setNuevoEstado] = useState("");
   const [motivo, setMotivo] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-  const [archivoFactura, setArchivoFactura] = useState(null);
-  const [archivoReceta, setArchivoReceta] = useState(null);
+
   const [isHistorialModalOpen, setHistorialModalOpen] = useState(false);
   const [historial, setHistorial] = useState([]);
 
@@ -159,23 +157,7 @@ export default function DetalleSolicitudPage() {
     }
   };
 
-  const handleSubirArchivos = async () => {
-    if (!archivoFactura && !archivoReceta) return;
-    const formData = new FormData();
-    if (archivoFactura) formData.append("factura", archivoFactura);
-    if (archivoReceta) formData.append("receta", archivoReceta);
 
-    try {
-      await uploadArchivosSolicitud(id, formData);
-      setSnackbar({ open: true, message: "Archivos subidos correctamente", severity: "success" });
-      setArchivoFactura(null);
-      setArchivoReceta(null);
-      loadSolicitud();
-    } catch (err) {
-      console.error(err);
-      setSnackbar({ open: true, message: err.response?.data?.message || err.message || "No se pudieron subir los archivos", severity: "error" });
-    }
-  };
 
   if (loading) return <Typography>Cargando...</Typography>;
   if (!solicitud) return <Typography>No se encontró la solicitud</Typography>;
@@ -185,10 +167,7 @@ export default function DetalleSolicitudPage() {
     return solicitud.estadoDisplay || e?.label || solicitud.estado || nuevoEstado;
   };
 
-  const archivosFromDescripcion = () => {
-    const adj = solicitud.descripcion?.adjuntos || [];
-    return Array.isArray(adj) ? adj : [];
-  };
+
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: "#f5f7fa", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -263,30 +242,7 @@ export default function DetalleSolicitudPage() {
           )}
         </InfoCard>
 
-        <InfoCard icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Archivos adjuntos">
-          <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.4 }}>
-            Adjunto la documentación indicada por el profesional.
-          </Typography>
-          {archivosFromDescripcion().map((a, idx) => (
-            <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <a href={`http://localhost:3000/${a.path}`} target="_blank" rel="noopener noreferrer"
-                style={{ textDecoration: "none", color: "#1976d2", fontSize: "0.85rem" }}>{a.nombreArchivo}</a>
-              <CloudDownloadIcon sx={{ fontSize: 16, color: "#6c757d", ml: 1 }} />
-            </Box>
-          ))}
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
-            <Button variant="outlined" component="label" size="small" sx={{ width: { xs: '100%', sm: 'auto' } }}>Subir Factura
-              <input type="file" hidden onChange={e => setArchivoFactura(e.target.files[0])} />
-            </Button>
-            {archivoFactura && <Typography variant="caption" sx={{ display: { xs: 'block', sm: 'inline' }, textAlign: { xs: 'center', sm: 'left' } }}>{archivoFactura.name}</Typography>}
-          </Box>
-          <Box sx={{ mt: 1, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
-            <Button variant="outlined" component="label" size="small" sx={{ width: { xs: '100%', sm: 'auto' } }}>Subir Receta
-              <input type="file" hidden onChange={e => setArchivoReceta(e.target.files[0])} />
-            </Button>
-            {archivoReceta && <Typography variant="caption" sx={{ display: { xs: 'block', sm: 'inline' }, textAlign: { xs: 'center', sm: 'left' } }}>{archivoReceta.name}</Typography>}
-          </Box>
-          <Button variant="contained" size="small" sx={{ mt: 2, alignSelf: { xs: 'center', md: 'flex-start'}, width: { xs: '100%', sm: 'auto' } }} onClick={handleSubirArchivos}>Subir Archivos</Button>
+        <InfoCard icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios">
         </InfoCard>
 
                 <InfoCard 
