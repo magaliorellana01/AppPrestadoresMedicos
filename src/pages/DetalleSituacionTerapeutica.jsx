@@ -450,11 +450,7 @@ export default function DetalleSituacionTerapeutica() {
                                 variant="outlined"
                                 size="small"
                                 value={fechaFinEditable}
-                                onChange={(e) => {
-                                    setFechaFinEditable(e.target.value)
-                                    console.log(fechaFinEditable)
-                                }
-                                }
+                                onChange={(e) => setFechaFinEditable(e.target.value)}
                                 InputLabelProps={{ shrink: true }}
                                 sx={{ flexGrow: 1 }}
                             />

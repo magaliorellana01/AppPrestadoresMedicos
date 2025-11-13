@@ -84,7 +84,6 @@ export const updateSituacionTerapeutica = async (id, updates) => {
 
 export const finalizarSituacionTerapeutica = async (id) => {
   const response = await api.put(`/situaciones-terapeuticas/${id}/finalizar`);
-  console.log("ID que se va a enviar:", id);
   return response.data;
 };
 
