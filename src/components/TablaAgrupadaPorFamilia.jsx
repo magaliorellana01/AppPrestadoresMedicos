@@ -70,7 +70,7 @@ export default function TablaAgrupadaPorFamilia({ gruposFamiliares }) {
                                         <Divider />
 
                                         <Typography variant="body2">
-                                            <strong>Diagnóstico:</strong> {situacion.tratamiento}
+                                            <strong>Diagnóstico:</strong> {situacion.diagnostico}
                                         </Typography>
 
                                         <Typography variant="body2" color="text.secondary">
@@ -134,7 +134,7 @@ export default function TablaAgrupadaPorFamilia({ gruposFamiliares }) {
                                         , {situacionTerapeutica.socio.nombres}
                                     </TableCell>
                                     <TableCell>{situacionTerapeutica.socio.rol === 'Titular' ? 'Titular' : `Familiar de ${grupo.nombreTitular}`}</TableCell>
-                                    <TableCell>{situacionTerapeutica.tratamiento}</TableCell>
+                                    <TableCell>{situacionTerapeutica.diagnostico}</TableCell>
                                     <TableCell>{situacionTerapeutica.socio.telefono}</TableCell>
                                     
                                     <TableCell>
