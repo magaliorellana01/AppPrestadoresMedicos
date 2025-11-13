@@ -124,15 +124,14 @@ export default function DetalleDeHistoriaClinica() {
                     {/* Se usa la fecha de creación y el prestador poblado */}
                     {new Date(nota.fecha_creacion).toLocaleDateString()} –
                     {nota.prestador
-                      ? ` ${nota.prestador.nombres || ""} ${
-                          nota.prestador.apellidos || "Prestador Desconocido"
-                        }`
+                      ? (nota.prestador.nombres || nota.prestador.apellidos
+                        ? `${nota.prestador.nombres || ''} ${nota.prestador.apellidos || ''}`.trim()
+                        : "Prestador Desconocido")
                       : "Prestador no especificado"}
-                      <Typography variant="caption" color="subtitle2" ml={1}>
-                        {nota.prestador?.especialidades?.length > 0
-                        ? ` - ${nota.prestador?.especialidades?.map((e) => e).join(', ')}`
-                        : "Especialidad no especificada"}
-                      </Typography>
+                    {!nota.prestador?.es_centro_medico && nota.prestador?.especialidades?.length > 0
+                      ? ` - ${nota.prestador.especialidades.join(', ')}`
+                      : ''}
+
                   </Typography>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="body1">{nota.nota}</Typography>
