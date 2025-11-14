@@ -482,7 +482,7 @@ export default function DetalleSituacionTerapeutica() {
                             onClick={handleOpenConfirmModal}
                             sx={{ flex: 1, fontSize: { xs: "14px", sm: "16px" } }}
                         >
-                            Dar de alta situación
+                            Dar de baja situación
                         </Button>
                     </Box>
 
@@ -511,7 +511,7 @@ export default function DetalleSituacionTerapeutica() {
                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             
                                 <Typography variant="h4" color="primary" sx={{ fontSize: "28px" }}>
-                                    Confirmar alta
+                                    Confirmar baja
                                 </Typography>
                                 
                             </Box>
@@ -519,7 +519,7 @@ export default function DetalleSituacionTerapeutica() {
                             <Divider sx={{ mt: 2, mb: 3 }} />
 
                             <Typography id="modal-description" sx={{ mt: 2, mb: 3, fontSize: "16px" }}>
-                                ¿Está seguro de que quiere dar de alta esta situación terapéutica?
+                                ¿Está seguro de que quiere dar de baja esta situación terapéutica?
                             </Typography>
 
                             <Box
@@ -554,7 +554,7 @@ export default function DetalleSituacionTerapeutica() {
                                         borderRadius: "10px"
                                     }}
                                 >
-                                    Dar de alta
+                                    Dar de baja
                                 </Button>
                             </Box>
                         </Box>
