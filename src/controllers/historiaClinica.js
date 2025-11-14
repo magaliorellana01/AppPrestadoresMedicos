@@ -2,6 +2,7 @@ const HistoriaClinica = require("../models/historiaClinica");
 const Socio = require("../models/socio");
 const Nota = require("../models/nota");
 const mongoose = require("mongoose");
+const { buildSocioSearchFilter } = require("../utils/filters");
 
 exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
     try {
@@ -11,14 +12,7 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
             return res.status(400).json({ message: "El query param 'input' es obligatorio." });
         }
 
-        const socioFilter = {
-            $or: [
-                { dni: input },
-                { telefono: input },
-                { nombres: { $regex: input, $options: "i" } },
-                { apellidos: { $regex: input, $options: "i" } },
-            ]
-        };
+        const socioFilter = buildSocioSearchFilter(input);
 
         
         const sociosEncontrados = await Socio.find(socioFilter).select('_id rol es_familiar_de');

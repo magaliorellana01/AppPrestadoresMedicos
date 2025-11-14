@@ -1,6 +1,7 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
 const Socio = require('../models/socio')
 const mongoose = require("mongoose");
+const { buildSocioSearchFilter } = require('../utils/filters');
 
 exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
     try {
@@ -10,14 +11,7 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
             return res.status(400).json({ message: "El query param 'input' es obligatorio." });
         }
 
-        const socioFilter = {
-            $or: [
-                { dni: input },
-                { telefono: input },
-                { nombres: { $regex: input, $options: "i" } },
-                { apellidos: { $regex: input, $options: "i" } }
-            ]
-        };
+        const socioFilter = buildSocioSearchFilter(input);
 
         
         const sociosEncontrados = await Socio.find(socioFilter).select('_id rol es_familiar_de');
