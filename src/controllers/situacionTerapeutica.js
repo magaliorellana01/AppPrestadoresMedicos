@@ -1,6 +1,7 @@
 const SituacionTerapeutica = require('../models/situacionTerapeutica')
 const Socio = require('../models/socio')
 const mongoose = require("mongoose");
+const { createAccentInsensitiveRegex } = require('../utils/filters');
 
 exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
     try {
@@ -10,13 +11,27 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
             return res.status(400).json({ message: "El query param 'input' es obligatorio." });
         }
 
+        const inputTrimmed = String(input).trim();
+        const minLengthForNameSearch = 2; // Mínimo de caracteres para buscar por nombres/apellidos
+
+        // Construir el filtro base con DNI y teléfono
+        const socioFilterConditions = [
+            { dni: inputTrimmed },
+            { telefono: inputTrimmed }
+        ];
+
+        // Solo agregar búsqueda por nombres/apellidos si el input tiene al menos 2 caracteres
+        if (inputTrimmed.length >= minLengthForNameSearch) {
+            const nombresRegex = createAccentInsensitiveRegex(inputTrimmed);
+            const apellidosRegex = createAccentInsensitiveRegex(inputTrimmed);
+            socioFilterConditions.push(
+                { nombres: { $regex: nombresRegex, $options: 'i' } },
+                { apellidos: { $regex: apellidosRegex, $options: 'i' } }
+            );
+        }
+
         const socioFilter = {
-            $or: [
-                { dni: input },
-                { telefono: input },
-                { nombres: { $regex: input, $options: "i" } },
-                { apellidos: { $regex: input, $options: "i" } }
-            ]
+            $or: socioFilterConditions
         };
 
         
