@@ -178,33 +178,3 @@ exports.updateSolicitud = async (req, res) => {
   }
 };
 
-exports.subirArchivos = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const solicitud = await Solicitud.findById(id);
-    if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
-
-    if (!solicitud.descripcion) solicitud.descripcion = {};
-    if (!Array.isArray(solicitud.descripcion.adjuntos)) solicitud.descripcion.adjuntos = [];
-
-    if (req.files['factura']) {
-      solicitud.descripcion.adjuntos.push({
-        tipo: 'Factura',
-        nombreArchivo: req.files['factura'][0].originalname,
-        path: req.files['factura'][0].path
-      });
-    }
-    if (req.files['receta']) {
-      solicitud.descripcion.adjuntos.push({
-        tipo: 'Receta',
-        nombreArchivo: req.files['receta'][0].originalname,
-        path: req.files['receta'][0].path
-      });
-    }
-
-    await solicitud.save();
-    res.status(200).json({ message: 'Archivos subidos correctamente', adjuntos: solicitud.descripcion.adjuntos });
-  } catch (err) {
-    console.error('Error al subir archivos:', err);
-  }
-};
