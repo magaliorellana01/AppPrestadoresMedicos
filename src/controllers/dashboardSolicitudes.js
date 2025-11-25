@@ -24,22 +24,15 @@ exports.getDashboardStats = async (req, res) => {
     hasta.setHours(23, 59, 59, 999); // Incluir todo el día final
 
     // Buscar el prestador para saber si es centro médico o médico individual
-    const prestador = await Prestador.findById(prestadorId).populate('sedes');
+    const prestador = await Prestador.findById(prestadorId);
     if (!prestador) {
       return res.status(404).json({ message: 'Prestador no encontrado' });
     }
 
-    // Construir filtro base según tipo de prestador
+    // Construir filtro base  
     let filtroBase = {};
 
-    if (prestador.es_centro_medico) {
-      // Si es centro médico, incluir solicitudes de todas sus sedes
-      const sedeIds = prestador.sedes.map(sede => sede._id);
-      filtroBase.sede = { $in: sedeIds };
-    } else {
-      // Si es médico individual, filtrar por prestadorAsignado
-      filtroBase.prestadorAsignado = prestadorId;
-    }
+    filtroBase.prestadorAsignado = prestadorId;
 
     // === 1. PENDIENTES (sin filtro de fecha, solo estados no resueltos) ===
     const pendientes = await Solicitud.countDocuments({
@@ -50,8 +43,9 @@ exports.getDashboardStats = async (req, res) => {
     // === 2. RESUELTAS en el rango de fechas ===
     const filtroResueltas = {
       ...filtroBase,
-      estado: { $in: ['Aprobado', 'Rechazado'] },
-      // Usamos historialEstados para encontrar cuando se resolvieron
+      // La condición principal es que una resolución ocurriera en el rango de fechas.
+      // El estado final del ticket puede haber cambiado, pero para el dashboard,
+      // cuenta como "resuelta" en ese período.
       'historialEstados': {
         $elemMatch: {
           estado: { $in: ['Aprobado', 'Rechazado'] },
@@ -64,6 +58,17 @@ exports.getDashboardStats = async (req, res) => {
       .select('estado tipo fechaCreacion historialEstados monto')
       .lean();
 
+    // Para consistencia, adjuntamos a cada solicitud su evento de resolución más reciente DENTRO DEL RANGO
+    solicitudesResueltas.forEach(sol => {
+      sol.resolucionEnRango = sol.historialEstados
+        .filter(h =>
+          (h.estado === 'Aprobado' || h.estado === 'Rechazado') &&
+          new Date(h.fecha) >= desde &&
+          new Date(h.fecha) <= hasta
+        )
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]; // Más reciente en el rango
+    });
+
     const totalResueltas = solicitudesResueltas.length;
 
     // === 3. TIEMPO PROMEDIO DE RESOLUCIÓN ===
@@ -75,10 +80,8 @@ exports.getDashboardStats = async (req, res) => {
       let contadorConTiempo = 0;
 
       solicitudesResueltas.forEach(sol => {
-        // Buscar la fecha de resolución en historialEstados
-        const cambioResolucion = sol.historialEstados
-          .filter(h => h.estado === 'Aprobado' || h.estado === 'Rechazado')
-          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]; // Más reciente
+        // Usamos el evento de resolución que ya identificamos
+        const cambioResolucion = sol.resolucionEnRango;
 
         if (cambioResolucion && sol.fechaCreacion) {
           const fechaCreacion = new Date(sol.fechaCreacion);
@@ -99,22 +102,20 @@ exports.getDashboardStats = async (req, res) => {
     }
 
     // === 4. TASA DE APROBACIÓN ===
-    const aprobadas = solicitudesResueltas.filter(s => s.estado === 'Aprobado').length;
-    const rechazadas = solicitudesResueltas.filter(s => s.estado === 'Rechazado').length;
-    const tasaAprobacion = totalResueltas > 0
-      ? Math.round((aprobadas / totalResueltas) * 100)
+    // Usamos el estado del evento de resolución, no el estado final de la solicitud
+    const aprobadas = solicitudesResueltas.filter(s => s.resolucionEnRango?.estado === 'Aprobado').length;
+    const rechazadas = solicitudesResueltas.filter(s => s.resolucionEnRango?.estado === 'Rechazado').length;
+    const totalCalculado = aprobadas + rechazadas;
+    const tasaAprobacion = totalCalculado > 0
+      ? Math.round((aprobadas / totalCalculado) * 100)
       : 0;
 
     // === 5. EVOLUCIÓN DIARIA ===
     const evolucionMap = new Map();
 
     solicitudesResueltas.forEach(sol => {
-      // Encontrar fecha de resolución
-      const cambioResolucion = sol.historialEstados
-        .filter(h => (h.estado === 'Aprobado' || h.estado === 'Rechazado') &&
-                     new Date(h.fecha) >= desde &&
-                     new Date(h.fecha) <= hasta)
-        .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))[0]; // Primera resolución en el rango
+      // Usamos el evento de resolución que ya identificamos
+      const cambioResolucion = sol.resolucionEnRango;
 
       if (cambioResolucion) {
         const fecha = new Date(cambioResolucion.fecha).toISOString().split('T')[0];
@@ -144,11 +145,11 @@ exports.getDashboardStats = async (req, res) => {
     };
 
     solicitudesResueltas.forEach(sol => {
-      if (porTipo[sol.tipo]) {
+      if (porTipo[sol.tipo] && sol.resolucionEnRango) {
         porTipo[sol.tipo].total++;
-        if (sol.estado === 'Aprobado') {
+        if (sol.resolucionEnRango.estado === 'Aprobado') {
           porTipo[sol.tipo].aprobadas++;
-        } else if (sol.estado === 'Rechazado') {
+        } else if (sol.resolucionEnRango.estado === 'Rechazado') {
           porTipo[sol.tipo].rechazadas++;
         }
       }
