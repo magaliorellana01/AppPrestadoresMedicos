@@ -48,8 +48,15 @@ exports.getSituacionesTerapeuticasByMultipleEntries = async (req, res) => {
 
         
         const situacionesFinales = await SituacionTerapeutica.find({ socio: { $in: todosLosSocioIds }, activa: true })
-            .populate('socio')
-            .populate('prestador'); 
+            .select('_id socio prestador diagnostico')
+            .populate({
+                path: 'socio',
+                select: '_id rol es_familiar_de apellidos nombres dni telefono'
+            })
+            .populate({
+                path: 'prestador',
+                select: '_id es_centro_medico nombres apellidos'
+            }); 
 
         return res.status(200).json(situacionesFinales);
 

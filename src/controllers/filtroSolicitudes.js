@@ -44,7 +44,17 @@ exports.getSolicitudes = async (req, res) => {
             },
             { $sort: { estadoOrder: 1, fechaCreacion: -1 } },
             { $skip: page * size },
-            { $limit: size }
+            { $limit: size },
+            {
+                $project: {
+                    _id: 1,
+                    nro: 1,
+                    afiliadoNombre: 1,
+                    tipo: 1,
+                    estado: 1,
+                    fechaCreacion: 1,
+                }
+            }
         ];
 
         const content = await Solicitud.aggregate(pipeline);

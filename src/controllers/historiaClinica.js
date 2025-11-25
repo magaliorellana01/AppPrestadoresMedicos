@@ -49,8 +49,11 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
 
         
         const historiasClinicas = await HistoriaClinica.find({ socio: { $in: todosLosSocioIds } })
-            .populate('socio')
-            .populate('medico_cabecera'); 
+            .select('_id socio')
+            .populate({
+                path: 'socio',
+                select: '_id nombres apellidos dni rol es_familiar_de'
+            }); 
 
         return res.status(200).json(historiasClinicas);
 
