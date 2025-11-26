@@ -7,10 +7,12 @@ const {
     updateHistoriaClinica,
     deleteHistoriaClinica,
     addNotaAHC,
+    searchSocios,
 } = require("../controllers/historiaClinica.js");
 
 const router = express.Router();
 router.get("/search", getHistoriasClinicasByMultipleEntries);
+router.get("/socios/search", searchSocios);
 router.get("/", getHistoriasClinicas);
 router.get("/:id", getHistoriaClinicaById);
 router.post("/", createHistoriaClinica);

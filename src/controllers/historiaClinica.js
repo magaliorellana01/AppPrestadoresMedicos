@@ -180,18 +180,93 @@ exports.addNotaAHC = async (req, res) => {
         });
 
         // opcional: Popular la nota para devolver la info completa al frontend
-        const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador", "_id nombres apellidos es_centro_medico especialidades");
 
-        res.status(201).json({
-            message: "Nota agregada correctamente a la Historia Clínica",
-            nota: notaPopulated,
-        });
+                const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador", "_id nombres apellidos es_centro_medico especialidades");
 
-    } catch (error) {
-        console.error("Error al agregar nota a Historia Clínica:", error);
-        res.status(500).json({
-            message: "Error interno del servidor al crear la nota.",
-            error: error.message
-        });
-    }
-};
+        
+
+                res.status(201).json({
+
+                    message: "Nota agregada correctamente a la Historia Clínica",
+
+                    nota: notaPopulated,
+
+                });
+
+        
+
+            } catch (error) {
+
+                console.error("Error al agregar nota a Historia Clínica:", error);
+
+                res.status(500).json({
+
+                    message: "Error interno del servidor al crear la nota.",
+
+                    error: error.message
+
+                });
+
+            }
+
+        };
+
+        
+
+        exports.searchSocios = async (req, res) => {
+
+            try {
+
+                const { input } = req.query;
+
+        
+
+                if (!input || String(input).trim().length < 3) {
+
+                    // No busca si el input es muy corto para evitar resultados masivos
+
+                    return res.status(200).json([]);
+
+                }
+
+        
+
+                const socioFilter = buildSocioSearchFilter(input);
+
+                
+
+                const sociosEncontrados = await Socio.find(socioFilter)
+
+                    .select('_id nombres apellidos dni')
+
+                    .limit(10); // Limita los resultados a 10 para el autocomplete
+
+        
+
+                if (!sociosEncontrados.length) {
+
+                    return res.status(200).json([]);
+
+                }
+
+        
+
+                return res.status(200).json(sociosEncontrados);
+
+        
+
+            } catch (error) {
+
+                console.error('Error al buscar socios:', error);
+
+                res.status(500).json({
+
+                    message: error.message || "Error interno del servidor"
+
+                });
+
+            }
+
+        };
+
+        
