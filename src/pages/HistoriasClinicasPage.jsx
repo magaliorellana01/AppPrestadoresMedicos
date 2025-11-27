@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -12,24 +12,64 @@ import {
   TableContainer,
   Paper,
   Container,
+  Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { getHistoriasClinicasByMultipleParams } from "../services/index.js";
+import { getHistoriasClinicasByMultipleParams, searchSocios } from "../services/index.js";
 import TablaHistoriasAgrupadaPorFamilia from "../components/TablaHistoriasAgrupadaPorFamilia";
+import debounce from 'lodash.debounce';
 
 export default function HistoriasClinicasPage({ theme }) {
   const nav = useNavigate();
-  const [q, setQ] = useState("");
   const [historiasClinicas, setHistoriasClinicas] = useState(null);
 
+  // Estados para el Autocomplete
+  const [afiliadoOptions, setAfiliadoOptions] = useState([]);
+  const [afiliadoInputValue, setAfiliadoInputValue] = useState("");
+  const [isAfiliadoLoading, setIsAfiliadoLoading] = useState(false);
+  const [selectedAfiliado, setSelectedAfiliado] = useState(null); // Objeto completo del socio seleccionado
+
+  const fetchSocios = useCallback(
+    debounce(async (inputValue) => {
+      if (inputValue && inputValue.length >= 3) {
+        setIsAfiliadoLoading(true);
+        try {
+          const data = await searchSocios(inputValue);
+          setAfiliadoOptions(data || []);
+        } catch (error) {
+          console.error("Error buscando socios:", error);
+          setAfiliadoOptions([]);
+        } finally {
+          setIsAfiliadoLoading(false);
+        }
+      } else {
+        setAfiliadoOptions([]);
+      }
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    fetchSocios(afiliadoInputValue);
+  }, [afiliadoInputValue, fetchSocios]);
+
+
   const handleBuscar = async () => {
-    const resultados = await getHistoriasClinicasByMultipleParams(q);
-    setHistoriasClinicas(resultados);
+    const searchInput = afiliadoInputValue.trim();
+    if (searchInput.length >= 3) {
+      const resultados = await getHistoriasClinicasByMultipleParams(searchInput);
+      setHistoriasClinicas(resultados);
+    } else {
+      setHistoriasClinicas([]);
+    }
   };
 
   const handleLimpiar = () => {
-    setQ("");
+    setAfiliadoInputValue("");
+    setSelectedAfiliado(null);
+    setAfiliadoOptions([]);
     setHistoriasClinicas(null);
   };
 
@@ -56,22 +96,44 @@ export default function HistoriasClinicasPage({ theme }) {
         gap={2}
       >
         <Box width="100%" display="flex" flexDirection="column" gap={3}>
-          <TextField
-            fullWidth
-            size="small"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
+        <Autocomplete
+            id="historias-afiliado-search-autocomplete"
+            options={afiliadoOptions}
+            getOptionLabel={(option) => `${option.nombres} ${option.apellidos} (${option.dni})`}
+            inputValue={afiliadoInputValue}
+            onInputChange={(event, newInputValue) => {
+              setAfiliadoInputValue(newInputValue);
+            }}
+            onChange={(event, newValue) => {
+              setSelectedAfiliado(newValue);
+              if (newValue) {
+                setAfiliadoInputValue(`${newValue.nombres} ${newValue.apellidos} (${newValue.dni})`);
+              } else {
+                setAfiliadoInputValue("");
+              }
+            }}
             onKeyDown={onKeyDown}
-            placeholder="Buscar por DNI, Nombres, Apellidos o Teléfono"
-            InputProps={{
-              inputProps: { "aria-label": "buscar afiliado" },
-            }}
-            sx={{
-              maxWidth: 660,
-              backgroundColor: "white",
-              "& .MuiInputBase-input": { py: 1 },
-              "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "22px" },
-            }}
+            value={selectedAfiliado}
+            loading={isAfiliadoLoading}
+            loadingText="Buscando..."
+            noOptionsText="No se encontraron afiliados. Ingrese DNI, nombre o apellido (mín. 4 caracteres)."
+            isOptionEqualToValue={(option, value) => option._id === value._id}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Buscar por DNI, Nombres o Apellidos (mín. 4 caracteres)"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isAfiliadoLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            sx={{ maxWidth: 660 }}
           />
 
           <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
@@ -80,17 +142,18 @@ export default function HistoriasClinicasPage({ theme }) {
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
-              disabled={!q.trim() && (!historiasClinicas || historiasClinicas.length === 0)}
+              disabled={!afiliadoInputValue.trim() && (!historiasClinicas || historiasClinicas.length === 0)}
             >
               Limpiar
             </Button>
 
             <Button
               variant="contained"
+  
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleBuscar}
-              disabled={!q.trim()}
+              disabled={afiliadoInputValue.trim().length < 3}
             >
               Buscar
               <Search sx={{ ml: 1 }} />
