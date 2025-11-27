@@ -1,32 +1,69 @@
-import React, { useState, useEffect } from "react";
-import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio, useMediaQuery, useTheme, Container } from "@mui/material";
+import React, { useState, useEffect, useCallback } from "react";
+import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio, useMediaQuery, useTheme, Container, Autocomplete, CircularProgress } from "@mui/material";
 import { Add, Search } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
-import { getSituacionTerapeuticaByMultipleParams } from "../services";
+import { getSituacionTerapeuticaByMultipleParams, searchSocios } from "../services";
 import TablaAgrupadaPorFamilia from "../components/TablaAgrupadaPorFamilia";
+import debounce from 'lodash.debounce';
 
 
 const SituacionesTerapeuticasPage = ({ theme }) => {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
-  const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
   const [filtro, setFiltro] = useState("todas");
   const prestadorLogueadoId = JSON.parse(localStorage.getItem("prestador"))?._id;
 
+  // Estados para el Autocomplete
+  const [afiliadoOptions, setAfiliadoOptions] = useState([]);
+  const [afiliadoInputValue, setAfiliadoInputValue] = useState("");
+  const [isAfiliadoLoading, setIsAfiliadoLoading] = useState(false);
+  const [selectedAfiliado, setSelectedAfiliado] = useState(null); // Objeto completo del socio seleccionado
+
+  const fetchSocios = useCallback(
+    debounce(async (inputValue) => {
+      if (inputValue && inputValue.length >= 3) {
+        setIsAfiliadoLoading(true);
+        try {
+          const data = await searchSocios(inputValue);
+          setAfiliadoOptions(data || []);
+        } catch (error) {
+          console.error("Error buscando socios:", error);
+          setAfiliadoOptions([]);
+        } finally {
+          setIsAfiliadoLoading(false);
+        }
+      } else {
+        setAfiliadoOptions([]);
+      }
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    fetchSocios(afiliadoInputValue);
+  }, [afiliadoInputValue, fetchSocios]);
+
+
   const handleBuscar = async () => {
-    const resultados = await getSituacionTerapeuticaByMultipleParams(q);
-    setSituacionesTerapeuticas(resultados);
+    // Usamos el inputValue del Autocomplete para la búsqueda de situaciones
+    const searchInput = afiliadoInputValue.trim();
+    if (searchInput.length >= 3) {
+      const resultados = await getSituacionTerapeuticaByMultipleParams(searchInput);
+      setSituacionesTerapeuticas(resultados);
+    } else {
+        setSituacionesTerapeuticas([]); // Limpiar resultados si el input es muy corto
+    }
   };
 
-
-
   const handleLimpiar = () => {
-    setQ("");
+    setAfiliadoInputValue("");
+    setSelectedAfiliado(null);
+    setAfiliadoOptions([]);
     setSituacionesTerapeuticas(null);
-    setFiltro("todas")
+    setFiltro("todas");
   };
 
   const situacionesFiltradas = (situacionesTerapeuticas || []).filter((sit) => {
@@ -88,34 +125,44 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
         gap={2}
       >
         <Box width="100%" display="flex" flexDirection="column" gap={3}>
-          <TextField
-            fullWidth
-            size="small"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (q.trim()) {
-                  handleBuscar();
-                }
+          <Autocomplete
+            id="situaciones-afiliado-search-autocomplete"
+            options={afiliadoOptions}
+            getOptionLabel={(option) => `${option.nombres} ${option.apellidos} (${option.dni})`}
+            inputValue={afiliadoInputValue}
+            onInputChange={(event, newInputValue) => {
+              setAfiliadoInputValue(newInputValue);
+            }}
+            onChange={(event, newValue) => {
+              setSelectedAfiliado(newValue);
+              // Cuando se selecciona, actualizamos el input para que refleje la selección
+              if (newValue) {
+                setAfiliadoInputValue(`${newValue.nombres} ${newValue.apellidos} (${newValue.dni})`);
+              } else {
+                setAfiliadoInputValue("");
               }
             }}
-            placeholder="Buscar por DNI, Nombres, Apellidos o Teléfono"
-            InputProps={{
-              inputProps: { "aria-label": "buscar afiliado" },
-            }}
-            sx={{
-              maxWidth: 660,
-              backgroundColor: "white",
-              "& .MuiInputBase-input": {
-                py: 1,
-              },
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                fontSize: '22px',
-              },
-            }}
+            value={selectedAfiliado}
+            loading={isAfiliadoLoading}
+            loadingText="Buscando..."
+            noOptionsText="No se encontraron afiliados. Ingrese DNI, nombre o apellido (mín. 4 caracteres)."
+            isOptionEqualToValue={(option, value) => option._id === value._id}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Buscar por DNI, Nombres o Apellidos (mín. 4 caracteres)"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isAfiliadoLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            sx={{ maxWidth: 660 }} // Mantener el mismo ancho que el TextField anterior
           />
           <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
             <Button
@@ -123,7 +170,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
-              disabled={!q.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
+              disabled={!afiliadoInputValue.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
             >
               Limpiar
             </Button>
@@ -132,7 +179,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleBuscar}
-              disabled={!q.trim()}
+              disabled={afiliadoInputValue.trim().length < 3}
             >
               Buscar
               <Search sx={{ ml: 1 }} />

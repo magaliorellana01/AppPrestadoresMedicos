@@ -55,6 +55,13 @@ export const getHistoriasClinicasByMultipleParams = async (input) => {
   return response.data;
 };
 
+export const searchSocios = async (input) => {
+  const response = await api.get(`/historias-clinicas/socios/search`, {
+    params: { input },
+  });
+  return response.data;
+};
+
 export const getSituacionTerapeuticaByMultipleParams = async (input) => {
   const response = await api.get(`/situaciones-terapeuticas/search`, {
     params: { input },
