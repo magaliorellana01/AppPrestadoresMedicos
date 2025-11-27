@@ -5,13 +5,15 @@ const {
     updateSituacionTerapeutica,
     agregarNovedad,
     createSituacionTerapeutica,
-    darDeBajaSituacionTerapeutica
-
+    darDeBajaSituacionTerapeutica,
+    getSituacionesTerapeuticasBySocioId
 } = require("../controllers/situacionTerapeutica");
 
 const router = express.Router();
 
 router.get("/search", getSituacionesTerapeuticasByMultipleEntries);
+
+router.get("/socio/:socioId", getSituacionesTerapeuticasBySocioId);
 
 router.get("/:id", getSituacionTerapeuticaById); 
 

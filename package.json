@@ -16,6 +16,7 @@
     "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas && npm run seed-sit-terapeuticas && npm run seed-solicitudes  && npm run seed-turnos-completo"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",

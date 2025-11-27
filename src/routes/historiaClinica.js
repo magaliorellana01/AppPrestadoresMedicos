@@ -8,10 +8,12 @@ const {
     deleteHistoriaClinica,
     addNotaAHC,
     searchSocios,
+    getHistoriasClinicasBySocioId,
 } = require("../controllers/historiaClinica.js");
 
 const router = express.Router();
 router.get("/search", getHistoriasClinicasByMultipleEntries);
+router.get("/socio/:socioId", getHistoriasClinicasBySocioId);
 router.get("/socios/search", searchSocios);
 router.get("/", getHistoriasClinicas);
 router.get("/:id", getHistoriaClinicaById);
