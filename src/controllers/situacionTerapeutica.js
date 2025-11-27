@@ -206,3 +206,53 @@ exports.darDeBajaSituacionTerapeutica = async (req, res) => {
         });
     }
 };
+
+exports.getSituacionesTerapeuticasBySocioId = async (req, res) => {
+    try {
+        const { socioId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(socioId)) {
+            return res.status(400).json({ message: "El ID de socio proporcionado no es válido." });
+        }
+
+        const socio = await Socio.findById(socioId).select('_id rol es_familiar_de');
+
+        if (!socio) {
+            return res.status(404).json({ message: "Socio no encontrado." });
+        }
+
+        const titularId = socio.rol === 'Titular' ? socio._id : socio.es_familiar_de;
+
+        if (!titularId) {
+            return res.status(200).json([]);
+        }
+
+        const familia = await Socio.find({
+            $or: [
+                { _id: titularId },
+                { es_familiar_de: titularId }
+            ]
+        }).select('_id');
+
+        const sociosIds = familia.map(s => s._id);
+
+        const situaciones = await SituacionTerapeutica.find({ socio: { $in: sociosIds }, activa: true })
+            .select('_id socio prestador diagnostico')
+            .populate({
+                path: 'socio',
+                select: '_id rol es_familiar_de apellidos nombres dni telefono'
+            })
+            .populate({
+                path: 'prestador',
+                select: '_id es_centro_medico nombres apellidos'
+            });
+
+        return res.status(200).json(situaciones);
+
+    } catch (error) {
+        console.error('Error al obtener las situaciones terapéuticas por ID de socio:', error);
+        res.status(500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+};

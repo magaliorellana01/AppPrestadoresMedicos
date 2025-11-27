@@ -269,3 +269,49 @@ exports.searchSocios = async (req, res) => {
 
 };
 
+exports.getHistoriasClinicasBySocioId = async (req, res) => {
+    try {
+        const { socioId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(socioId)) {
+            return res.status(400).json({ message: "El ID de socio proporcionado no es válido." });
+        }
+
+        const socio = await Socio.findById(socioId).select('_id rol es_familiar_de');
+
+        if (!socio) {
+            return res.status(404).json({ message: "Socio no encontrado." });
+        }
+
+        const titularId = socio.rol === 'Titular' ? socio._id : socio.es_familiar_de;
+
+        if (!titularId) {
+            // Esto podría pasar si es un familiar sin un titular asignado
+            return res.status(200).json([]);
+        }
+
+        const familia = await Socio.find({
+            $or: [
+                { _id: titularId },
+                { es_familiar_de: titularId }
+            ]
+        }).select('_id');
+
+        const sociosIds = familia.map(s => s._id);
+
+        const historiasClinicas = await HistoriaClinica.find({ socio: { $in: sociosIds } })
+            .select('_id socio')
+            .populate({
+                path: 'socio',
+                select: '_id nombres apellidos dni rol es_familiar_de'
+            });
+
+        return res.status(200).json(historiasClinicas);
+
+    } catch (error) {
+        console.error('Error al obtener las historias clínicas por ID de socio:', error);
+        res.status(500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+};
