@@ -14,14 +14,14 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
 
         const socioFilter = buildSocioSearchFilter(input);
 
-        
+
         const sociosEncontrados = await Socio.find(socioFilter).select('_id rol es_familiar_de');
 
         if (!sociosEncontrados.length) {
             return res.status(200).json([]);
         }
 
-       
+
         const titularesIds = new Set();
         for (const socio of sociosEncontrados) {
             if (socio.rol === 'Titular') {
@@ -32,10 +32,10 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
         }
 
         if (titularesIds.size === 0) {
-             return res.status(200).json([]); 
+            return res.status(200).json([]);
         }
 
-      
+
         const familiasIds = Array.from(titularesIds).map(id => new mongoose.Types.ObjectId(id));
 
         const todosLosMiembrosDeLasFamilias = await Socio.find({
@@ -44,16 +44,16 @@ exports.getHistoriasClinicasByMultipleEntries = async (req, res) => {
                 { es_familiar_de: { $in: familiasIds } } // Los familiares de esos titulares
             ]
         }).select('_id');
-        
+
         const todosLosSocioIds = todosLosMiembrosDeLasFamilias.map(s => s._id);
 
-        
+
         const historiasClinicas = await HistoriaClinica.find({ socio: { $in: todosLosSocioIds } })
             .select('_id socio')
             .populate({
                 path: 'socio',
                 select: '_id nombres apellidos dni rol es_familiar_de'
-            }); 
+            });
 
         return res.status(200).json(historiasClinicas);
 
@@ -180,18 +180,92 @@ exports.addNotaAHC = async (req, res) => {
         });
 
         // opcional: Popular la nota para devolver la info completa al frontend
+
         const notaPopulated = await Nota.findById(nuevaNota._id).populate("prestador", "_id nombres apellidos es_centro_medico especialidades");
 
+
+
         res.status(201).json({
+
             message: "Nota agregada correctamente a la Historia Clínica",
+
             nota: notaPopulated,
+
         });
 
+
+
     } catch (error) {
+
         console.error("Error al agregar nota a Historia Clínica:", error);
+
         res.status(500).json({
+
             message: "Error interno del servidor al crear la nota.",
+
             error: error.message
+
         });
+
     }
+
 };
+
+
+
+exports.searchSocios = async (req, res) => {
+
+    try {
+
+        const { input } = req.query;
+
+
+
+        if (!input || String(input).trim().length < 3) {
+
+            // No busca si el input es muy corto para evitar resultados masivos
+
+            return res.status(200).json([]);
+
+        }
+
+
+
+        const socioFilter = buildSocioSearchFilter(input);
+
+
+
+        const sociosEncontrados = await Socio.find(socioFilter)
+
+            .select('_id nombres apellidos dni')
+
+            .limit(10); // Limita los resultados a 10 para el autocomplete
+
+
+
+        if (!sociosEncontrados.length) {
+
+            return res.status(200).json([]);
+
+        }
+
+
+
+        return res.status(200).json(sociosEncontrados);
+
+
+
+    } catch (error) {
+
+        console.error('Error al buscar socios:', error);
+
+        res.status(500).json({
+
+            message: error.message || "Error interno del servidor"
+
+        });
+
+    }
+
+};
+
