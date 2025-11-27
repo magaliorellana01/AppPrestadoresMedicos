@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio, useMediaQuery, useTheme, Container, Autocomplete, CircularProgress } from "@mui/material";
-import { Add, Search } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import ModalNuevaSTerapeutica from "../components/ModalNuevaSTerapeutica";
-import { getSituacionTerapeuticaByMultipleParams, searchSocios } from "../services";
+import { getSituacionesTerapeuticasBySocioId, searchSocios } from "../services";
 import TablaAgrupadaPorFamilia from "../components/TablaAgrupadaPorFamilia";
 import debounce from 'lodash.debounce';
 
@@ -20,7 +20,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const [afiliadoOptions, setAfiliadoOptions] = useState([]);
   const [afiliadoInputValue, setAfiliadoInputValue] = useState("");
   const [isAfiliadoLoading, setIsAfiliadoLoading] = useState(false);
-  const [selectedAfiliado, setSelectedAfiliado] = useState(null); // Objeto completo del socio seleccionado
+  const [selectedAfiliado, setSelectedAfiliado] = useState(null);
 
   const fetchSocios = useCallback(
     debounce(async (inputValue) => {
@@ -43,18 +43,21 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   );
 
   useEffect(() => {
-    fetchSocios(afiliadoInputValue);
-  }, [afiliadoInputValue, fetchSocios]);
+    if (!selectedAfiliado) {
+      fetchSocios(afiliadoInputValue);
+    }
+  }, [afiliadoInputValue, fetchSocios, selectedAfiliado]);
 
 
-  const handleBuscar = async () => {
-    // Usamos el inputValue del Autocomplete para la búsqueda de situaciones
-    const searchInput = afiliadoInputValue.trim();
-    if (searchInput.length >= 3) {
-      const resultados = await getSituacionTerapeuticaByMultipleParams(searchInput);
+  const handleSeleccionAfiliado = async (socio) => {
+    setSelectedAfiliado(socio);
+    if (socio) {
+      const resultados = await getSituacionesTerapeuticasBySocioId(socio._id);
       setSituacionesTerapeuticas(resultados);
+      setAfiliadoInputValue(`${socio.nombres} ${socio.apellidos} (${socio.dni})`);
     } else {
-        setSituacionesTerapeuticas([]); // Limpiar resultados si el input es muy corto
+      setSituacionesTerapeuticas(null);
+      setAfiliadoInputValue("");
     }
   };
 
@@ -134,13 +137,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               setAfiliadoInputValue(newInputValue);
             }}
             onChange={(event, newValue) => {
-              setSelectedAfiliado(newValue);
-              // Cuando se selecciona, actualizamos el input para que refleje la selección
-              if (newValue) {
-                setAfiliadoInputValue(`${newValue.nombres} ${newValue.apellidos} (${newValue.dni})`);
-              } else {
-                setAfiliadoInputValue("");
-              }
+              handleSeleccionAfiliado(newValue);
             }}
             value={selectedAfiliado}
             loading={isAfiliadoLoading}
@@ -162,7 +159,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
                 }}
               />
             )}
-            sx={{ maxWidth: 660 }} // Mantener el mismo ancho que el TextField anterior
+            sx={{ maxWidth: 660 }}
           />
           <Box display="flex" gap={2} flexDirection={{ xs: "column", sm: "row" }}>
             <Button
@@ -170,19 +167,9 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
-              disabled={!afiliadoInputValue.trim() && (!situacionesTerapeuticas || situacionesTerapeuticas.length === 0)}
+              disabled={!afiliadoInputValue && !selectedAfiliado}
             >
               Limpiar
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
-              onClick={handleBuscar}
-              disabled={afiliadoInputValue.trim().length < 3}
-            >
-              Buscar
-              <Search sx={{ ml: 1 }} />
             </Button>
           </Box>
         </Box>
@@ -229,5 +216,6 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
     </Container>
   );
 };
+
 
 export default SituacionesTerapeuticasPage;
