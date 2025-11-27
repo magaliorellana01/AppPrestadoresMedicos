@@ -55,10 +55,22 @@ export const getHistoriasClinicasByMultipleParams = async (input) => {
   return response.data;
 };
 
+
+export const getHistoriasClinicasBySocioId = async (socioId) => {
+  const response = await api.get(`/historias-clinicas/socio/${socioId}`);
+  return response.data;
+};
+
 export const searchSocios = async (input) => {
   const response = await api.get(`/historias-clinicas/socios/search`, {
     params: { input },
   });
+  return response.data;
+};
+
+
+export const getSituacionesTerapeuticasBySocioId = async (socioId) => {
+  const response = await api.get(`/situaciones-terapeuticas/socio/${socioId}`);
   return response.data;
 };
 

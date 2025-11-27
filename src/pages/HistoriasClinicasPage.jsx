@@ -15,9 +15,8 @@ import {
   Autocomplete,
   CircularProgress,
 } from "@mui/material";
-import { Search } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { getHistoriasClinicasByMultipleParams, searchSocios } from "../services/index.js";
+import { getHistoriasClinicasBySocioId, searchSocios } from "../services/index.js";
 import TablaHistoriasAgrupadaPorFamilia from "../components/TablaHistoriasAgrupadaPorFamilia";
 import debounce from 'lodash.debounce';
 
@@ -29,7 +28,7 @@ export default function HistoriasClinicasPage({ theme }) {
   const [afiliadoOptions, setAfiliadoOptions] = useState([]);
   const [afiliadoInputValue, setAfiliadoInputValue] = useState("");
   const [isAfiliadoLoading, setIsAfiliadoLoading] = useState(false);
-  const [selectedAfiliado, setSelectedAfiliado] = useState(null); // Objeto completo del socio seleccionado
+  const [selectedAfiliado, setSelectedAfiliado] = useState(null);
 
   const fetchSocios = useCallback(
     debounce(async (inputValue) => {
@@ -52,17 +51,25 @@ export default function HistoriasClinicasPage({ theme }) {
   );
 
   useEffect(() => {
-    fetchSocios(afiliadoInputValue);
-  }, [afiliadoInputValue, fetchSocios]);
+    // No buscar socios si hay un afiliado seleccionado
+    if (!selectedAfiliado) {
+      fetchSocios(afiliadoInputValue);
+    }
+  }, [afiliadoInputValue, fetchSocios, selectedAfiliado]);
 
 
-  const handleBuscar = async () => {
-    const searchInput = afiliadoInputValue.trim();
-    if (searchInput.length >= 3) {
-      const resultados = await getHistoriasClinicasByMultipleParams(searchInput);
+  const handleSeleccionAfiliado = async (socio) => {
+    setSelectedAfiliado(socio);
+    if (socio) {
+      // Cuando se selecciona un socio, se buscan sus historias clínicas
+      const resultados = await getHistoriasClinicasBySocioId(socio._id);
       setHistoriasClinicas(resultados);
+      // Actualizamos el input para mostrar el socio seleccionado
+      setAfiliadoInputValue(`${socio.nombres} ${socio.apellidos} (${socio.dni})`);
     } else {
-      setHistoriasClinicas([]);
+      // Si se limpia la selección, se limpian los resultados
+      setHistoriasClinicas(null);
+      setAfiliadoInputValue("");
     }
   };
 
@@ -71,13 +78,6 @@ export default function HistoriasClinicasPage({ theme }) {
     setSelectedAfiliado(null);
     setAfiliadoOptions([]);
     setHistoriasClinicas(null);
-  };
-
-  const onKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleBuscar();
-    }
   };
 
   return (
@@ -91,8 +91,7 @@ export default function HistoriasClinicasPage({ theme }) {
       <Box
         mb={2}
         display="flex"
-        justifyContent={{ xs: "flex-start", md: "space-between" }}
-        flexDirection={{ xs: "column-reverse", md: "row" }}
+        flexDirection={{ xs: "column", md: "row" }}
         gap={2}
       >
         <Box width="100%" display="flex" flexDirection="column" gap={3}>
@@ -105,14 +104,8 @@ export default function HistoriasClinicasPage({ theme }) {
               setAfiliadoInputValue(newInputValue);
             }}
             onChange={(event, newValue) => {
-              setSelectedAfiliado(newValue);
-              if (newValue) {
-                setAfiliadoInputValue(`${newValue.nombres} ${newValue.apellidos} (${newValue.dni})`);
-              } else {
-                setAfiliadoInputValue("");
-              }
+              handleSeleccionAfiliado(newValue);
             }}
-            onKeyDown={onKeyDown}
             value={selectedAfiliado}
             loading={isAfiliadoLoading}
             loadingText="Buscando..."
@@ -142,21 +135,9 @@ export default function HistoriasClinicasPage({ theme }) {
               color="primary"
               sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
               onClick={handleLimpiar}
-              disabled={!afiliadoInputValue.trim() && (!historiasClinicas || historiasClinicas.length === 0)}
+              disabled={!afiliadoInputValue && !selectedAfiliado}
             >
               Limpiar
-            </Button>
-
-            <Button
-              variant="contained"
-  
-              color="primary"
-              sx={{ fontSize: { xs: "16px", sm: "20px", md: "22px" }, width: { xs: "100%", sm: "fit-content" } }}
-              onClick={handleBuscar}
-              disabled={afiliadoInputValue.trim().length < 3}
-            >
-              Buscar
-              <Search sx={{ ml: 1 }} />
             </Button>
           </Box>
         </Box>
@@ -177,13 +158,15 @@ export default function HistoriasClinicasPage({ theme }) {
                 </TableHead>
                 <TableBody>
                   <TableRow>
-                    <TableCell colSpan={4} align="center">No hay resultados</TableCell>
+                    <TableCell colSpan={4} align="center">No hay resultados para el afiliado seleccionado.</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
           ) : (
             (() => {
+              if (!historiasClinicas) return null;
+
               const titularesPorId = (historiasClinicas || []).reduce((map, r) => {
                 const socio = r.socio;
                 if (socio && socio.rol === 'Titular') {
@@ -221,3 +204,4 @@ export default function HistoriasClinicasPage({ theme }) {
     </Container>
   );
 }
+
