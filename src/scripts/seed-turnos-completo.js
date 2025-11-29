@@ -78,11 +78,11 @@ function sampleDays(year, month, count, diasMes) {
   }
   console.log(`👥 Socios activos encontrados: ${socios.length}\n`);
 
-  // PASO 3: Obtener médicos activos con sus sedes de trabajo
+  // PASO 3: Obtener médicos activos con sus sedes
   const medicos = await Prestador.find({
     es_centro_medico: false,
     estado: /Activo/i
-  }).populate('sedes_trabajo').lean();
+  }).populate('sedes').lean();
 
   if (!medicos.length) {
     console.log("⚠️ No hay médicos activos en la base.");
@@ -116,9 +116,9 @@ function sampleDays(year, month, count, diasMes) {
 
     // Determinar sede y centro del médico
     let sedeDelMedico, centroDelMedico;
-    if (m.sedes_trabajo && m.sedes_trabajo.length > 0) {
-      // Usar la primera sede de trabajo del médico
-      const sedeCompleta = m.sedes_trabajo[0];
+    if (m.sedes && m.sedes.length > 0) {
+      // Usar la primera sede del médico
+      const sedeCompleta = m.sedes[0];
       sedeDelMedico = sedeCompleta._id || sedeCompleta;
       // Buscar la sede en el array de sedes activas para obtener el centro
       const sedeConCentro = sedesActivas.find(s => String(s._id) === String(sedeDelMedico));

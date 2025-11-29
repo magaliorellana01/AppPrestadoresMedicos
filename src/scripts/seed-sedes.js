@@ -126,7 +126,7 @@ async function seedSedes() {
           .slice(0, numSedes);
 
         await Prestador.findByIdAndUpdate(medico._id, {
-          sedes_trabajo: sedesAsignadas.map((s) => s._id),
+          sedes: sedesAsignadas.map((s) => s._id),
         });
 
         console.log(

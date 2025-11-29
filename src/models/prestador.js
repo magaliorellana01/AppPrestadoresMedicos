@@ -64,6 +64,13 @@ const prestadorSchema = new mongoose.Schema({
     enum: ["Activo", "Inactivo"],
     default: "Activo",
   },
+  // Sedes asociadas al prestador:
+  // - Si es centro médico: sedes que le pertenecen
+  // - Si es médico: sedes donde trabaja
+  sedes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Sede"
+  }],
   fecha_creacion: {
     type: Date,
     default: Date.now,
