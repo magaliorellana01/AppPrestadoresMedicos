@@ -291,6 +291,9 @@ export default function TurnosPage() {
   const turnosDelDia = useMemo(() => {
     return turnos
       .filter((t) => {
+        // Solo mostrar turnos reservados
+        if (t.estado !== "reservado") return false;
+
         // Filtro por fecha
         if (t.fecha !== fechaSeleccionada) return false;
 
@@ -324,15 +327,36 @@ export default function TurnosPage() {
     }));
   }, [turnosDelDia, medicoNombreById]);
 
-  // Agrupación para el calendario
+  // Turnos filtrados para el calendario (aplica filtros de sede y especialidad)
+  const turnosFiltradosParaCalendario = useMemo(() => {
+    return turnos.filter((t) => {
+      // Solo mostrar turnos reservados
+      if (t.estado !== "reservado") return false;
+
+      // Filtro por sede
+      if (role === "CENTRO" && sedeSeleccionada && t.sedeId !== sedeSeleccionada) return false;
+      if (role === "MEDICO" && filters.sedeId && t.sedeId !== filters.sedeId) return false;
+
+      // Filtro por especialidad
+      if (filters.especialidad && t.especialidad !== filters.especialidad) return false;
+
+      // Filtro por rango horario (para centros)
+      if (role === "CENTRO" && filters.horaDesde && t.hora < filters.horaDesde) return false;
+      if (role === "CENTRO" && filters.horaHasta && t.hora > filters.horaHasta) return false;
+
+      return true;
+    });
+  }, [turnos, role, sedeSeleccionada, filters]);
+
+  // Agrupación para el calendario (usa turnos filtrados)
   const turnosByDate = useMemo(() => {
     const map = {};
-    for (const t of turnos) (map[t.fecha] ||= []).push(t);
+    for (const t of turnosFiltradosParaCalendario) (map[t.fecha] ||= []).push(t);
     Object.values(map).forEach((arr) =>
       arr.sort((a, b) => a.hora.localeCompare(b.hora))
     );
     return map;
-  }, [turnos]);
+  }, [turnosFiltradosParaCalendario]);
 
   useEffect(() => {
     if (!listaRef.current) return;
