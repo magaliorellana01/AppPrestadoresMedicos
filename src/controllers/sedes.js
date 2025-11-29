@@ -217,9 +217,9 @@ exports.asignarMedico = async (req, res) => {
       }
     }
 
-    // Agregar sede al array de sedes_trabajo del médico
+    // Agregar sede al array de sedes del médico
     await Prestador.findByIdAndUpdate(medicoId, {
-      $addToSet: { sedes_trabajo: sedeId },
+      $addToSet: { sedes: sedeId },
     });
 
     res.json({ message: "Médico asignado a sede correctamente" });
@@ -250,9 +250,9 @@ exports.desasignarMedico = async (req, res) => {
       }
     }
 
-    // Remover sede del array de sedes_trabajo del médico
+    // Remover sede del array de sedes del médico
     await Prestador.findByIdAndUpdate(medicoId, {
-      $pull: { sedes_trabajo: sedeId },
+      $pull: { sedes: sedeId },
     });
 
     res.json({ message: "Médico desasignado de sede correctamente" });
