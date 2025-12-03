@@ -130,13 +130,14 @@ export const login = async (cuit, password) => {
 };
 
 // Solicitudes - listado con filtros y paginación
-export const getSolicitudesFiltradas = async ({ page, size, estado, tipo }) => {
+export const getSolicitudesFiltradas = async ({ page, size, estado, tipo, vista }) => {
   const response = await api.get(`/filtro-solicitudes`, {
     params: {
       page,
       size,
       ...(estado ? { estado } : {}),
       ...(tipo ? { tipo } : {}),
+      ...(vista ? { vista } : {}),
     },
   });
   return response.data;

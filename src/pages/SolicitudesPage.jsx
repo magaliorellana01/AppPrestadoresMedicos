@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, Container, Grid, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Box, Typography, Button, Container, Grid, MenuItem, Select, FormControl, InputLabel, Paper, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TablaGenerica from "../components/TablaGenerica";
+import ViewListIcon from '@mui/icons-material/ViewList';
+import GroupIcon from '@mui/icons-material/Group';
 import ComponenteDeEstados from "../components/EstadosComponente";
 import { getSolicitudesFiltradas } from "../services";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -12,7 +14,7 @@ const estadosOpciones = [
   { label: 'Recibido', value: 'Recibido' },
   { label: 'En Análisis', value: 'En Análisis' },
   { label: ' Observado', value: 'Observado' },
-  { label: 'Aprobado', value: 'Aprobado' }, 
+  { label: 'Aprobado', value: 'Aprobado' },
   { label: 'Rechazado', value: 'Rechazado' },
 ];
 
@@ -49,9 +51,12 @@ const SolicitudesPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tipoFiltro, setTipoFiltro] = useState('');
-  const [estadoFiltro, setEstadoFiltro] = useState('Todas'); 
+  const [estadoFiltro, setEstadoFiltro] = useState('Todas');
+  const [vistaActual, setVistaActual] = useState('propia');
   const navigate = useNavigate();
   const location = useLocation();
+  const usuarioLogueado = JSON.parse(sessionStorage.getItem("prestador") || "{}");
+  const esCentroMedico = usuarioLogueado?.es_centro_medico;
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -61,6 +66,7 @@ const SolicitudesPage = () => {
         size: rowsPerPage,
         estado: estadoFiltro,
         tipo: tipoFiltro,
+        vista: esCentroMedico ? vistaActual : undefined
       });
       setData(json.content || []);
       setCount(json.total || 0);
@@ -72,8 +78,19 @@ const SolicitudesPage = () => {
   };
 
   useEffect(() => {
+    setPage(0);
+  }, [vistaActual]);
+
+  useEffect(() => {
     fetchData();
-  }, [page, rowsPerPage, estadoFiltro, tipoFiltro, location.key]);
+  }, [page, rowsPerPage, estadoFiltro, tipoFiltro, vistaActual, location.key]);
+
+
+  const handleVistaChange = (event, newVista) => {
+    if (newVista !== null) {
+      setVistaActual(newVista);
+    }
+  };
 
   return (
     <Container maxWidth={false} sx={{ mt: 4, mb: 8 }}>
@@ -88,6 +105,50 @@ const SolicitudesPage = () => {
           Ver Dashboard
         </Button>
       </Box>
+
+      {/* esto es solo visible para el cntro medico */}
+      {esCentroMedico && (
+        <Paper elevation={0} sx={{ mb: 3, bgcolor: 'transparent' }}>
+          <ToggleButtonGroup
+            value={vistaActual}
+            exclusive
+            onChange={handleVistaChange}
+            aria-label="Vistas de solicitud"
+            size="small"
+            sx={{
+              bgcolor: 'white',
+              boxShadow: 1,
+              '& .MuiToggleButton-root': {
+                textTransform: 'none',
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                border: '1px solid #e0e0e0'
+              },
+              '& .Mui-selected': {
+                bgcolor: '#1976d2 !important',
+                color: 'white !important',
+                borderColor: '#1976d2 !important'
+              }
+            }}
+          >
+            <ToggleButton value="propia">
+              <ViewListIcon sx={{ mr: 1, fontSize: 20 }} />
+              Mi Bandeja
+            </ToggleButton>
+            <ToggleButton value="equipo">
+              <GroupIcon sx={{ mr: 1, fontSize: 20 }} />
+              Equipo Médico
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          <Typography variant="caption" display="block" sx={{ mt: 1, ml: 1, color: 'text.secondary' }}>
+            {vistaActual === 'propia'
+              ? 'Viendo: Solicitudes libres y asignadas al Centro.'
+              : `Viendo: Solicitudes gestionadas por los médicos de ${usuarioLogueado.nombres || 'su centro'}.`}
+          </Typography>
+        </Paper>
+      )}
 
       <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} sx={{ mb: 4 }}>
         <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }} variant="outlined">
@@ -117,8 +178,14 @@ const SolicitudesPage = () => {
             onPageChange={(e, p) => setPage(p)}
             onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
             keyFor={keyForSolicitudes}
-            onRowClick={(row) => navigate(`/solicitudes/${row._id}`)} 
+            onRowClick={(row) => navigate(`/solicitudes/${row._id}`)}
           />}
+        {/* Mensaje de ayuda si el filtro visual vacía la tabla */}
+        {!isLoading && data.length > 0 && data.length === 0 && (
+          <Typography align="center" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
+            No hay solicitudes en esta pestaña. Prueba cambiando a "{vistaActual === 'propia' ? 'Equipo Médico' : 'Mi Bandeja'}" o revisa otra página.
+          </Typography>
+        )}
       </Box>
     </Container>
   );
