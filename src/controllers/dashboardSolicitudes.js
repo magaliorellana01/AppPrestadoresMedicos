@@ -1,20 +1,18 @@
 const Solicitud = require('../models/solicitud');
-const Prestador = require('../models/prestador');
 
 /**
  * Obtener estadísticas del dashboard de solicitudes
  * Query params:
  * - fechaDesde: fecha inicio (ISO)
  * - fechaHasta: fecha fin (ISO)
- * - prestadorId: ID del prestador logeado
  */
 exports.getDashboardStats = async (req, res) => {
   try {
-    const { fechaDesde, fechaHasta, prestadorId } = req.query;
+    const { fechaDesde, fechaHasta } = req.query;
 
-    if (!fechaDesde || !fechaHasta || !prestadorId) {
+    if (!fechaDesde || !fechaHasta || !req.prestador._id) {
       return res.status(400).json({
-        message: 'Faltan parámetros requeridos: fechaDesde, fechaHasta, prestadorId'
+        message: 'Faltan parámetros requeridos: fechaDesde, fechaHasta, prestador'
       });
     }
 
@@ -23,16 +21,10 @@ exports.getDashboardStats = async (req, res) => {
     const hasta = new Date(fechaHasta);
     hasta.setHours(23, 59, 59, 999); // Incluir todo el día final
 
-    // Buscar el prestador para saber si es centro médico o médico individual
-    const prestador = await Prestador.findById(prestadorId);
-    if (!prestador) {
-      return res.status(404).json({ message: 'Prestador no encontrado' });
-    }
-
     // Construir filtro base  
     let filtroBase = {};
 
-    filtroBase.prestadorAsignado = prestadorId;
+    filtroBase.prestadorAsignado = req.prestador._id;
 
     // === 1. PENDIENTES (sin filtro de fecha, solo estados no resueltos) ===
     const pendientes = await Solicitud.countDocuments({
