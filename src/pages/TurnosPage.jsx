@@ -442,6 +442,9 @@ export default function TurnosPage() {
 
   return (
     <Container maxWidth={false} sx={{ mt: 4, mb: 8 }}>
+      <Typography variant="h4" color="primary" mb={4}>
+        Turnos
+      </Typography>
       {flash && <Alert severity="success" sx={{ mb: 2 }}>{flash}</Alert>}
 
       {/* Botón de calendario en mobile - arriba a la derecha */}
@@ -613,8 +616,10 @@ export default function TurnosPage() {
         anchor="right"
         open={isMobile && calendarDrawerOpen}
         onClose={() => setCalendarDrawerOpen(false)}
+        variant="temporary"
+        PaperProps={{ sx: { width: '100vw', maxWidth: '100vw' } }}
       >
-        <Box sx={{ width: 340, p: 2 }}>
+        <Box sx={{ width: '100vw', p: 2 }}>
           <CalendarMonth
             currentDate={currentDate}
             onPrev={() =>

@@ -71,7 +71,6 @@ export function TopMenu({ theme }) {
           backgroundColor: theme.color.primary,
           pl: { xs: 2, md: 2, lg: 3, xl: 4 },
           pr: { xs: 2, md: 2, lg: 3, xl: 4 },
-          width: "100%",
           flexWrap: "nowrap"
         }}
       >
@@ -153,9 +152,11 @@ export function TopMenu({ theme }) {
         anchor="right"
         open={drawerOpen}
         onClose={toggleDrawer(false)}
+        variant="temporary"
+        PaperProps={{ sx: { width: '100vw', maxWidth: '100vw' } }}
       >
         <Box
-          sx={{ width: 280, backgroundColor: theme.color.primary, height: '100%', color: 'white' }}
+          sx={{ width: '100vw', backgroundColor: theme.color.primary, height: '100%', color: 'white' }}
           role="presentation"
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
