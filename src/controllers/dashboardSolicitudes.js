@@ -20,45 +20,93 @@ exports.getDashboardStats = async (req, res) => {
     const desde = new Date(fechaDesde);
     const hasta = new Date(fechaHasta);
     hasta.setHours(23, 59, 59, 999); // Incluir todo el día final
+    // Validaciones de fechas
+    if (isNaN(desde.getTime()) || isNaN(hasta.getTime())) {
+      return res.status(400).json({ message: 'Fechas inválidas: use formato ISO' });
+    }
+    if (desde > hasta) {
+      return res.status(400).json({ message: 'fechaDesde no puede ser mayor que fechaHasta' });
+    }
 
     // Construir filtro base  
     let filtroBase = {};
 
     filtroBase.prestadorAsignado = req.prestador._id;
 
-    // === 1. PENDIENTES (sin filtro de fecha, solo estados no resueltos) ===
+    // === 1. PENDIENTES (sin filtro de fecha)
+    // - Asignadas al prestador actual y no resueltas
+    // - O en estado "Recibido" y aún sin asignación
     const pendientes = await Solicitud.countDocuments({
-      ...filtroBase,
-      estado: { $nin: ['Aprobado', 'Rechazado'] }
+      $or: [
+        {
+          prestadorAsignado: req.prestador._id,
+          estado: { $nin: ['Aprobado', 'Rechazado'] }
+        },
+        {
+          estado: 'Recibido',
+          prestadorAsignado: { $exists: false }
+        }
+      ]
     });
 
     // === 2. RESUELTAS en el rango de fechas ===
     const filtroResueltas = {
       ...filtroBase,
-      // La condición principal es que una resolución ocurriera en el rango de fechas.
-      // El estado final del ticket puede haber cambiado, pero para el dashboard,
-      // cuenta como "resuelta" en ese período.
-      'historialEstados': {
-        $elemMatch: {
+      // Considerar como resueltas si:
+      // a) Hay un evento de Aprobado/Rechazado en historial dentro del rango, o
+      // b) No hay evento de historial pero el estado final es Aprobado/Rechazado y la fecha de actualización cae en el rango
+      $or: [
+        {
+          historialEstados: {
+            $elemMatch: {
+              estado: { $in: ['Aprobado', 'Rechazado'] },
+              fecha: { $gte: desde, $lte: hasta }
+            }
+          }
+        },
+        {
           estado: { $in: ['Aprobado', 'Rechazado'] },
-          fecha: { $gte: desde, $lte: hasta }
+          $or: [
+            { fechaActualizacion: { $gte: desde, $lte: hasta } },
+            { updatedAt: { $gte: desde, $lte: hasta } }
+          ]
         }
-      }
+      ]
     };
 
     const solicitudesResueltas = await Solicitud.find(filtroResueltas)
-      .select('estado tipo fechaCreacion historialEstados monto')
+      .select('estado tipo fechaCreacion fechaActualizacion updatedAt historialEstados monto')
       .lean();
 
-    // Para consistencia, adjuntamos a cada solicitud su evento de resolución más reciente DENTRO DEL RANGO
+    // Para consistencia, adjuntamos a cada solicitud su evento de resolución más reciente DENTRO DEL RANGO.
+    // Si no hay evento en historial, usamos el estado final con fechaActualizacion/updatedAt en el rango.
     solicitudesResueltas.forEach(sol => {
-      sol.resolucionEnRango = sol.historialEstados
-        .filter(h =>
-          (h.estado === 'Aprobado' || h.estado === 'Rechazado') &&
-          new Date(h.fecha) >= desde &&
-          new Date(h.fecha) <= hasta
-        )
-        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]; // Más reciente en el rango
+      const cambiosEnRango = (sol.historialEstados || []).filter(h =>
+        (h.estado === 'Aprobado' || h.estado === 'Rechazado') &&
+        new Date(h.fecha) >= desde &&
+        new Date(h.fecha) <= hasta
+      );
+      const cambioHistorialMasReciente = cambiosEnRango
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+
+      if (cambioHistorialMasReciente) {
+        sol.resolucionEnRango = cambioHistorialMasReciente;
+        return;
+      }
+
+      // Fallback: sin historial en rango, pero el estado final es resuelto y la fecha de actualización cae en el rango
+      const fechaActualizacion = sol.fechaActualizacion || sol.updatedAt;
+      if (
+        (sol.estado === 'Aprobado' || sol.estado === 'Rechazado') &&
+        fechaActualizacion &&
+        new Date(fechaActualizacion) >= desde &&
+        new Date(fechaActualizacion) <= hasta
+      ) {
+        sol.resolucionEnRango = {
+          estado: sol.estado,
+          fecha: fechaActualizacion
+        };
+      }
     });
 
     const totalResueltas = solicitudesResueltas.length;
