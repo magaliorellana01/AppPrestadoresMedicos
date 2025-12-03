@@ -6,41 +6,51 @@ exports.getSolicitudes = async (req, res) => {
     try {
         const page = Math.max(0, parseInt(req.query.page, 10) || 0);
         const size = Math.max(1, parseInt(req.query.size, 10) || 10);
-        const { estado, tipo } = req.query;
+        
+     
+        const { estado, tipo, vista } = req.query;
         const prestador = req.prestador;
 
-        
+
         const baseClauses = [];
 
-        baseClauses.push({
-            tipo: 'Receta',
+        
+        const solicitudesLibresClause = {
             estado: 'Recibido',
-            prestadorAsignado: { $exists: false}
-        })
+            prestadorAsignado: { $exists: false }
+        };
 
-       
         let scopedClause;
+
         if (prestador.es_centro_medico) {
-            
+            // Buscamos a los médicos del centro
             const sedes = await Sede.find({ centro_medico_id: prestador._id }).select('_id');
             const sedeIds = sedes.map(s => s._id);
             const medicos = await Prestador.find({ es_centro_medico: false, sedes: { $in: sedeIds } }).select('_id');
-            const personalIds = medicos.map(m => m._id);
-            personalIds.push(prestador._id);  
+            const idsSoloMedicos = medicos.map(m => m._id);
 
-            scopedClause = {
-                prestadorAsignado: { $in: personalIds }
-            };
+            if (vista === 'equipo') {
+                scopedClause = {
+                    prestadorAsignado: { $in: idsSoloMedicos }
+                };
+            } else {
+                baseClauses.push(solicitudesLibresClause);
+                scopedClause = {
+                    prestadorAsignado: prestador._id
+                };
+            }
+
         } else {
+            baseClauses.push(solicitudesLibresClause);
             scopedClause = {
                 prestadorAsignado: prestador._id
             };
         }
+
         baseClauses.push(scopedClause);
         
         const securityFilter = { $or: baseClauses };
 
-        
         const finalFilterClauses = [securityFilter];
         if (estado && estado !== 'Todas') {
             finalFilterClauses.push({ estado: estado });
@@ -78,6 +88,7 @@ exports.getSolicitudes = async (req, res) => {
                     tipo: 1,
                     estado: 1,
                     fechaCreacion: 1,
+                    prestadorAsignado: 1
                 }
             }
         ];
