@@ -364,6 +364,7 @@ export default function DetalleSituacionTerapeutica() {
                                 color="primary"
                                 sx={{ width: "100%", fontSize: { xs: "14px", sm: "16px" } }}
                                 onClick={handleAgregarNovedad}
+                                disabled={!nuevaNovedad.trim()}
                             >
                                 Agregar Novedad
                             </Button>

@@ -118,11 +118,6 @@ export const updateSolicitud = async (id, updateData) => {
   return response.data;
 };
 
-export const uploadArchivosSolicitud = async (id, formData) => {
-  const response = await api.post(`/solicitud/${id}/archivos`, formData);
-  return response.data;
-};
-
 export const login = async (cuit, password) => {
   const response = await api.post(`/prestador/login`, { cuit, password });
   // Si el backend devuelve token, lo persistimos
