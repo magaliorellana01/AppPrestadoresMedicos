@@ -40,8 +40,8 @@ const MEDICO_DEMO = {
   ciudad: "Buenos Aires",
   provincia: "Buenos Aires",
   especialidades: ["Cardiología", "Clínica Médica", "Medicina Interna"],
-  cuit: "20111111111",
-  password: "demo1234",
+  cuit: "11111111111",
+  password: "123",
   matricula: "MN-DEMO-001",
   es_centro_medico: false,
   estado: "Activo"
@@ -65,8 +65,8 @@ const CENTRO_MEDICO_DEMO = {
     "Medicina General",
     "Oftalmología"
   ],
-  cuit: "30222222222",
-  password: "centro1234",
+  cuit: "22222222222",
+  password: "123",
   matricula: "CM-DEMO-001",
   es_centro_medico: true,
   estado: "Activo"
@@ -276,7 +276,7 @@ async function crearPrestadoresDemo() {
       medico = await Prestador.create(MEDICO_DEMO);
       console.log(`✅ Médico individual creado: Dr. ${medico.nombres} ${medico.apellidos}`);
       console.log(`   📧 Email: ${medico.email}`);
-      console.log(`   🔑 CUIT: ${medico.cuit} | Password: demo1234`);
+      console.log(`   🔑 CUIT: ${medico.cuit} | Password: 123`);
       console.log(`   📋 Especialidades: ${medico.especialidades.join(", ")}`);
       prestadoresCreados.medicoIndividual = medico;
     }
@@ -294,7 +294,7 @@ async function crearPrestadoresDemo() {
       centro = await Prestador.create(CENTRO_MEDICO_DEMO);
       console.log(`\n✅ Centro médico creado: ${centro.nombres}`);
       console.log(`   📧 Email: ${centro.email}`);
-      console.log(`   🔑 CUIT: ${centro.cuit} | Password: centro1234`);
+      console.log(`   🔑 CUIT: ${centro.cuit} | Password: 123`);
       prestadoresCreados.centroMedico = centro;
     }
   } catch (error) {
@@ -966,7 +966,7 @@ async function seedDemo() {
     console.log("│ MÉDICO INDIVIDUAL                                       │");
     console.log("├─────────────────────────────────────────────────────────┤");
     console.log(`│ CUIT: ${MEDICO_DEMO.cuit}                                │`);
-    console.log(`│ Password: demo1234                                      │`);
+    console.log(`│ Password: 123                                      │`);
     console.log(`│ Email: ${MEDICO_DEMO.email}              │`);
     console.log("└─────────────────────────────────────────────────────────┘");
 
@@ -974,7 +974,7 @@ async function seedDemo() {
     console.log("│ CENTRO MÉDICO                                           │");
     console.log("├─────────────────────────────────────────────────────────┤");
     console.log(`│ CUIT: ${CENTRO_MEDICO_DEMO.cuit}                                │`);
-    console.log(`│ Password: centro1234                                    │`);
+    console.log(`│ Password: 123                                    │`);
     console.log(`│ Email: ${CENTRO_MEDICO_DEMO.email}           │`);
     console.log("└─────────────────────────────────────────────────────────┘");
 
