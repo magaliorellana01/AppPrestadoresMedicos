@@ -1,6 +1,7 @@
 const Solicitud = require('../models/solicitud');
 const Socio = require('../models/socio');
 const Prestador = require('../models/prestador');
+const Sede = require('../models/sede');
 
 const calcularEdadNumerica = (fechaNacimiento) => {
   if (!fechaNacimiento) return null;
@@ -115,32 +116,79 @@ exports.updateSolicitud = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado: nuevoEstado, motivo } = req.body;
-    const prestadorId = req.prestador._id;
-
-    const estadosValidos = ['Recibido', 'En Análisis', 'Observado', 'Aprobado', 'Rechazado'];
-    if (!estadosValidos.includes(nuevoEstado)) return res.status(400).json({ message: 'Estado no válido' });
-    if ((nuevoEstado === 'Observado' || nuevoEstado === 'Rechazado') && !motivo) return res.status(400).json({ message: 'Motivo obligatorio' });
+    const prestador = req.prestador;
 
     const solicitud = await Solicitud.findById(id);
     if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
 
     
+    if (solicitud.estado === 'Aprobado' || solicitud.estado === 'Rechazado') {
+      return res.status(400).json({ message: `La solicitud ya está en estado '${solicitud.estado}' y no puede ser modificada.` });
+    }
+
+    const estadosValidos = ['Recibido', 'En Análisis', 'Observado', 'Aprobado', 'Rechazado'];
+    if (!estadosValidos.includes(nuevoEstado)) return res.status(400).json({ message: 'Estado no válido' });
+    
+    
+    if (nuevoEstado === 'Rechazado' && !motivo) {
+      return res.status(400).json({ message: 'Para rechazar una solicitud, el motivo es obligatorio.' });
+    }
+    if (nuevoEstado === 'Observado' && !motivo) {
+      return res.status(400).json({ message: 'Para observar una solicitud, el motivo es obligatorio.' });
+    }
+    
+    let hasPermission = false;
+
+    if (solicitud.tipo === 'Receta') {
+        hasPermission = true;
+    } else { 
+        if (prestador.es_centro_medico) {
+            
+            if (!solicitud.prestadorAsignado) {
+                hasPermission = true; 
+            } else if (solicitud.prestadorAsignado.toString() === prestador._id.toString()) {
+                hasPermission = true; 
+            } else {
+                
+                const sedes = await Sede.find({ centro_medico_id: prestador._id }).select('_id');
+                const sedeIds = sedes.map(s => s._id);
+                const medicoAsignado = await Prestador.findOne({
+                    _id: solicitud.prestadorAsignado,
+                    es_centro_medico: false,
+                    sedes: { $in: sedeIds }
+                });
+                if (medicoAsignado) {
+                    hasPermission = true;
+                }
+            }
+        } else {
+         
+            if (!solicitud.prestadorAsignado) {
+                hasPermission = true; 
+            } else if (solicitud.prestadorAsignado.toString() === prestador._id.toString()) {
+                hasPermission = true; 
+            }
+        }
+    }
+
+    if (!hasPermission) {
+        return res.status(403).json({ message: "No tienes permisos para modificar esta solicitud." });
+    }
+    
+
     if (nuevoEstado === solicitud.estado) {
       return res.json({ message: 'No se detectaron cambios en el estado. No se guardó historial.', solicitud });
     }
-
-    if (solicitud.prestadorAsignado && solicitud.prestadorAsignado.toString() !== prestadorId.toString()) {
-      return res.status(403).json({ message: "Esta solicitud está siendo gestionada por otro prestador. No tienes permisos para modificarla." });
-    }
-
+    
     const transiciones = {
         'Recibido': ['En Análisis'],
         'En Análisis': ['Observado', 'Aprobado', 'Rechazado', 'Recibido'], 
         'Observado': ['Aprobado', 'Rechazado', 'En Análisis', 'Recibido'],
-        'Aprobado': [],
-        'Rechazado': [] 
+        'Aprobado': [], 
+        'Rechazado': []  
     };
 
+    
     if (!transiciones[solicitud.estado]?.includes(nuevoEstado)) {
         return res.status(400).json({ message: `Transición de estado no permitida: de '${solicitud.estado}' a '${nuevoEstado}'.` });
     }
@@ -154,7 +202,7 @@ exports.updateSolicitud = async (req, res) => {
     const nuevoHistorial = {
         estado: nuevoEstado,
         motivo: descripcionCambio,
-        usuario: prestadorId,
+        usuario: prestador._id,
         fecha: new Date()
     };
 
@@ -162,7 +210,7 @@ exports.updateSolicitud = async (req, res) => {
     if (nuevoEstado === 'Recibido') {
       solicitud.prestadorAsignado = undefined;
     } else if (!solicitud.prestadorAsignado) {
-      solicitud.prestadorAsignado = prestadorId;
+      solicitud.prestadorAsignado = prestador._id;
     }
     if (!Array.isArray(solicitud.historialEstados)) {
         solicitud.historialEstados = [];
