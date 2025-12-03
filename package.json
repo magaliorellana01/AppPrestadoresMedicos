@@ -13,8 +13,9 @@
     "seed-sit-terapeuticas": "node src/scripts/seed-sit-terapeuticas.js",
     "seed-solicitudes": "node src/scripts/seed-solicitudes.js",
     "seed-turnos-completo": "node src/scripts/seed-turnos-completo.js",
-    "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas && npm run seed-sit-terapeuticas && npm run seed-solicitudes  && npm run seed-turnos-completo",
-    "seed-demo": "node src/scripts/seed-demo.js"
+    "seed-all": "npm run seed-prestadores && npm run seed && npm run seed-notas && npm run seed-sit-terapeuticas && npm run seed-solicitudes  && npm run seed-turnos-completo && npm run seed-demo && npm run seed-dashboard",
+    "seed-demo": "node src/scripts/seed-demo.js",
+    "seed-dashboard": "node src/scripts/seed-dashboard-solicitudes.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -679,7 +679,7 @@ async function crearSolicitudesDemo(prestadores) {
     const fechaCreacion = generarFechaAleatoria(90, 0); // Últimos 90 días
 
     const solicitud = {
-      nro: `DEMO-${Date.now()}-${i}`,
+      nro: `${Date.now()}-${i}`,
       afiliadoNombre: `${socio.nombres} ${socio.apellidos}`,
       afiliadoId: socio._id,
       tipo,
