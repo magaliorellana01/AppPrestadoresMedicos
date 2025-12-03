@@ -2,8 +2,8 @@ import axios from "axios";
 
 // Eliminar el token y limpiar estado simple
 export const logoutUser = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("prestador");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("prestador");
 };
 
 // Instancia de Axios
@@ -14,7 +14,7 @@ const api = axios.create({
 // Interceptor de solicitud: adjunta Authorization si hay token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       config.headers = config.headers || {};
       config.headers.authorization = `Bearer ${token}`;
@@ -128,7 +128,7 @@ export const login = async (cuit, password) => {
   // Si el backend devuelve token, lo persistimos
   const token = response?.data?.accessToken || response?.data?.token;
   if (token) {
-    localStorage.setItem("token", token);
+    sessionStorage.setItem("token", token);
     api.defaults.headers.common.authorization = `Bearer ${token}`;
   }
   return response.data;
@@ -200,9 +200,9 @@ export const asignarMedicoSede = async (sedeId, medicoId) => {
 };
 
 // DASHBOARD SOLICITUDES API
-export const getDashboardStats = async (fechaDesde, fechaHasta, prestadorId) => {
+export const getDashboardStats = async (fechaDesde, fechaHasta) => {
   const { data } = await api.get(`/solicitud/dashboard/stats`, {
-    params: { fechaDesde, fechaHasta, prestadorId }
+    params: { fechaDesde, fechaHasta }
   });
   return data;
 };

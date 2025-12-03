@@ -45,15 +45,6 @@ const DashboardSolicitudesPage = () => {
       setLoading(true);
       setError(null);
 
-      // Obtener prestador del localStorage
-      const prestadorStr = localStorage.getItem('prestador');
-      if (!prestadorStr) {
-        throw new Error('No hay sesión activa');
-      }
-
-      const prestador = JSON.parse(prestadorStr);
-      const prestadorId = prestador._id;
-
       // Calcular fechas
       const fechaHasta = new Date();
       const fechaDesde = new Date();
@@ -64,7 +55,7 @@ const DashboardSolicitudesPage = () => {
       const fechaHastaISO = fechaHasta.toISOString();
 
       // Llamar al servicio
-      const data = await getDashboardStats(fechaDesdeISO, fechaHastaISO, prestadorId);
+      const data = await getDashboardStats(fechaDesdeISO, fechaHastaISO);
       setStats(data);
     } catch (err) {
       console.error('Error cargando stats:', err);

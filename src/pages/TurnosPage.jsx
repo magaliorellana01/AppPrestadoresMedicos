@@ -24,7 +24,7 @@ import {
 
 function usePerfilLocalStorage() {
   try {
-    return JSON.parse(localStorage.getItem("perfil") || "{}");
+    return JSON.parse(sessionStorage.getItem("perfil") || "{}");
   } catch {
     return {};
   }
@@ -65,10 +65,10 @@ export default function TurnosPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
-  // Perfil del usuario logueado (localStorage del login del backend)
+  // Perfil del usuario logueado (sessionStorage del login del backend)
   const prestador = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("prestador") || "{}");
+      return JSON.parse(sessionStorage.getItem("prestador") || "{}");
     } catch {
       return {};
     }

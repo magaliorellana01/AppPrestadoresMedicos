@@ -14,7 +14,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const [openModal, setOpenModal] = useState(false);
   const [situacionesTerapeuticas, setSituacionesTerapeuticas] = useState(null);
   const [filtro, setFiltro] = useState("todas");
-  const prestadorLogueadoId = JSON.parse(localStorage.getItem("prestador"))?._id;
+  const prestadorLogueadoId = JSON.parse(sessionStorage.getItem("prestador"))?._id;
 
   // Estados para el Autocomplete
   const [afiliadoOptions, setAfiliadoOptions] = useState([]);

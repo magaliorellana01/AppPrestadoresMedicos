@@ -20,7 +20,7 @@ const LoginPage = ({ theme }) => {
   const [password, setPassword] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const navigate = useNavigate();
-  const prestador = JSON.parse(localStorage.getItem('prestador'));
+  const prestador = JSON.parse(sessionStorage.getItem('prestador'));
 
   const handleChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -47,8 +47,8 @@ const LoginPage = ({ theme }) => {
   const handleLogin = async () => {
     try {
       const response = await login(cuit, password);
-      localStorage.setItem('token', response.accessToken);
-      localStorage.setItem('prestador', JSON.stringify(response.prestador));
+      sessionStorage.setItem('token', response.accessToken);
+      sessionStorage.setItem('prestador', JSON.stringify(response.prestador));
       setSnackbar({ open: true, message: "Bienvenido", severity: "success" });
       navigate('/solicitudes');
     } catch (error) {
@@ -58,8 +58,8 @@ const LoginPage = ({ theme }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('prestador');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('prestador');
     window.location.reload();
   };
 

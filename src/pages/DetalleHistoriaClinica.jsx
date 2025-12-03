@@ -69,7 +69,7 @@ export default function DetalleDeHistoriaClinica() {
   const socio = historiaClinicaData.socio;
   const notasBackend = historiaClinicaData.notas || [];
 
-  const usuarioActualId = JSON.parse(localStorage.getItem('prestador'))?._id;
+  const usuarioActualId = JSON.parse(sessionStorage.getItem('prestador'))?._id;
 
   const notasFiltradas =
     filtro === "mias"

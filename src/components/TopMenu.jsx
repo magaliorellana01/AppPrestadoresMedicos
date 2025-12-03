@@ -34,15 +34,15 @@ function MenuOption({ path, content, onClick }) {
 }
 
 export function TopMenu({ theme }) {
-  const prestador = JSON.parse(localStorage.getItem('prestador'));
+  const prestador = JSON.parse(sessionStorage.getItem('prestador'));
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('prestador');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('prestador');
     navigate('/login');
     setTimeout(() => {
       window.location.reload();
