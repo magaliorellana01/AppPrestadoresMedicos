@@ -12,11 +12,11 @@ exports.getSolicitudes = async (req, res) => {
         
         const baseClauses = [];
 
-        
-        baseClauses.push({ tipo: 'Receta' });
-        
-       
-        baseClauses.push({ estado: 'Recibido', prestadorAsignado: { $exists: false } });
+        baseClauses.push({
+            tipo: 'Receta',
+            estado: 'Recibido',
+            prestadorAsignado: { $exists: false}
+        })
 
        
         let scopedClause;
