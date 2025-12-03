@@ -2,10 +2,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { 
-  Box, Typography, Button, TextField, Snackbar, Alert, IconButton
+  Box, Typography, Button, TextField, Snackbar, Alert
 } from "@mui/material";
 import {
-  Description as DescriptionIcon,
   EditNote as EditNoteIcon,
   CheckBox as CheckBoxIcon,
   History as HistoryIcon
