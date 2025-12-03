@@ -81,7 +81,7 @@ export default function HistoriasClinicasPage({ theme }) {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
+    <Container maxWidth={false} sx={{ mt: 4, mb: 8 }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h4" color="primary">
           Historias Clínicas

@@ -441,7 +441,7 @@ export default function TurnosPage() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
+    <Container maxWidth={false} sx={{ mt: 4, mb: 8 }}>
       {flash && <Alert severity="success" sx={{ mb: 2 }}>{flash}</Alert>}
 
       {/* Botón de calendario en mobile - arriba a la derecha */}

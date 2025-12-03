@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const HomePage = ({ theme }) => {
   const navigate = useNavigate();
   return (
-    <Container maxWidth="md">
+    <Container maxWidth={false}>
       <Box
         sx={{
           display: "flex",

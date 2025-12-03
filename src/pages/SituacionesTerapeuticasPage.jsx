@@ -115,7 +115,7 @@ const SituacionesTerapeuticasPage = ({ theme }) => {
   const gruposFamiliares = Object.values(situacionesAgrupadasPorFamilia);
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
+    <Container maxWidth={false} sx={{ mt: 4, mb: 8 }}>
       <Typography variant="h4" color="primary" mb={4}>
         Situaciones Terapéuticas
       </Typography>

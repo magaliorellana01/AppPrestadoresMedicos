@@ -75,7 +75,7 @@ const DashboardSolicitudesPage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
           <CircularProgress size={60} />
         </Box>
@@ -85,7 +85,7 @@ const DashboardSolicitudesPage = () => {
 
   if (error) {
     return (
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
@@ -108,7 +108,7 @@ const DashboardSolicitudesPage = () => {
   }));
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 3, mb: 3, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth={false} sx={{ mt: 3, mb: 3, px: { xs: 2, sm: 3 } }}>
       {/* Título con botón de volver */}
       <Box mb={2} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'flex-start' }} gap={{ xs: 2, sm: 0 }}>
         <Box>
@@ -160,7 +160,7 @@ const DashboardSolicitudesPage = () => {
           <MetricCard
             title="Resueltas"
             value={resumen.resueltas}
-            subtitle={`Últimos ${rangoSeleccionado} días`}
+            subtitle={`Aprobadas y Rechazadas`}
             color="#4BAE72"
             icon={<CheckCircleIcon />}
           />
@@ -176,7 +176,7 @@ const DashboardSolicitudesPage = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.375 }}>
           <MetricCard
-            title="Tasa de Aprobación"
+            title="Tasa de Aprobación Entre Resueltas"
             value={`${resumen.tasaAprobacion}%`}
             subtitle="Del total resuelto"
             color="#8B5CF6"
