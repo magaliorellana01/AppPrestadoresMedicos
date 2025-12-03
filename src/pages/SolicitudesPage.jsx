@@ -27,9 +27,9 @@ const tiposOpciones = [
 // TABLA:
 
 const columnasSolicitudes = [
-  { id: 'nro', label: 'Nro Solicitud', align: 'left', width: '15%' },
-  { id: 'afiliadoNombre', label: 'Afiliado', align: 'left', width: '30%' },
-  { id: 'tipo', label: 'Tipo', align: 'left', width: '20%' },
+  { id: 'nro', label: 'Nro', align: 'left', width: '20%' },
+  { id: 'afiliadoNombre', label: 'Afiliado', align: 'left', width: '30%', hideOnMobile: true },
+  { id: 'tipo', label: 'Tipo', align: 'left', width: '15%', hideOnMobile: true },
   {
     id: 'estado',
     label: 'Estado',

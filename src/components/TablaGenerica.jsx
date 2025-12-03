@@ -118,7 +118,12 @@ export default function TablaGenerica({
                                     key={column.id}
                                     align={column.align || 'left'}
                                     style={{ width: column.width || 'auto' }}
-                                    sx={column.sxHeader || {}}
+                                    sx={{
+                                        ...(column.sxHeader || {}),
+                                        ...(column.hideOnMobile && {
+                                            display: { xs: 'none', sm: 'table-cell' }
+                                        })
+                                    }}
                                 >
                                     {column.label}
                                 </TableCell>
@@ -151,7 +156,12 @@ export default function TablaGenerica({
                                         <TableCell
                                             key={`${column.id}-${keyFor ? keyFor(item) : index}`}
                                             align={column.align || 'left'}
-                                            sx={column.sxCell || {}}
+                                            sx={{
+                                                ...(column.sxCell || {}),
+                                                ...(column.hideOnMobile && {
+                                                    display: { xs: 'none', sm: 'table-cell' }
+                                                })
+                                            }}
                                         >
                                             {column.renderCell
                                                 ? column.renderCell(item, item[column.id])
