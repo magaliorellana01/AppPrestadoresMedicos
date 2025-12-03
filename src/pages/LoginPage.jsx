@@ -15,7 +15,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { login } from "../services";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage = ({ theme }) => {
+const LoginPage = () => {
   const [cuit, setCuit] = useState("");
   const [password, setPassword] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });

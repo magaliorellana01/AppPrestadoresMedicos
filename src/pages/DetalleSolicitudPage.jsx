@@ -198,30 +198,6 @@ export default function DetalleSolicitudPage() {
           <CartelInformacionSocio socio={solicitud.socio} />
         </Box>
 
-        <InfoCard key="detalles-solicitud" icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
-          <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
-          <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
-          <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-            {[
-              { label: 'Descargar Factura', download: 'Factura.pdf' },
-              { label: 'Descargar Receta', download: 'Receta.pdf' }
-            ].map(btn => (
-              <Button
-                key={btn.label}
-                variant="outlined"
-                size="small"
-                component="a"
-                href="/sample.pdf"
-                download={btn.download}
-                sx={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}
-              >
-                {btn.label}
-              </Button>
-            ))}
-          </Box>
-        </InfoCard>
-
         <InfoCard key="comentarios-prestador" icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del prestador">
         {solicitud.comentariosPrestador?.length > 0 ? (
             solicitud.comentariosPrestador.map((c) => (
@@ -248,26 +224,9 @@ export default function DetalleSolicitudPage() {
           )}
         </InfoCard>
 
-        <InfoCard key="historial-cambios" icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios" >
-          <Box sx={{ maxHeight: 200, overflowY: 'auto', width: '100%', pr: 1 }}>
-            {solicitud.historial?.length > 0 ? (
-              solicitud.historial.map((h) => (
-                <Box key={h.fechaHora || h._id} sx={{ borderBottom: "1px solid", borderColor: "divider", pb: 1, mb: 1, '&:last-child': { borderBottom: 0, mb: 0 } }}>
-                  <Typography variant="body2">
-                    {h.descripcion || 'Sin descripción del cambio.'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Por: <strong>{h.usuario || 'N/A'}</strong> {h.profesion ? `- ${h.profesion}` : ''} - {h.fechaHora || 'Fecha no disponible'}
-                  </Typography>
-                </Box>
-              ))
-            ) : (
-              <Typography variant="body1">No hay historial de cambios.</Typography>
-            )}
-          </Box>
-        </InfoCard>
+        
 
-                <InfoCard 
+        <InfoCard 
           key="cambiar-estado"
           icon={<CheckBoxIcon sx={{ fontSize: 70 }} color="action" />} 
           title="Cambiar estado de solicitud">
@@ -341,6 +300,25 @@ export default function DetalleSolicitudPage() {
           />
         </InfoCard>
 
+
+        <InfoCard key="historial-cambios" icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios" >
+          <Box sx={{ maxHeight: 200, overflowY: 'auto', width: '100%', pr: 1 }}>
+            {solicitud.historial?.length > 0 ? (
+              solicitud.historial.map((h) => (
+                <Box key={h.fechaHora || h._id} sx={{ borderBottom: "1px solid", borderColor: "divider", pb: 1, mb: 1, '&:last-child': { borderBottom: 0, mb: 0 } }}>
+                  <Typography variant="body2">
+                    {h.descripcion || 'Sin descripción del cambio.'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Por: <strong>{h.usuario || 'N/A'}</strong> {h.profesion ? `- ${h.profesion}` : ''} - {h.fechaHora || 'Fecha no disponible'}
+                  </Typography>
+                </Box>
+              ))
+            ) : (
+              <Typography variant="body1">No hay historial de cambios.</Typography>
+            )}
+          </Box>
+        </InfoCard>
       </Box>
 
       <Button variant="contained" size="large" onClick={handleGuardarCambios}
