@@ -63,6 +63,13 @@ const LoginPage = ({ theme }) => {
     window.location.reload();
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (cuit.length === 11) {
+      handleLogin();
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -118,6 +125,8 @@ const LoginPage = ({ theme }) => {
         </Box>
 
         <Box
+          component="form"
+          onSubmit={handleSubmit}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -126,7 +135,7 @@ const LoginPage = ({ theme }) => {
             gap: 6,
           }}
         >
-          <TextField label="CUIT" value={cuit} onChange={handleChange} />
+          <TextField label="CUIT" value={cuit} onChange={handleChange} sx={{ width: "200px"}} />
 
           <TextField
             label="Contraseña"
@@ -149,18 +158,18 @@ const LoginPage = ({ theme }) => {
               ),
             }}
             sx={{
-              width: "auto",
-              maxWidth: 225,
+              width: "200px",
             }}
           />
           <Button
             variant="contained"
             size="large"
             disabled={cuit.length !== 11}
-            onClick={handleLogin}
+            type="submit"
           >
             Login
-          </Button>
+          </Button
+          >
         </Box>
       </Box> : 
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
