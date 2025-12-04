@@ -26,7 +26,7 @@ const HomePage = ({ theme }) => {
             lineHeight: 1.3
           }}
         >
-          Bienvenido a la plataforma de gestión de solicitudes de atención médica
+          Prestadores de servicios médicos
         </Typography>
         <Button
           variant="contained"
