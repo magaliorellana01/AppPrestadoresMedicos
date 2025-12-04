@@ -90,7 +90,39 @@ exports.getSolicitudes = async (req, res) => {
                     fechaCreacion: 1,
                     prestadorAsignado: 1
                 }
-            }
+            },
+            {
+                $lookup: {
+                    from: 'prestadors',
+                    localField: 'prestadorAsignado',
+                    foreignField: '_id',
+                    as: 'prestadorAsignado'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$prestadorAsignado',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    nro: 1,
+                    afiliadoNombre: 1,
+                    tipo: 1,
+                    estado: 1,
+                    fechaCreacion: 1,
+                    prestadorAsignado: {
+                        _id: 1,
+                        nombres: 1,
+                        apellidos: 1,
+                        cuit: 1,
+                        especialidades: 1,
+                        es_centro_medico: 1
+                    }
+                }
+            },
         ];
 
         const content = await Solicitud.aggregate(pipeline);
