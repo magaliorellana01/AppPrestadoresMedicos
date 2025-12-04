@@ -16,7 +16,8 @@ const FiltroFechas = ({ rangoSeleccionado, onRangoChange, onAplicar }) => {
         flexDirection: 'column',
         gap: 1.5,
         height: '100%',
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        mt: 3
       }}
     >
       <FormControl sx={{ minWidth: 180 }} size="small">

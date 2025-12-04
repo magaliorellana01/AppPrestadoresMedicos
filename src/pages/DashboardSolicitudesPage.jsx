@@ -137,14 +137,6 @@ const DashboardSolicitudesPage = () => {
 
       {/* Filtros + Cards de métricas en la misma fila */}
       <Grid container spacing={2} mb={2} alignItems="stretch">
-        {/* Filtro a la izquierda */}
-        <Grid size={{ xs: 12, md: 2.5 }}>
-          <FiltroFechas
-            rangoSeleccionado={rangoSeleccionado}
-            onRangoChange={setRangoSeleccionado}
-            onAplicar={handleAplicar}
-          />
-        </Grid>
 
         {/* 4 Cards a la derecha */}
         <Grid size={{ xs: 12, sm: 6, md: 2.375 }}>
@@ -241,61 +233,16 @@ const DashboardSolicitudesPage = () => {
           </Paper>
         </Grid>
 
-        {/* Resumen por tipo */}
-        <Grid size={{ xs: 12, md: 5, lg: 4 }}>
-          <Paper sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Resumen por Tipo
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              Distribución de solicitudes procesadas
-            </Typography>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {Object.entries(porTipo).map(([tipo, datos]) => (
-                <Box
-                  key={tipo}
-                  sx={{
-                    p: 2,
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 2,
-                    backgroundColor: '#fafafa'
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                    {tipo}
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
-                  <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" color="text.secondary" fontSize="0.85rem">
-                      Total:
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600} fontSize="0.85rem">
-                      {datos.total}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" color="success.main" fontSize="0.85rem">
-                      Aprobadas:
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600} color="success.main" fontSize="0.85rem">
-                      {datos.aprobadas}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2" color="error.main" fontSize="0.85rem">
-                      Rechazadas:
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600} color="error.main" fontSize="0.85rem">
-                      {datos.rechazadas}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
+        <Grid size={{ xs: 12, md: 2.5 }}>
+          <FiltroFechas
+            rangoSeleccionado={rangoSeleccionado}
+            onRangoChange={setRangoSeleccionado}
+            onAplicar={handleAplicar}
+          />
         </Grid>
+
       </Grid>
+      
     </Container>
   );
 };
