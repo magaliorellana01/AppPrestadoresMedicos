@@ -26,8 +26,18 @@ const tiposOpciones = [
 
 // TABLA:
 
-const columnasSolicitudes = [
+const columnasSolicitudes = (mostrarMedicoAsignado) =>  [
   { id: 'nro', label: 'Nro', align: 'left', width: '20%' },
+  ...(mostrarMedicoAsignado ? [{
+    id: 'prestadorAsignado',
+    label: 'Médico Asignado',
+    align: 'left',
+    width: '30%',
+    renderCell: (row) =>
+      row?.prestadorAsignado
+        ? `${row.prestadorAsignado.nombres || ''} ${row.prestadorAsignado.apellidos || ''}`.trim()
+        : 'Sin Asignar'
+  }] : []),
   { id: 'afiliadoNombre', label: 'Afiliado', align: 'left', width: '30%', hideOnMobile: true },
   { id: 'tipo', label: 'Tipo', align: 'left', width: '15%', hideOnMobile: true },
   {
@@ -76,7 +86,6 @@ const SolicitudesPage = () => {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     setPage(0);
   }, [vistaActual]);
@@ -170,7 +179,7 @@ const SolicitudesPage = () => {
       <Box sx={{ overflowX: 'auto', mb: 4 }}>
         {isLoading ? <Typography align="center" sx={{ py: 4 }}>Cargando solicitudes...</Typography> :
           <TablaGenerica
-            columns={columnasSolicitudes}
+            columns={columnasSolicitudes(esCentroMedico && vistaActual === 'equipo')}
             rows={data}
             count={count}
             page={page}
