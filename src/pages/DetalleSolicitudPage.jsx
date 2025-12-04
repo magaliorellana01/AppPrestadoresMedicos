@@ -5,6 +5,7 @@ import {
   Box, Typography, Button, TextField, Snackbar, Alert
 } from "@mui/material";
 import {
+  Description as DescriptionIcon,
   EditNote as EditNoteIcon,
   CheckBox as CheckBoxIcon,
   History as HistoryIcon
@@ -197,6 +198,12 @@ export default function DetalleSolicitudPage() {
           <CartelInformacionSocio socio={solicitud.socio} />
         </Box>
 
+        <InfoCard key="detalles-solicitud" icon={<DescriptionIcon sx={{ fontSize: 70 }} color="action" />} title="Detalles de la solicitud">
+          <Typography variant="body1"><strong>Fecha:</strong> {solicitud.detalles?.fecha ?? "—"}</Typography>
+          <Typography variant="body1"><strong>Monto:</strong> {solicitud.detalles?.monto ?? "—"}</Typography>
+          <Typography variant="body1"><strong>Proveedor:</strong> {solicitud.detalles?.proveedor ?? "—"}</Typography>
+        </InfoCard>
+
         <InfoCard key="comentarios-prestador" icon={<EditNoteIcon sx={{ fontSize: 70 }} color="action" />} title="Comentarios del prestador">
         {solicitud.comentariosPrestador?.length > 0 ? (
             solicitud.comentariosPrestador.map((c) => (
@@ -222,8 +229,6 @@ export default function DetalleSolicitudPage() {
             <Typography variant="body1">No hay comentarios del afiliado</Typography>
           )}
         </InfoCard>
-
-        
 
         <InfoCard 
           key="cambiar-estado"
@@ -298,7 +303,6 @@ export default function DetalleSolicitudPage() {
             onChange={e => setMotivo(e.target.value)}
           />
         </InfoCard>
-
 
         <InfoCard key="historial-cambios" icon={<HistoryIcon sx={{ fontSize: 70 }} color="action" />} title="Historial de cambios" >
           <Box sx={{ maxHeight: 200, overflowY: 'auto', width: '100%', pr: 1 }}>

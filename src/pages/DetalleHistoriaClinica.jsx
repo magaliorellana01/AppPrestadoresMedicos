@@ -122,7 +122,7 @@ export default function DetalleDeHistoriaClinica() {
                 >
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                     {/* Se usa la fecha de creación y el prestador poblado */}
-                    {new Date(nota.fecha_creacion).toLocaleDateString()} –
+                    {new Date(nota.fecha_creacion).toLocaleDateString()} -{' '}
                     {nota.prestador
                       ? (nota.prestador.nombres || nota.prestador.apellidos
                         ? `${nota.prestador.nombres || ''} ${nota.prestador.apellidos || ''}`.trim()
