@@ -83,6 +83,7 @@ export default function TablaGenerica({
     keyFor,
     sxContainer = {},
 }) {
+    const theme = useTheme();
 
     return (
         <Paper elevation={3} sx={{ borderRadius: 3, overflow: "hidden", backgroundColor: "#E5E7EB", ...sxContainer }}>
@@ -187,23 +188,27 @@ export default function TablaGenerica({
                 ActionsComponent={TablePaginationActions}
                 sx={{
                     "& .MuiTablePagination-toolbar": {
+                        justifyContent: { xs: 'center', sm: 'normal' },
                         pr: { xs: 1, sm: 2 },
                         "& .MuiIconButton-root": {
-                            color: theme => theme.palette.primary.main,
+                            color: theme.palette.primary.main,
                             opacity: 0.8,
                             "&:hover": {
                                 backgroundColor: 'rgba(0,0,0,0.04)',
                             }
                         },
+                        "& .MuiTablePagination-spacer, & .MuiTablePagination-selectLabel, & .MuiInputBase-root, & .MuiTablePagination-displayedRows": {
+                            display: { xs: 'none', sm: 'flex' }
+                        },
                         "& .MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": {
                             color: '#555',
                             fontSize: '0.875rem',
+                        },
+                        "& .MuiInputBase-root": {
+                            fontSize: '0.875rem',
+                            color: '#555',
                         }
                     },
-                    "& .MuiInputBase-root": {
-                        fontSize: '0.875rem',
-                        color: '#555',
-                    }
                 }}
             />
         </Paper>

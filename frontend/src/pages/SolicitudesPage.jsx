@@ -48,7 +48,7 @@ const columnasSolicitudes = (mostrarMedicoAsignado) =>  [
     renderCell: (row) => <ComponenteDeEstados estado={row.estado} />,
     sxCell: { padding: '8px' }
   },
-  { id: 'fechaCreacion', label: 'Fecha', align: 'right', width: '15%', renderCell: (row) => row.fechaCreacion ? new Date(row.fechaCreacion).toLocaleDateString('es-AR') : '-', },
+  { id: 'fechaCreacion', label: 'Fecha', align: 'right', width: '15%', renderCell: (row) => row.fechaCreacion ? new Date(row.fechaCreacion).toLocaleDateString('es-AR') : '-', hideOnMobile: mostrarMedicoAsignado },
 ];
 
 const keyForSolicitudes = (item) => item._id || item.id;
