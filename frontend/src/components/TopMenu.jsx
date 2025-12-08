@@ -77,14 +77,15 @@ export function TopMenu({ theme }) {
         <MenuOption
           path="/"
           content={
-            <img
-              src={Logo}
-              alt="Logo"
-              style={{
-                width: window.innerWidth < 900 ? "40px" : window.innerWidth < 1536 ? "50px" : "60px",
-                height: window.innerWidth < 900 ? "40px" : window.innerWidth < 1536 ? "50px" : "60px",
-                marginTop: "10px"
-              }}
+            <Box
+                component="img"
+                src={Logo}
+                alt="Logo"
+                sx={{
+                    width: { xs: "40px", md: "50px", lg: "60px" },
+                    height: { xs: "40px", md: "50px", lg: "60px" },
+                    mt: "10px",
+                }}
             />
           }
         />

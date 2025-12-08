@@ -87,7 +87,7 @@ const LoginPage = () => {
         src={Logo}
         alt="Logo"
         sx={{
-          width: { xs: "150px", sm: "100px" },
+          width: { xs: "100px", sm: "150px" },
           height: "auto",
           mt: 5,
           mb: 0,
@@ -103,7 +103,7 @@ const LoginPage = () => {
           border: "1px solid #E5E7EB",
           borderRadius: 3,
           width: { xs: "90%", sm: "400px" },
-          p: 4,
+          p: { xs: 2, sm: 4 },
           boxShadow: 2,
           display: "flex",
           flexDirection: "column",
@@ -132,10 +132,10 @@ const LoginPage = () => {
             flexDirection: "column",
             alignItems: "center",
             width: "100%",
-            gap: 6,
+            gap: { xs: 3, sm: 6 },
           }}
         >
-          <TextField label="CUIT" value={cuit} onChange={handleChange} sx={{ width: "200px"}} />
+          <TextField label="CUIT" value={cuit} onChange={handleChange} sx={{ width: "100%"}} />
 
           <TextField
             label="Contraseña"
@@ -158,7 +158,7 @@ const LoginPage = () => {
               ),
             }}
             sx={{
-              width: "200px",
+              width: "100%",
             }}
           />
           <Button
@@ -166,6 +166,9 @@ const LoginPage = () => {
             size="large"
             disabled={cuit.length !== 11}
             type="submit"
+            sx={{
+              width: "100%",
+            }}
           >
             Login
           </Button
