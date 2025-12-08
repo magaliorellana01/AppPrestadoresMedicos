@@ -83,7 +83,7 @@ const InfoCard = ({ icon, title, children, action }) => (
       {icon}
     </Box>
     <Box display="grid" gap={0.5} sx={{ width: "100%", textAlign: { xs: 'center', md: 'left'} }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'space-between' }, alignItems: 'center' }}>
         <Typography variant="body1" sx={{ fontWeight: "bold", mb: 1 }}>
           {title}
         </Typography>
