@@ -29,23 +29,13 @@ require("./models/solicitud");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://app-prestadores-medicos.vercel.app" 
-];
+app.use(express.json());
 
+// Middleware
 app.use(
   cors({
-    origin: function(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS error: origin ${origin} not allowed`));
-      }
-    },
-    credentials: true
+    origin: true,
+    credentials: true,
   })
 );
 
