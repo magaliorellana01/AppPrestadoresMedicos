@@ -9,6 +9,7 @@ function normalizarCUIT(valor) {
 }
 
 exports.loginPrestador = async (req, res) => {
+    console.log("REQ.BODY:", req.body);
     try {
         const { cuit, password } = req.body;
 
